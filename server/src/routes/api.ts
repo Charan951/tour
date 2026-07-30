@@ -17,11 +17,17 @@ import { getSitemapXML } from '../controllers/sitemapController.js';
 import uploadRoutes from './uploadRoutes.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { authRateLimiter, enquiryRateLimiter, contactRateLimiter } from '../middleware/security.js';
+import { cacheMiddleware, clearApiCache } from '../middleware/cacheMiddleware.js';
 
 const router = Router();
 
+const invalidateCache = (_req: any, _res: any, next: any) => {
+  clearApiCache();
+  next();
+};
+
 // Dynamic XML Sitemap Endpoint
-router.get('/sitemap.xml', getSitemapXML);
+router.get('/sitemap.xml', cacheMiddleware(300), getSitemapXML);
 
 // Image Upload Endpoint (Cloudinary)
 router.use('/upload', uploadRoutes);
@@ -29,28 +35,28 @@ router.use('/upload', uploadRoutes);
 // --- PUBLIC ROUTES ---
 router.post('/auth/login', authRateLimiter, login);
 
-router.get('/packages', getPackages);
-router.get('/packages/:slug', getPackageBySlug);
+router.get('/packages', cacheMiddleware(120), getPackages);
+router.get('/packages/:slug', cacheMiddleware(120), getPackageBySlug);
 
-router.get('/destinations', getDestinations);
-router.get('/destinations/:slug', getDestinationBySlug);
+router.get('/destinations', cacheMiddleware(120), getDestinations);
+router.get('/destinations/:slug', cacheMiddleware(120), getDestinationBySlug);
 
-router.get('/banners', getBanners);
-router.get('/themes', getThemeBanners);
+router.get('/banners', cacheMiddleware(120), getBanners);
+router.get('/themes', cacheMiddleware(120), getThemeBanners);
 
-router.get('/blogs', getBlogs);
-router.get('/blogs/:slug', getBlogBySlug);
+router.get('/blogs', cacheMiddleware(120), getBlogs);
+router.get('/blogs/:slug', cacheMiddleware(120), getBlogBySlug);
 
-router.get('/testimonials', getTestimonials);
-router.get('/faq', getFAQs);
-router.get('/settings', getSettings);
+router.get('/testimonials', cacheMiddleware(120), getTestimonials);
+router.get('/faq', cacheMiddleware(120), getFAQs);
+router.get('/settings', cacheMiddleware(300), getSettings);
 
-router.post('/enquiries', enquiryRateLimiter, createEnquiry);
-router.post('/contact', enquiryRateLimiter, createContactMessage);
-router.post('/newsletter', subscribeNewsletter);
+router.post('/enquiries', enquiryRateLimiter, invalidateCache, createEnquiry);
+router.post('/contact', enquiryRateLimiter, invalidateCache, createContactMessage);
+router.post('/newsletter', invalidateCache, subscribeNewsletter);
 
 // --- PROTECTED ADMIN ROUTES ---
-router.use('/admin', authenticateToken);
+router.use('/admin', invalidateCache, authenticateToken);
 
 router.get('/admin/auth/me', getMe);
 

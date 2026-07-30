@@ -17,27 +17,9 @@ export const configureSecurityHeaders = helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 });
 
-// Enterprise CORS Configuration matching security.md & production guidelines
+// Enterprise CORS Configuration with dynamic origin reflection matching production specs
 export const configureCORS = cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, or Postman)
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      process.env.CLIENT_URL,
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:5000',
-      'https://holidaycity.com',
-      'https://www.holidaycity.com'
-    ].filter(Boolean);
-
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    } else {
-      return callback(new Error(`CORS policy violation: Origin ${origin} not allowed`));
-    }
-  },
+  origin: true, // Dynamically reflects request origin in Access-Control-Allow-Origin header
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],

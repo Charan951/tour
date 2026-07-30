@@ -1,0 +1,17 @@
+# HolidayCity Production Robots.txt matching seo.md Section 5.2
+User-agent: *
+Allow: /
+Allow: /destinations/
+Allow: /packages/
+Allow: /blogs/
+Allow: /gallery/
+Allow: /theme/
+Allow: /themes/
+
+# Block Private Admin & API Endpoints
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /scratch/
+
+Sitemap: https://holidaycity.com/sitemap.xml

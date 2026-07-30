@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary-ocean: #0A6FB5;
+    --color-secondary-ocean: #58B8E8;
+    --color-tropical-aqua: #57D0C9;
+    --color-sunset-gold: #F6C65B;
+    --color-deep-sea: #063B6D;
+    --color-sand: #F8F7F3;
+    --color-bg-light: #FCFCFC;
+    --color-text-main: #1F2937;
+  }
+}
+
+/* Glassmorphism Classes */
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(6, 59, 109, 0.08);
+}
+
+.glass-card-dark {
+  background: rgba(6, 59, 109, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(88, 184, 232, 0.25);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}

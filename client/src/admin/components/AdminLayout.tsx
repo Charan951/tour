@@ -1,0 +1,59 @@
+import React, { useState } from 'react';
+import { AdminSidebar } from './AdminSidebar';
+import { Menu } from 'lucide-react';
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}
+
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subtitle, action }) => {
+  // Sidebar is closed by default, opens on hamburger click!
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800 relative overflow-x-hidden">
+      {/* Dimmed backdrop overlay when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-40 transition-opacity"
+        />
+      )}
+
+      {/* White Slide-Over Vertical Sidebar */}
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 min-h-screen overflow-y-auto">
+        {/* Top Header Bar with Hamburger Button */}
+        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-4">
+            {/* Hamburger Toggle Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center gap-2 font-bold text-xs"
+              title="Toggle Menu Sidebar"
+            >
+              <Menu className="w-5 h-5 text-slate-800" />
+            </button>
+
+            <div>
+              <h1 className="font-['Outfit'] font-bold text-xl text-slate-900 tracking-tight">{title}</h1>
+              {subtitle && <p className="text-xs text-slate-500 font-medium mt-0.5">{subtitle}</p>}
+            </div>
+          </div>
+
+          {action && <div className="flex items-center gap-3">{action}</div>}
+        </header>
+
+        {/* Inner Content Wrapper */}
+        <div className="p-6 sm:p-8 flex-1">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};

@@ -36,7 +36,7 @@ export const FloatingActionWidget: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 font-['Plus_Jakarta_Sans']">
+    <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col items-end gap-3 font-['Plus_Jakarta_Sans']">
       
       {/* TOP BUTTON: Call Us Button */}
       <a

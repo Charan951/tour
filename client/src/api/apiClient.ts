@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clientCache } from '../utils/cache';
 
 const rawBackendUrl = (import.meta as any).env?.VITE_API_URL || '';
 const backendHost = rawBackendUrl.replace(/\/+$/, '').replace(/\/api\/v1$/, '');
@@ -39,3 +40,26 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/**
+ * Perform a cached GET request.
+ * Returns cached result immediately (0ms) if available, while updating in background if stale.
+ */
+export const cachedGet = async <T = any>(
+  url: string,
+  options?: { params?: any; ttlMs?: number; forceRefresh?: boolean }
+): Promise<{ data: T }> => {
+  const { params, ttlMs = 60000, forceRefresh = false } = options || {};
+  const cacheKey = `get:${url}:${JSON.stringify(params || {})}`;
+
+  if (!forceRefresh) {
+    const cached = clientCache.get<T>(cacheKey);
+    if (cached) {
+      return { data: cached };
+    }
+  }
+
+  const response = await apiClient.get<T>(url, { params });
+  clientCache.set<T>(cacheKey, response.data, ttlMs);
+  return response;
+};

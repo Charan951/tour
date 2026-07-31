@@ -35,21 +35,24 @@ router.use('/upload', uploadRoutes);
 // --- PUBLIC ROUTES ---
 router.post('/auth/login', authRateLimiter, login);
 
-router.get('/packages', cacheMiddleware(120), getPackages);
-router.get('/packages/:slug', cacheMiddleware(120), getPackageBySlug);
+// Packages Catalog & Detail (10 mins Redis/CDN, 1 min Browser)
+router.get('/packages', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getPackages);
+router.get('/packages/:slug', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getPackageBySlug);
 
-router.get('/destinations', cacheMiddleware(120), getDestinations);
-router.get('/destinations/:slug', cacheMiddleware(120), getDestinationBySlug);
+// Destinations Landing & Detail (10 mins Redis/CDN, 1 min Browser)
+router.get('/destinations', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getDestinations);
+router.get('/destinations/:slug', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getDestinationBySlug);
 
-router.get('/banners', cacheMiddleware(120), getBanners);
-router.get('/themes', cacheMiddleware(120), getThemeBanners);
+// Banners & Themes (30 mins Redis/CDN, 5 mins Browser)
+router.get('/banners', cacheMiddleware({ ttlSeconds: 1800, browserMaxAge: 300, cdnMaxAge: 1800 }), getBanners);
+router.get('/themes', cacheMiddleware({ ttlSeconds: 1800, browserMaxAge: 300, cdnMaxAge: 1800 }), getThemeBanners);
 
-router.get('/blogs', cacheMiddleware(120), getBlogs);
-router.get('/blogs/:slug', cacheMiddleware(120), getBlogBySlug);
-
-router.get('/testimonials', cacheMiddleware(120), getTestimonials);
-router.get('/faq', cacheMiddleware(120), getFAQs);
-router.get('/settings', cacheMiddleware(300), getSettings);
+// Blogs, Testimonials, FAQ & Settings (1 Hour Redis/CDN, 10 mins Browser)
+router.get('/blogs', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getBlogs);
+router.get('/blogs/:slug', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getBlogBySlug);
+router.get('/testimonials', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getTestimonials);
+router.get('/faq', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getFAQs);
+router.get('/settings', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getSettings);
 
 router.post('/enquiries', enquiryRateLimiter, invalidateCache, createEnquiry);
 router.post('/contact', enquiryRateLimiter, invalidateCache, createContactMessage);

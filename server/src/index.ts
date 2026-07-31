@@ -5,10 +5,16 @@ import mongoSanitize from 'express-mongo-sanitize';
 import { configureSecurityHeaders, configureCORS, globalErrorHandler } from './middleware/security.js';
 import apiRouter from './routes/api.js';
 
+import compression from 'compression';
+import { getCacheStatus } from './config/redis.js';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Compression Middleware for fast payloads
+app.use(compression());
 
 // Security & Global Middleware
 app.use(configureSecurityHeaders);
@@ -22,13 +28,14 @@ app.use(mongoSanitize({
   replaceWith: '_'
 }));
 
-// Health Check Route
+// Health Check Route with Cache Status
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     service: 'HolidayCity API Backend Service',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    cache: getCacheStatus(),
   });
 });
 

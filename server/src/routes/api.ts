@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, getMe } from '../controllers/authController.js';
+import { login, register, forgotPassword, getMe } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getDestinations, getDestinationBySlug, createDestination, updateDestination, deleteDestination } from '../controllers/destinationController.js';
@@ -34,6 +34,9 @@ router.use('/upload', uploadRoutes);
 
 // --- PUBLIC ROUTES ---
 router.post('/auth/login', authRateLimiter, login);
+router.post('/auth/register', authRateLimiter, register);
+router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
+
 
 // Packages Catalog & Detail (10 mins Redis/CDN, 1 min Browser)
 router.get('/packages', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getPackages);

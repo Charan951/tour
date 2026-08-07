@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 export const configureSecurityHeaders = helmet({
   contentSecurityPolicy: false, // Disabled for inline scripts/styles in dev, enabled via Helmet default headers
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
   frameguard: { action: 'deny' },
   hsts: {
     maxAge: 31536000, // 1 year
@@ -19,17 +20,20 @@ export const configureSecurityHeaders = helmet({
 
 // Enterprise CORS Configuration with dynamic origin reflection matching production specs
 export const configureCORS = cors({
-  origin: true, // Dynamically reflects request origin in Access-Control-Allow-Origin header
+  origin: (origin, callback) => {
+    // Allow requests from any origin (mobile apps, React web client, local network devices)
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Set-Cookie']
 });
 
-// Auth Rate Limiter: 15 mins, max 5 attempts
+// Auth Rate Limiter: 15 mins, max 100 attempts in development for mobile testing
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: process.env.NODE_ENV === 'production' ? 5 : 100,
   message: {
     success: false,
     message: 'Too many authentication attempts from this IP. Please try again after 15 minutes.'

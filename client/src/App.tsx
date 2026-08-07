@@ -24,11 +24,18 @@ const DestinationManagerPage = lazy(() => import('./admin/pages/DestinationManag
 const BannerManagerPage = lazy(() => import('./admin/pages/BannerManagerPage').then(m => ({ default: m.BannerManagerPage })));
 const CMSManagerPage = lazy(() => import('./admin/pages/CMSManagerPage').then(m => ({ default: m.CMSManagerPage })));
 
+import { SplashScreen } from './components/common/SplashScreen';
+
 const PageFallback: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center p-8">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-10 h-10 border-4 border-[#0A6FB5] border-t-transparent rounded-full animate-spin" />
-      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loading HolidayCity...</span>
+    <div className="flex flex-col items-center gap-4">
+      <div className="bg-white p-4 rounded-2xl shadow-md border border-slate-100 flex items-center justify-center">
+        <img src="/favicon.png" alt="HolidayCity Emblem" className="h-16 w-auto object-contain" />
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-[#0A6FB5] border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loading HolidayCity...</span>
+      </div>
     </div>
   </div>
 );
@@ -39,6 +46,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FCFCFC] text-[#1F2937]">
+      {!isAdminRoute && <SplashScreen />}
       {!isAdminRoute && <Navbar />}
 
       <main className="flex-1">

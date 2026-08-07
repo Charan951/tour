@@ -1,27 +1,89 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { Enquiry } from '../models/Enquiry.js';
+import { Destination } from '../models/Destination.js';
+import { Package } from '../models/Package.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 export const createEnquiry = async (req: Request, res: Response) => {
   try {
-    const { fullName, email, mobile, destination, package: packageId, travelDate, adults, children, budget, travelType, message, source } = req.body;
+    const { 
+      fullName, 
+      name, 
+      email, 
+      mobile, 
+      phone, 
+      destination, 
+      package: packageId, 
+      travelDate, 
+      adults, 
+      travelers, 
+      children, 
+      budget, 
+      travelType, 
+      message, 
+      source 
+    } = req.body;
+
+    const resolvedFullName = fullName || name || '';
+    const resolvedMobile = mobile || phone || '';
+    const resolvedAdults = adults || travelers || 1;
+
+    let resolvedDestination = null;
+    let resolvedPackage = packageId || null;
+    let appendedMessage = message || '';
+
+    if (destination && typeof destination === 'string') {
+      const trimmedDest = destination.trim();
+      if (mongoose.Types.ObjectId.isValid(trimmedDest)) {
+        resolvedDestination = trimmedDest;
+      } else if (trimmedDest.length > 0) {
+        // Try to match destination name or slug
+        const foundDest = await Destination.findOne({
+          $or: [
+            { slug: trimmedDest },
+            { name: { $regex: new RegExp(`^${trimmedDest}$`, 'i') } }
+          ]
+        }).lean();
+
+        if (foundDest) {
+          resolvedDestination = foundDest._id;
+        } else {
+          // Try to match package title or slug
+          const foundPkg = await Package.findOne({
+            $or: [
+              { slug: trimmedDest },
+              { title: { $regex: new RegExp(`^${trimmedDest}$`, 'i') } }
+            ]
+          }).lean();
+
+          if (foundPkg) {
+            resolvedPackage = foundPkg._id;
+            resolvedDestination = foundPkg.destination;
+          } else {
+            // Append the unmatched string to message so we don't lose user's input
+            appendedMessage = `[Requested Destination: ${trimmedDest}] ${appendedMessage}`.trim();
+          }
+        }
+      }
+    }
 
     const count = await Enquiry.countDocuments();
     const enquiryId = `HC-2026-${(count + 1001).toString()}`;
 
     const enquiry = await Enquiry.create({
       enquiryId,
-      fullName,
+      fullName: resolvedFullName,
       email,
-      mobile,
-      destination: destination || null,
-      package: packageId || null,
+      mobile: resolvedMobile,
+      destination: resolvedDestination,
+      package: resolvedPackage,
       travelDate: travelDate ? new Date(travelDate) : null,
-      adults: adults || 1,
+      adults: resolvedAdults,
       children: children || 0,
       budget: budget || null,
       travelType: travelType || 'Family',
-      message: message || '',
+      message: appendedMessage,
       source: source || 'PackagePage',
       status: 'New',
       priority: 'Medium'

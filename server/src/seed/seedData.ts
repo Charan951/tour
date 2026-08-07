@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import dns from 'dns';
 import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { Continent, Country, State, Destination } from '../models/Destination.js';
@@ -7,6 +8,9 @@ import { Package, TravelTheme, PackageCategory } from '../models/Package.js';
 import { Blog, Testimonial, FAQ, Setting } from '../models/CMS.js';
 
 dotenv.config();
+
+// Fix Node.js DNS resolution issues on Windows/ISPs for MongoDB SRV records
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 
 const seed = async () => {
   try {

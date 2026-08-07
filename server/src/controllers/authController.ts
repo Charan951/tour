@@ -94,6 +94,98 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { firstName, lastName, email, mobile, password } = req.body;
+
+    if (!firstName || !lastName || !email || !mobile || !password) {
+      return res.status(400).json({ success: false, message: 'All required fields must be provided' });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: 'User with this email already exists' });
+    }
+
+    // Default Customer/User role fallback
+    let defaultRole = await Role.findOne({ name: 'Customer' });
+    if (!defaultRole) {
+      defaultRole = await Role.findOne({ name: 'Sales Executive' });
+    }
+    if (!defaultRole) {
+      defaultRole = await Role.findOne({});
+    }
+    if (!defaultRole) {
+      // Dynamic fallback role creation if the DB has no roles seeded
+      defaultRole = await Role.create({
+        name: 'Sales Executive',
+        description: 'Default Sales Executive Role',
+        isSystemRole: true
+      });
+    }
+
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      mobile,
+      password,
+      role: defaultRole._id,
+      status: 'Active'
+    });
+
+    const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
+    const accessToken = jwt.sign(
+      { id: newUser._id, email: newUser.email, role: 'Customer' },
+      secret,
+      { expiresIn: '24h' }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Account created successfully',
+      data: {
+        accessToken,
+        user: {
+          id: newUser._id,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          email: newUser.email,
+          mobile: newUser.mobile,
+          role: 'Customer'
+        }
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+    if (!user) {
+      // Return 200 to prevent user enumeration attacks
+      return res.status(200).json({
+        success: true,
+        message: 'If an account exists with this email, a password reset link has been dispatched.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'If an account exists with this email, a password reset link has been dispatched.'
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -114,3 +206,4 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+

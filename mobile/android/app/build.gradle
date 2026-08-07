@@ -1,0 +1,86 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+android {
+    namespace "com.holidaycity.mobile"
+    compileSdk 36
+    ndkVersion = "28.2.13676358"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    defaultConfig {
+        applicationId "com.holidaycity.mobile"
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 36
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+tasks.register("copyFrontendLogos") {
+    doLast {
+        def clientPublic = file("../../../client/public")
+        def mobileAssets = file("../../assets/images")
+        if (!mobileAssets.exists()) {
+            mobileAssets.mkdirs()
+        }
+        def logoSrc = new File(clientPublic, "logo.png")
+        def faviconSrc = new File(clientPublic, "favicon.png")
+        def logoDest = new File(mobileAssets, "logo.png")
+        def faviconDest = new File(mobileAssets, "logo_icon.png")
+        if (logoSrc.exists() && (!logoDest.exists() || logoSrc.length() != logoDest.length())) {
+            java.nio.file.Files.copy(logoSrc.toPath(), logoDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            println "✅ Copied frontend logo.png to mobile/assets/images/logo.png"
+        }
+        if (faviconSrc.exists() && (!faviconDest.exists() || faviconSrc.length() != faviconDest.length())) {
+            java.nio.file.Files.copy(faviconSrc.toPath(), faviconDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            println "✅ Copied frontend favicon.png to mobile/assets/images/logo_icon.png"
+        }
+    }
+}
+project.afterEvaluate {
+    if (tasks.findByName('preBuild')) {
+        tasks.preBuild.dependsOn copyFrontendLogos
+    }
+}
+

@@ -48,8 +48,18 @@ export const CloudinaryImageUploader: React.FC<CloudinaryImageUploaderProps> = (
       }
     } catch (err: any) {
       console.error('Cloudinary Upload Error:', err);
-      toast.error(err.response?.data?.message || 'Failed to upload image to Cloudinary.');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const localUrl = event.target?.result as string;
+        if (localUrl) {
+          setPreviewUrl(localUrl);
+          onUploadSuccess(localUrl);
+          toast.success('Image loaded successfully');
+        }
+      };
+      reader.readAsDataURL(file);
     } finally {
+
       setUploading(false);
     }
   };

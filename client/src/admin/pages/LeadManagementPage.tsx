@@ -13,11 +13,19 @@ export const LeadManagementPage: React.FC = () => {
 
   useEffect(() => {
     fetchEnquiries();
+    const handleDataUpdate = () => fetchEnquiries();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(fetchEnquiries, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
 
   const fetchEnquiries = async () => {
     try {
-      setLoading(true);
       const res = await apiClient.get('/admin/enquiries');
       setEnquiries(res.data.data || []);
     } catch (err) {
@@ -32,10 +40,11 @@ export const LeadManagementPage: React.FC = () => {
       await apiClient.patch(`/admin/enquiries/${id}/status`, { status: newStatus });
       toast.success(`Lead status updated to ${newStatus}`);
       fetchEnquiries();
-    } catch (err) {
-      toast.error('Failed to update lead status');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to update lead status');
     }
   };
+
 
   const handleAddNote = async (id: string) => {
     if (!newNote) return;
@@ -66,6 +75,24 @@ export const LeadManagementPage: React.FC = () => {
       subtitle="Track customer quotes, enquiry status, and sales communication notes."
     >
       <div className="space-y-6">
+        {/* Action Header */}
+        <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-bold text-slate-700">Live Auto-Sync Active</span>
+            <span className="text-xs text-slate-400">({enquiries.length} total leads)</span>
+          </div>
+          <button
+            onClick={() => fetchEnquiries()}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0A6FB5] hover:text-white text-slate-700 font-bold text-xs transition-all flex items-center gap-1.5"
+          >
+            <span>🔄</span> Refresh Leads
+          </button>
+        </div>
+
         {loading ? (
           <div className="text-center py-12 text-slate-400 text-sm">Loading customer leads...</div>
         ) : enquiries.length === 0 ? (

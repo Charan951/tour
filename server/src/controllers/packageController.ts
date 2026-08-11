@@ -8,7 +8,8 @@ export const getPackages = async (req: Request, res: Response) => {
   try {
     const { search, destination, category, theme, minPrice, maxPrice, featured, trending, page = 1, limit = 12 } = req.query;
 
-    const query: any = { status: 'Active', isDeleted: false };
+    const query: any = { isDeleted: false };
+
 
     if (search) {
       query.$or = [
@@ -35,10 +36,34 @@ export const getPackages = async (req: Request, res: Response) => {
         }
       }
     }
-    if (category) query.category = category;
-    if (theme) query.theme = theme;
+    if (category) {
+      if (category === 'Domestic' || category === 'International') {
+        const isDom = category === 'Domestic';
+        const matchingDests = await Destination.find({
+          isDeleted: false,
+          $or: [
+            { category },
+            { isDomestic: isDom }
+          ]
+        }).select('_id').lean();
+        const destIds = matchingDests.map((d) => d._id);
+        query.destination = { $in: destIds };
+      } else if (mongoose.Types.ObjectId.isValid(category as string)) {
+        query.category = category;
+      }
+    }
+
+    if (theme) {
+      if (mongoose.Types.ObjectId.isValid(theme as string)) {
+        query.theme = theme;
+      } else {
+        query.themeName = { $regex: new RegExp(`^${(theme as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+      }
+    }
+
     if (featured) query.featured = featured === 'true';
     if (trending) query.trending = trending === 'true';
+
 
     if (minPrice || maxPrice) {
       query.startingPrice = {};
@@ -55,10 +80,11 @@ export const getPackages = async (req: Request, res: Response) => {
       .populate('destination', 'name slug banner country state')
       .populate('category', 'name slug')
       .populate('theme', 'name slug icon')
-      .sort({ featured: -1, createdAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean();
+
 
     return res.status(200).json({
       success: true,
@@ -104,23 +130,90 @@ export const getPackageBySlug = async (req: Request, res: Response) => {
 export const createPackage = async (req: AuthRequest, res: Response) => {
   try {
     const payload = req.body;
+    if (!payload.title || !payload.title.trim()) {
+      return res.status(400).json({ success: false, message: 'Package title is required' });
+    }
+
+    if (!payload.destination || !mongoose.Types.ObjectId.isValid(payload.destination)) {
+      return res.status(400).json({ success: false, message: 'Please select a valid Destination' });
+    }
+
     const count = await Package.countDocuments();
-    const packageCode = payload.packageCode || `PKG-HC-${(count + 101).toString()}`;
-    const slug = payload.slug || payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    let baseCode = payload.packageCode || `PKG-HC-${(count + 1001).toString()}`;
+    let packageCode = baseCode;
+    let codeAttempts = 0;
+    while ((await Package.findOne({ packageCode })) && codeAttempts < 10) {
+      codeAttempts++;
+      packageCode = `PKG-HC-${Math.floor(10000 + Math.random() * 90000)}`;
+    }
+
+    let baseSlug = (payload.slug || payload.title).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (!baseSlug) baseSlug = `pkg-${Date.now().toString().slice(-4)}`;
+
+    let slug = baseSlug;
+    let slugAttempts = 0;
+    while ((await Package.findOne({ slug })) && slugAttempts < 10) {
+      slugAttempts++;
+      slug = `${baseSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    const sanitizedItinerary = Array.isArray(payload.itinerary) && payload.itinerary.length > 0
+      ? payload.itinerary.map((item: any, idx: number) => ({
+          day: item.day || idx + 1,
+          title: item.title || `Day ${idx + 1}`,
+          description: item.description || 'Day itinerary details.',
+          hotel: item.hotel || '',
+          activities: item.activities || []
+        }))
+      : [
+          {
+            day: 1,
+            title: 'Day 1: Arrival & Transfer',
+            description: 'Arrival at destination, transfer to pre-booked hotel and evening free for leisure.',
+            hotel: '',
+            activities: []
+          }
+        ];
 
     const newPackage = await Package.create({
-      ...payload,
+      title: payload.title.trim(),
       packageCode,
       slug,
+      destination: payload.destination,
+      themeName: payload.themeName || 'Leisure',
+      startingPrice: Number(payload.startingPrice) || 25000,
+      discountPrice: payload.discountPrice ? Number(payload.discountPrice) : undefined,
+      duration: {
+        nights: Number(payload.duration?.nights) || 3,
+        days: Number(payload.duration?.days) || 4
+      },
+      coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1200&auto=format&fit=crop',
+      overview: payload.overview || '',
+      highlights: Array.isArray(payload.highlights) ? payload.highlights : [],
+      inclusions: Array.isArray(payload.inclusions) ? payload.inclusions : [],
+      exclusions: Array.isArray(payload.exclusions) ? payload.exclusions : [],
+      itinerary: sanitizedItinerary,
+      featured: payload.featured !== false,
       createdBy: req.user?.id
     });
+
+    const populatedPackage = await Package.findById(newPackage._id)
+      .populate('destination', 'name slug banner country state')
+      .lean();
 
     return res.status(201).json({
       success: true,
       message: 'Package created successfully',
-      data: newPackage
+      data: populatedPackage
     });
   } catch (error: any) {
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern || {})[0] || 'field';
+      return res.status(400).json({
+        success: false,
+        message: `A package with this ${duplicateField} already exists. Please use a unique ${duplicateField}.`
+      });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -130,11 +223,21 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const payload = req.body;
 
+    if (Array.isArray(payload.itinerary) && payload.itinerary.length > 0) {
+      payload.itinerary = payload.itinerary.map((item: any, idx: number) => ({
+        day: item.day || idx + 1,
+        title: item.title || `Day ${idx + 1}`,
+        description: item.description || 'Day itinerary details.',
+        hotel: item.hotel || '',
+        activities: item.activities || []
+      }));
+    }
+
     const tourPackage = await Package.findByIdAndUpdate(
       id,
       { ...payload, updatedBy: req.user?.id },
-      { new: true, runValidators: true }
-    );
+      { new: true, runValidators: false }
+    ).populate('destination', 'name slug banner country state').lean();
 
     if (!tourPackage) {
       return res.status(404).json({ success: false, message: 'Package not found' });
@@ -146,29 +249,35 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
       data: tourPackage
     });
   } catch (error: any) {
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern || {})[0] || 'field';
+      return res.status(400).json({
+        success: false,
+        message: `A package with this ${duplicateField} already exists.`
+      });
+    }
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
+
+
 export const deletePackage = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tourPackage = await Package.findById(id);
+    const tourPackage = await Package.findByIdAndDelete(id);
 
     if (!tourPackage) {
       return res.status(404).json({ success: false, message: 'Package not found' });
     }
 
-    tourPackage.isDeleted = true;
-    tourPackage.deletedAt = new Date();
-    tourPackage.deletedBy = req.user?.id as any;
-    await tourPackage.save();
-
     return res.status(200).json({
       success: true,
-      message: 'Package soft-deleted successfully'
+      message: 'Package deleted successfully'
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+

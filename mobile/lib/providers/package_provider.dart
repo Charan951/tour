@@ -11,7 +11,40 @@ class PackageProvider extends ChangeNotifier {
   String _searchQuery = '';
   String? _errorMessage;
 
-  List<PackageModel> get packages => _packages;
+  PackageProvider() {
+    // Populate instant fallback packages immediately so UI renders with zero lag
+    _packages = _packageService.getPackagesSync();
+  }
+
+  List<PackageModel> get packages {
+    List<PackageModel> list = _packages;
+
+    // Filter by selected category or theme
+    if (_selectedCategory != 'All' && _selectedCategory.trim().isNotEmpty) {
+      final cat = _selectedCategory.toLowerCase().replaceAll('tour', '').trim();
+      list = list.where((p) {
+        final categoryMatch = p.category.toLowerCase().contains(cat);
+        final titleMatch = p.title.toLowerCase().contains(cat);
+        final overviewMatch = p.overview.toLowerCase().contains(cat);
+        final highlightMatch = p.highlights.any((h) => h.toLowerCase().contains(cat));
+        return categoryMatch || titleMatch || overviewMatch || highlightMatch;
+      }).toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.trim().isNotEmpty) {
+      final q = _searchQuery.toLowerCase().trim();
+      list = list.where((p) {
+        final titleMatch = p.title.toLowerCase().contains(q);
+        final destMatch = p.destination.toLowerCase().contains(q);
+        final catMatch = p.category.toLowerCase().contains(q);
+        return titleMatch || destMatch || catMatch;
+      }).toList();
+    }
+
+    return list;
+  }
+
   bool get isLoading => _isLoading;
   String get selectedCategory => _selectedCategory;
   String get searchQuery => _searchQuery;
@@ -21,15 +54,20 @@ class PackageProvider extends ChangeNotifier {
       _packages.where((p) => p.isFeatured).toList();
 
   Future<void> fetchPackages() async {
-    _isLoading = true;
+    if (_packages.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
     _errorMessage = null;
-    notifyListeners();
 
     try {
-      _packages = await _packageService.getPackages(
+      final fetched = await _packageService.getPackages(
         category: _selectedCategory,
         search: _searchQuery,
       );
+      if (fetched.isNotEmpty) {
+        _packages = fetched;
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -41,12 +79,14 @@ class PackageProvider extends ChangeNotifier {
   void setCategory(String category) {
     if (_selectedCategory != category) {
       _selectedCategory = category;
+      notifyListeners();
       fetchPackages();
     }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
+    notifyListeners();
     fetchPackages();
   }
 }

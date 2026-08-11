@@ -7,17 +7,25 @@ class SpecializationThemeProvider extends ChangeNotifier {
   List<ThemeModel> _themes = [];
   bool _isLoading = false;
 
+  SpecializationThemeProvider() {
+    _themes = _themeService.getThemesSync();
+  }
+
   List<ThemeModel> get themes => _themes;
   bool get isLoading => _isLoading;
 
   Future<void> fetchThemes() async {
-    _isLoading = true;
-    notifyListeners();
+    if (_themes.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
-      _themes = await _themeService.getThemes();
+      final fetched = await _themeService.getThemes();
+      if (fetched.isNotEmpty) {
+        _themes = fetched;
+      }
     } catch (_) {
-      _themes = [];
     } finally {
       _isLoading = false;
       notifyListeners();

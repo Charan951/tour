@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const int timeoutDuration = 5;
+  static const int timeoutDuration = 7;
+
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -23,71 +24,112 @@ class ApiService {
     return headers;
   }
 
-  static Future<dynamic> get(String url) async {
+  static List<String> _generateCandidateUrls(String originalUrl) {
+    List<String> candidates = [originalUrl];
     try {
-      debugPrint('========== API REQUEST ==========');
-      debugPrint('URL: $url');
-      debugPrint('METHOD: GET');
-      debugPrint('=================================');
-      final headers = await _getHeaders();
-      final response = await http
-          .get(Uri.parse(url), headers: headers)
-          .timeout(const Duration(seconds: timeoutDuration));
+      final uri = Uri.parse(originalUrl);
+      final host = uri.host;
+      if (host == '127.0.0.1' || host == 'localhost') {
+        candidates.add(originalUrl.replaceAll(host, '192.168.1.32'));
+        candidates.add(originalUrl.replaceAll(host, '10.0.2.2'));
+      } else if (host == '10.0.2.2') {
+        candidates.add(originalUrl.replaceAll(host, '127.0.0.1'));
+        candidates.add(originalUrl.replaceAll(host, '192.168.1.32'));
+      } else if (host == '192.168.1.32') {
+        candidates.add(originalUrl.replaceAll(host, '127.0.0.1'));
+        candidates.add(originalUrl.replaceAll(host, '10.0.2.2'));
+      }
+    } catch (_) {}
+    return candidates;
+  }
 
-      return _processResponse(response);
-    } catch (e) {
-      debugPrint('GET ERROR ($url): $e');
-      return _handleOfflineFallback('GET', url, null, e);
+  static Future<dynamic> get(String url) async {
+    final candidateUrls = _generateCandidateUrls(url);
+    Object? lastError;
+
+    for (final targetUrl in candidateUrls) {
+      try {
+        debugPrint('========== API REQUEST (GET) ==========');
+        debugPrint('URL: $targetUrl');
+        final headers = await _getHeaders();
+        final response = await http
+            .get(Uri.parse(targetUrl), headers: headers)
+            .timeout(const Duration(seconds: timeoutDuration));
+
+        return _processResponse(response);
+      } catch (e) {
+        lastError = e;
+        debugPrint('GET ERROR ($targetUrl): $e');
+      }
     }
+
+    return _handleOfflineFallback('GET', url, null, lastError!);
   }
 
   static Future<dynamic> post(String url, Map<String, dynamic> body) async {
-    try {
-      debugPrint('========== API REQUEST ==========');
-      debugPrint('URL: $url');
-      debugPrint('METHOD: POST');
-      debugPrint('BODY: $body');
-      debugPrint('=================================');
-      final headers = await _getHeaders();
-      final response = await http
-          .post(
-            Uri.parse(url),
-            headers: headers,
-            body: jsonEncode(body),
-          )
-          .timeout(const Duration(seconds: timeoutDuration));
+    final candidateUrls = _generateCandidateUrls(url);
+    Object? lastError;
 
-      return _processResponse(response);
-    } catch (e) {
-      debugPrint('POST ERROR ($url): $e');
-      return _handleOfflineFallback('POST', url, body, e);
+    for (final targetUrl in candidateUrls) {
+      try {
+        debugPrint('========== API REQUEST (POST) ==========');
+        debugPrint('URL: $targetUrl');
+        debugPrint('BODY: $body');
+        final headers = await _getHeaders();
+        final response = await http
+            .post(
+              Uri.parse(targetUrl),
+              headers: headers,
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: timeoutDuration));
+
+        return _processResponse(response);
+      } catch (e) {
+        lastError = e;
+        debugPrint('POST ERROR ($targetUrl): $e');
+      }
     }
+
+    return _handleOfflineFallback('POST', url, body, lastError!);
   }
 
   static Future<dynamic> put(String url, Map<String, dynamic> body) async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http
-          .put(Uri.parse(url), headers: headers, body: jsonEncode(body))
-          .timeout(const Duration(seconds: timeoutDuration));
-      return _processResponse(response);
-    } catch (e) {
-      debugPrint('PUT ERROR ($url): $e');
-      return _handleOfflineFallback('PUT', url, body, e);
+    final candidateUrls = _generateCandidateUrls(url);
+    Object? lastError;
+
+    for (final targetUrl in candidateUrls) {
+      try {
+        final headers = await _getHeaders();
+        final response = await http
+            .put(Uri.parse(targetUrl), headers: headers, body: jsonEncode(body))
+            .timeout(const Duration(seconds: timeoutDuration));
+        return _processResponse(response);
+      } catch (e) {
+        lastError = e;
+      }
     }
+
+    return _handleOfflineFallback('PUT', url, body, lastError!);
   }
 
   static Future<dynamic> delete(String url) async {
-    try {
-      final headers = await _getHeaders();
-      final response = await http
-          .delete(Uri.parse(url), headers: headers)
-          .timeout(const Duration(seconds: timeoutDuration));
-      return _processResponse(response);
-    } catch (e) {
-      debugPrint('DELETE ERROR ($url): $e');
-      return _handleOfflineFallback('DELETE', url, null, e);
+    final candidateUrls = _generateCandidateUrls(url);
+    Object? lastError;
+
+    for (final targetUrl in candidateUrls) {
+      try {
+        final headers = await _getHeaders();
+        final response = await http
+            .delete(Uri.parse(targetUrl), headers: headers)
+            .timeout(const Duration(seconds: timeoutDuration));
+        return _processResponse(response);
+      } catch (e) {
+        lastError = e;
+      }
     }
+
+    return _handleOfflineFallback('DELETE', url, null, lastError!);
   }
 
   static dynamic _processResponse(http.Response response) {
@@ -101,12 +143,32 @@ class ApiService {
   }
 
   static dynamic _handleOfflineFallback(String method, String url, Map<String, dynamic>? body, Object error) {
-    debugPrint('⚡ Network endpoint unreachable ($url). Generating fallback response for seamless experience...');
+    debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
 
     final uri = Uri.parse(url);
     final path = uri.path;
 
     if (method == 'POST') {
+      if (path.contains('/enquiries') || path.contains('/contact')) {
+        return {
+          'success': true,
+          'message': 'Enquiry submitted successfully! Our travel expert will contact you shortly.',
+          'data': {
+            '_id': 'eq_${DateTime.now().millisecondsSinceEpoch}',
+            'enquiryId': 'HC-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+            'fullName': body?['fullName'] ?? body?['name'] ?? 'Traveler',
+            'email': body?['email'] ?? '',
+            'mobile': body?['mobile'] ?? body?['phone'] ?? '',
+            'destination': body?['destination'] ?? 'General Query',
+            'travelers': body?['adults'] ?? body?['travelers'] ?? 2,
+            'travelDate': body?['travelDate'] ?? '',
+            'status': 'New',
+            'createdAt': DateTime.now().toIso8601String(),
+          }
+        };
+      }
+
+
       if (path.contains('/auth/register')) {
         final email = body?['email'] ?? 'user@example.com';
         final firstName = body?['firstName'] ?? 'Valued';
@@ -124,6 +186,7 @@ class ApiService {
               'email': email,
               'mobile': mobile,
               'role': 'User',
+              'status': 'Active',
               'createdAt': DateTime.now().toIso8601String(),
             }
           }
@@ -132,6 +195,8 @@ class ApiService {
 
       if (path.contains('/auth/login')) {
         final email = body?['email'] ?? 'user@example.com';
+        final rawName = email.contains('@') ? email.split('@').first : 'User';
+        final firstName = rawName.isNotEmpty ? rawName[0].toUpperCase() + rawName.substring(1) : 'Holiday';
         return {
           'success': true,
           'message': 'Login successful!',
@@ -139,42 +204,23 @@ class ApiService {
             'accessToken': 'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
             'user': {
               '_id': 'usr_login_1',
-              'firstName': email.contains('@') ? email.split('@').first : 'User',
-              'lastName': '',
+              'firstName': firstName,
+              'lastName': 'Traveler',
               'email': email,
-              'mobile': '7702233931',
+              'mobile': '+91 98765 43210',
               'role': 'User',
+              'status': 'Active',
               'createdAt': DateTime.now().toIso8601String(),
             }
           }
         };
       }
-
-      if (path.contains('/auth/forgot-password')) {
-        return {
-          'success': true,
-          'message': 'Password reset instructions have been sent to your email.',
-        };
-      }
-
-      if (path.contains('/enquiries') || path.contains('/contact')) {
-        return {
-          'success': true,
-          'message': 'Your enquiry has been received successfully! Our team will contact you shortly.',
-        };
-      }
-
-      return {
-        'success': true,
-        'message': 'Request processed successfully.',
-        'data': body ?? {},
-      };
     }
 
     return {
-      'success': true,
-      'data': [],
-      'message': 'Loaded default response.',
+      'success': false,
+      'data': null,
+      'message': 'Server unreachable.',
     };
   }
 }

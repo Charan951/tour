@@ -1,20 +1,30 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // PC's LAN IPv4 address (for physical Android phone & local development)
-  static String hostIp = '192.168.1.32';
+  // Configured server host IP (127.0.0.1 works seamlessly with adb reverse tcp:5000 tcp:5000 on physical devices)
+  static String hostIp = '127.0.0.1';
   static String? customHost;
 
   // Centralized Base API URL
   static String get baseUrl {
-    final host = customHost ?? hostIp;
-    if (kIsWeb && customHost == null) {
-      return 'http://$hostIp:5000/api/v1';
+    if (customHost != null && customHost!.trim().isNotEmpty) {
+      final host = customHost!.trim();
+      if (host.startsWith('http')) {
+        return host.endsWith('/api/v1') ? host : '$host/api/v1';
+      }
+      return 'http://$host:5000/api/v1';
     }
-    if (host.startsWith('http')) {
-      return host.endsWith('/api/v1') ? host : '$host/api/v1';
+
+    if (kIsWeb) {
+      return 'http://localhost:5000/api/v1';
     }
-    return 'http://$host:5000/api/v1';
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final ip = hostIp.isNotEmpty ? hostIp : "127.0.0.1";
+      return 'http://$ip:5000/api/v1';
+    }
+
+    return 'http://localhost:5000/api/v1';
   }
 
   // Endpoints

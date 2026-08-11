@@ -1,5 +1,38 @@
+class PricingTierModel {
+  final String category;
+  final double price;
+  final double discount;
+  final String hotel;
+  final String meal;
+  final String transport;
+  final bool availability;
+
+  PricingTierModel({
+    required this.category,
+    required this.price,
+    this.discount = 0.0,
+    this.hotel = '',
+    this.meal = 'Breakfast Included',
+    this.transport = 'Private Transfer',
+    this.availability = true,
+  });
+
+  factory PricingTierModel.fromJson(Map<String, dynamic> json) {
+    return PricingTierModel(
+      category: json['category']?.toString() ?? 'Standard',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
+      hotel: json['hotel']?.toString() ?? '',
+      meal: json['meal']?.toString() ?? 'Breakfast Included',
+      transport: json['transport']?.toString() ?? 'Private Transfer',
+      availability: json['availability'] as bool? ?? true,
+    );
+  }
+}
+
 class PackageModel {
   final String id;
+  final String packageCode;
   final String title;
   final String slug;
   final String destination;
@@ -13,11 +46,13 @@ class PackageModel {
   final List<Map<String, dynamic>> itinerary;
   final List<String> inclusions;
   final List<String> exclusions;
+  final List<PricingTierModel> pricingTiers;
   final bool isFeatured;
   final double rating;
 
   PackageModel({
     required this.id,
+    this.packageCode = '',
     required this.title,
     required this.slug,
     required this.destination,
@@ -31,6 +66,7 @@ class PackageModel {
     required this.itinerary,
     required this.inclusions,
     required this.exclusions,
+    this.pricingTiers = const [],
     this.isFeatured = false,
     this.rating = 4.8,
   });
@@ -73,17 +109,52 @@ class PackageModel {
       resolvedImages.addAll((json['images'] as List).map((e) => e.toString()));
     }
 
+    final double basePrice = (json['startingPrice'] ?? json['price'] ?? 0.0) is num
+        ? (json['startingPrice'] ?? json['price'] ?? 0.0).toDouble()
+        : 0.0;
+
+    // Parse pricing tiers or construct defaults matching frontend tiers
+    List<PricingTierModel> tiers = [];
+    if (json['pricingTiers'] is List && (json['pricingTiers'] as List).isNotEmpty) {
+      tiers = (json['pricingTiers'] as List)
+          .map((e) => PricingTierModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    } else {
+      tiers = [
+        PricingTierModel(
+          category: 'Standard',
+          price: basePrice > 0 ? basePrice : 14999,
+          hotel: '3 Star Deluxe Hotel',
+          meal: 'Daily Breakfast',
+          transport: 'AC Car Transfers',
+        ),
+        PricingTierModel(
+          category: 'Deluxe',
+          price: basePrice > 0 ? basePrice * 1.25 : 18999,
+          hotel: '4 Star Luxury Resort',
+          meal: 'Breakfast & Dinner',
+          transport: 'Private Sedan Cab',
+        ),
+        PricingTierModel(
+          category: 'Luxury',
+          price: basePrice > 0 ? basePrice * 1.6 : 24999,
+          hotel: '5 Star Heritage Villa / Pool Villa',
+          meal: 'All Meals Included',
+          transport: 'Premium Private SUV',
+        ),
+      ];
+    }
+
     return PackageModel(
       id: json['_id'] ?? json['id'] ?? '',
+      packageCode: json['packageCode']?.toString() ?? '',
       title: json['title'] ?? '',
       slug: json['slug'] ?? '',
       destination: json['destination'] is Map
           ? json['destination']['name'] ?? ''
           : (json['destination'] ?? ''),
       duration: resolvedDuration,
-      price: (json['startingPrice'] ?? json['price'] ?? 0.0) is num
-          ? (json['startingPrice'] ?? json['price'] ?? 0.0).toDouble()
-          : 0.0,
+      price: basePrice,
       originalPrice: (json['discountPrice'] ?? json['originalPrice']) is num
           ? (json['discountPrice'] ?? json['originalPrice']).toDouble()
           : null,
@@ -106,6 +177,7 @@ class PackageModel {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      pricingTiers: tiers,
       isFeatured: json['featured'] ?? json['isFeatured'] ?? false,
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
     );

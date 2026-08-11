@@ -224,6 +224,18 @@ const seed = async () => {
       highlights: ['Solang Valley Snow Sports', 'Rohtang Pass Day Trip', 'Private Mountain View Resort'],
       inclusions: ['Breakfast & Dinner', 'Private Cab Sightseeing'],
       exclusions: ['Heater Charges', 'Personal Shopping'],
+      pricingTiers: [
+        { category: 'Standard', price: 16500, hotel: '3 Star Mountain View Hotel', meal: 'Breakfast & Dinner', transport: 'Private Alto/Dzire', availability: true },
+        { category: 'Deluxe', price: 21900, hotel: '4 Star Luxury Cottage Resort', meal: 'Breakfast & Dinner', transport: 'Private Etios/Sedan', availability: true },
+        { category: 'Luxury', price: 32000, hotel: '5 Star Span Resort & Spa', meal: 'All Meals Included', transport: 'Private Innova Crysta', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival in Manali', description: 'Check-in to mountain resort & rest.' },
+        { day: 2, title: 'Local Sightseeing', description: 'Hadimba Temple, Vashisht Hot Springs & Mall Road.' },
+        { day: 3, title: 'Solang Valley Adventure', description: 'Paragliding, ropeway & snow sports.' },
+        { day: 4, title: 'Atal Tunnel & Sissu', description: 'Excursion to Lahaul valley via Atal Tunnel.' },
+        { day: 5, title: 'Departure', description: 'Breakfast & Volvo bus drop.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -243,6 +255,19 @@ const seed = async () => {
       highlights: ['Shimla Kufri Fun World', 'Kasol & Manikaran Sahib', 'Atal Tunnel Drive'],
       inclusions: ['MAP Breakfast & Dinner', 'Private Car Transfers'],
       exclusions: ['Flight Airfare'],
+      pricingTiers: [
+        { category: 'Standard', price: 21900, hotel: '3 Star Shimla/Manali Hotel', meal: 'Breakfast & Dinner', transport: 'Private AC Car', availability: true },
+        { category: 'Deluxe', price: 28500, hotel: '4 Star Valley View Resort', meal: 'Breakfast & Dinner', transport: 'Private Sedan', availability: true },
+        { category: 'Luxury', price: 42000, hotel: '5 Star Heritage Resort', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival in Shimla', description: 'Check-in to hotel & Mall Road evening walk.' },
+        { day: 2, title: 'Kufri & Chail Excursion', description: 'Horse riding & Himalayan Nature Park.' },
+        { day: 3, title: 'Shimla to Manali Scenic Drive', description: 'Drive past Kullu valley & river rafting point.' },
+        { day: 4, title: 'Manali Local & Solang', description: 'Hadimba Temple & Solang valley snow point.' },
+        { day: 5, title: 'Kasol & Manikaran Day Trip', description: 'Parvati valley riverfront & Manikaran Sahib hot springs.' },
+        { day: 6, title: 'Departure', description: 'Breakfast & departure transfer.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -263,6 +288,17 @@ const seed = async () => {
       highlights: ['4-Star Beach Resort Stay', 'Mandovi River Sunset Cruise', 'Parasailing & Jet Skiing Combo', 'Old Goa Churches'],
       inclusions: ['Daily Buffet Breakfast', 'Private AC Sedan Airport Transfer'],
       exclusions: ['Flight Airfare'],
+      pricingTiers: [
+        { category: 'Standard', price: 12900, hotel: '3 Star Beachside Hotel', meal: 'Daily Breakfast', transport: 'Shared AC Coach', availability: true },
+        { category: 'Deluxe', price: 15900, hotel: '4 Star Luxury Resort', meal: 'Breakfast & Dinner', transport: 'Private AC Sedan', availability: true },
+        { category: 'Luxury', price: 24900, hotel: '5 Star Taj / Marriott Beach Resort', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival & Beach Chill', description: 'Airport transfer, check-in to resort, and evening stroll at Baga beach.' },
+        { day: 2, title: 'North Goa & Water Sports', description: 'Parasailing, jet skiing, banana ride, and Fort Aguada photoshoot.' },
+        { day: 3, title: 'South Goa & Sunset Cruise', description: 'Visit Basilica of Bom Jesus, Mangueshi Temple, and Mandovi river cruise.' },
+        { day: 4, title: 'Departure', description: 'Breakfast & souvenir shopping before airport drop.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -282,6 +318,17 @@ const seed = async () => {
       highlights: ['5-Star Private Pool Resort Stay', 'Romantic Candlelight Dinner', 'Couples Spa Massage Session'],
       inclusions: ['Daily Breakfast & 1 Romantic Dinner', 'Private SUV Transfers'],
       exclusions: ['Flight Airfare'],
+      pricingTiers: [
+        { category: 'Deluxe', price: 24900, hotel: '4 Star Boutique Pool Resort', meal: 'Breakfast & Candlelight Dinner', transport: 'Private AC Sedan', availability: true },
+        { category: 'Luxury', price: 34900, hotel: '5 Star Private Beach Villa', meal: 'All Meals Included', transport: 'Private Luxury SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'VIP Arrival & Pool Villa Welcome', description: 'Private SUV transfer & welcome drinks at South Goa resort.' },
+        { day: 2, title: 'Couples Spa & Private Beach Stroll', description: 'Ayurvedic couples massage & private sunset beach walk.' },
+        { day: 3, title: 'Yacht Cruise & Candlelight Dinner', description: 'Private catamaran sunset cruise & beachside dining.' },
+        { day: 4, title: 'Leisure & Shopping', description: 'Explore Panjim French quarter & craft markets.' },
+        { day: 5, title: 'Departure', description: 'Breakfast & luxury drop to airport.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -302,6 +349,19 @@ const seed = async () => {
       highlights: ['Jaipur Forts & Palaces', 'Udaipur Lake Pichola Boat Cruise', 'Heritage Hotel Stay'],
       inclusions: ['Breakfast & Dinner', 'Private AC Car'],
       exclusions: ['Monument Entrance Tickets'],
+      pricingTiers: [
+        { category: 'Standard', price: 26500, hotel: '3 Star Heritage Haveli', meal: 'Breakfast & Dinner', transport: 'Private AC Sedan', availability: true },
+        { category: 'Deluxe', price: 34000, hotel: '4 Star Palace Resort', meal: 'Breakfast & Royal Dinner', transport: 'Private AC SUV', availability: true },
+        { category: 'Luxury', price: 54000, hotel: '5 Star Taj Lake Palace / Leela', meal: 'All Meals Included', transport: 'Luxury SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival in Pink City Jaipur', description: 'Check-in to heritage hotel and evening visit to Chokhi Dhani village.' },
+        { day: 2, title: 'Jaipur Forts & Palaces', description: 'Explore Amer Fort, Jal Mahal, City Palace, and Hawa Mahal.' },
+        { day: 3, title: 'Drive to Udaipur', description: 'Scenic highway drive via Chittorgarh Fort.' },
+        { day: 4, title: 'Udaipur City of Lakes', description: 'Jagdish Temple, City Palace Udaipur, and Lake Pichola boat cruise.' },
+        { day: 5, title: 'Saheliyon Ki Bari & Crafts', description: 'Visit Saheliyon ki Bari gardens and local handicrafts market.' },
+        { day: 6, title: 'Departure', description: 'Breakfast & airport/railway station drop.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -322,6 +382,18 @@ const seed = async () => {
       highlights: ['Sunrise Taj Mahal Guided Visit', 'Jaipur City Palace & Hawa Mahal', 'Fatehpur Sikri Excursion'],
       inclusions: ['Breakfast & Private Sedan Transfer'],
       exclusions: ['Flight Airfare'],
+      pricingTiers: [
+        { category: 'Standard', price: 19800, hotel: '3 Star City Hotel', meal: 'Daily Breakfast', transport: 'Private AC Sedan', availability: true },
+        { category: 'Deluxe', price: 25900, hotel: '4 Star Taj View Hotel', meal: 'Breakfast & Dinner', transport: 'Private AC Sedan', availability: true },
+        { category: 'Luxury', price: 42000, hotel: '5 Star Oberoi Amarvilas Agra', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Delhi Sightseeing & Drive to Agra', description: 'Qutub Minar, India Gate, and drive via Yamuna Expressway.' },
+        { day: 2, title: 'Sunrise Taj Mahal & Agra Fort', description: 'Early morning Taj Mahal visit & Agra Fort tour.' },
+        { day: 3, title: 'Fatehpur Sikri & Drive to Jaipur', description: 'Buland Darwaza visit & check-in to Jaipur hotel.' },
+        { day: 4, title: 'Jaipur Forts & Shopping', description: 'Amer Fort, Hawa Mahal photoshoot & Johari bazaar.' },
+        { day: 5, title: 'Departure to Delhi', description: 'Breakfast & drop to Delhi IGI airport.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -342,6 +414,18 @@ const seed = async () => {
       highlights: ['Overwater Bungalow with Ocean Access', 'Speedboat Airport Transfer', 'Sunset Dolphin Cruise'],
       inclusions: ['All-Inclusive Meals & Drinks', 'Speedboat Transfer'],
       exclusions: ['International Flight'],
+      pricingTiers: [
+        { category: 'Standard', price: 59000, hotel: 'Beach Villa with Lagoon View', meal: 'Full Board (All Meals)', transport: 'Shared Speedboat', availability: true },
+        { category: 'Deluxe', price: 72000, hotel: 'Private Overwater Bungalow', meal: 'All-Inclusive Drinks & Dining', transport: 'Speedboat Transfer', availability: true },
+        { category: 'Luxury', price: 98000, hotel: 'Sunset Ocean Pool Villa', meal: 'Ultra All-Inclusive Dine Around', transport: 'Seaplane Flight Transfer', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Speedboat Welcome to Resort', description: 'Speedboat transfer to island resort & overwater bungalow check-in.' },
+        { day: 2, title: 'Snorkeling & House Reef Exploration', description: 'Guided snorkeling session among coral reefs & sea turtles.' },
+        { day: 3, title: 'Sunset Dolphin Cruise', description: 'Romantic boat cruise with champagne & dolphin sightings.' },
+        { day: 4, title: 'Island Spa & Leisure', description: 'Relaxing couples massage and beachside dinner.' },
+        { day: 5, title: 'Departure', description: 'Breakfast & Speedboat transfer back to Male airport.' }
+      ],
       featured: true,
       status: 'Active'
     });
@@ -362,6 +446,18 @@ const seed = async () => {
       highlights: ['Universal Studios One Day Pass', 'Gardens by the Bay Supertree Dome', 'Night Safari Tram Ride'],
       inclusions: ['Daily Breakfast, E-Visa & Transfers'],
       exclusions: ['International Flight'],
+      pricingTiers: [
+        { category: 'Standard', price: 48500, hotel: '3 Star City Hotel', meal: 'Daily Breakfast', transport: 'Shared Tourist Coach', availability: true },
+        { category: 'Deluxe', price: 58000, hotel: '4 Star Orchard Road Hotel', meal: 'Daily Breakfast & Lunch', transport: 'Private Sedan', availability: true },
+        { category: 'Luxury', price: 85000, hotel: '5 Star Marina Bay Sands', meal: 'All Inclusive Dining', transport: 'Private Executive Van', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival in Singapore & Night Safari', description: 'Airport transfer, hotel check-in, and world-famous Night Safari.' },
+        { day: 2, title: 'City Tour & Gardens by the Bay', description: 'Merlion Park, Chinatown, Cloud Forest, and Supertree light show.' },
+        { day: 3, title: 'Full Day Universal Studios', description: 'Thrill rides, Transformers 3D, and Jurassic Park adventure.' },
+        { day: 4, title: 'Sentosa Island Exploration', description: 'Cable car ride, S.E.A. Aquarium, and Wings of Time laser show.' },
+        { day: 5, title: 'Departure', description: 'Jewel Changi airport tour & flight drop.' }
+      ],
       featured: true,
       status: 'Active'
     });

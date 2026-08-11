@@ -33,16 +33,19 @@ export const createEnquiry = async (req: Request, res: Response) => {
     let resolvedPackage = packageId || null;
     let appendedMessage = message || '';
 
+    const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     if (destination && typeof destination === 'string') {
       const trimmedDest = destination.trim();
       if (mongoose.Types.ObjectId.isValid(trimmedDest)) {
         resolvedDestination = trimmedDest;
       } else if (trimmedDest.length > 0) {
+        const safeRegex = new RegExp(`^${escapeRegex(trimmedDest)}$`, 'i');
         // Try to match destination name or slug
         const foundDest = await Destination.findOne({
           $or: [
             { slug: trimmedDest },
-            { name: { $regex: new RegExp(`^${trimmedDest}$`, 'i') } }
+            { name: { $regex: safeRegex } }
           ]
         }).lean();
 
@@ -53,7 +56,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
           const foundPkg = await Package.findOne({
             $or: [
               { slug: trimmedDest },
-              { title: { $regex: new RegExp(`^${trimmedDest}$`, 'i') } }
+              { title: { $regex: safeRegex } }
             ]
           }).lean();
 
@@ -207,21 +210,17 @@ export const addEnquiryNote = async (req: AuthRequest, res: Response) => {
 export const deleteEnquiry = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const enquiry = await Enquiry.findById(id);
+    const enquiry = await Enquiry.findByIdAndDelete(id);
     if (!enquiry) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
     }
 
-    enquiry.isDeleted = true;
-    enquiry.deletedAt = new Date();
-    enquiry.deletedBy = req.user?.id as any;
-    await enquiry.save();
-
     return res.status(200).json({
       success: true,
-      message: 'Enquiry soft-deleted successfully'
+      message: 'Enquiry deleted successfully'
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+

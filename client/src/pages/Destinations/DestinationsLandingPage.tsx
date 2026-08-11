@@ -15,7 +15,27 @@ export const DestinationsLandingPage: React.FC = () => {
 
   useEffect(() => {
     fetchDestinations();
+    const handleDataUpdate = () => fetchDestinationsSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchDestinationsSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
+  const fetchDestinationsSilently = async () => {
+    try {
+      const res = await apiClient.get('/destinations');
+      if (res.data?.data) {
+        setDestinations(res.data.data);
+      }
+    } catch (_) {}
+  };
 
   const fetchDestinations = async () => {
     try {
@@ -28,6 +48,7 @@ export const DestinationsLandingPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const filteredDestinations = selectedCategory === 'Domestic'
     ? destinations.filter((d) => d.category === 'Domestic' || d.isDomestic !== false)

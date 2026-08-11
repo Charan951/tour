@@ -13,8 +13,9 @@ const faqSchema = new Schema({
 
 const destinationSchema = new Schema(
   {
-    country: { type: Schema.Types.ObjectId, ref: 'Country', required: true },
-    state: { type: Schema.Types.ObjectId, ref: 'State', required: true },
+    country: { type: Schema.Types.ObjectId, ref: 'Country', default: null },
+    state: { type: Schema.Types.ObjectId, ref: 'State', default: null },
+
     city: { type: Schema.Types.ObjectId, ref: 'City', default: null },
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },

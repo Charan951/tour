@@ -38,7 +38,31 @@ export const BannerManagerPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    const handleDataUpdate = () => fetchDataSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchDataSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
+  const fetchDataSilently = async () => {
+    try {
+      const [banRes, destRes, themeRes] = await Promise.all([
+        apiClient.get('/banners'),
+        apiClient.get('/destinations'),
+        apiClient.get('/themes')
+      ]);
+      if (banRes.data?.data) setBanners(banRes.data.data);
+      if (destRes.data?.data) setDestinations(destRes.data.data);
+      if (themeRes.data?.data) setThemeBanners(themeRes.data.data);
+    } catch (_) {}
+  };
 
   const fetchData = async () => {
     try {
@@ -57,6 +81,7 @@ export const BannerManagerPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const handleEdit = (banner: any) => {
     setEditingId(banner._id);
@@ -94,8 +119,8 @@ export const BannerManagerPage: React.FC = () => {
       setIsModalOpen(false);
       resetForm();
       fetchData();
-    } catch (err) {
-      toast.error('Failed to save banner');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to save banner');
     }
   };
 
@@ -116,8 +141,8 @@ export const BannerManagerPage: React.FC = () => {
       setThemeImageUrl('');
       setThemeDesc('');
       fetchData();
-    } catch (err) {
-      toast.error('Failed to save theme banner');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to save theme banner');
     }
   };
 
@@ -127,10 +152,11 @@ export const BannerManagerPage: React.FC = () => {
       await apiClient.delete(`/admin/banners/${id}`);
       toast.success('Banner deleted');
       fetchData();
-    } catch (err) {
-      toast.error('Failed to delete banner');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete banner');
     }
   };
+
 
   const resetForm = () => {
     setEditingId(null);

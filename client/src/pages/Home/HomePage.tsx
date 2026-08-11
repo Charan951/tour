@@ -83,7 +83,43 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    const handleDataUpdate = () => fetchDataSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchDataSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
+  const fetchDataSilently = async () => {
+    try {
+      const [destRes, pkgRes, banRes, themeRes] = await Promise.allSettled([
+        apiClient.get('/destinations'),
+        apiClient.get('/packages?limit=12'),
+        apiClient.get('/banners'),
+        apiClient.get('/themes')
+      ]);
+
+      if (destRes.status === 'fulfilled' && destRes.value.data?.data) {
+        setDestinations(destRes.value.data.data);
+      }
+      if (pkgRes.status === 'fulfilled' && pkgRes.value.data?.data) {
+        setPackages(pkgRes.value.data.data);
+      }
+      if (banRes.status === 'fulfilled' && banRes.value.data?.data) {
+        setBanners(banRes.value.data.data);
+      }
+      if (themeRes.status === 'fulfilled' && themeRes.value.data?.data) {
+        setThemeBanners(themeRes.value.data.data);
+      }
+    } catch (_) {}
+  };
+
 
   const explicitHeroBanners = banners.filter((b) => b.targetSection === 'HeroBanner');
   const homeBanners = banners.filter((b) => b.targetSection === 'HomeBanner');

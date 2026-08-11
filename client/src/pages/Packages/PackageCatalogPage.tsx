@@ -42,11 +42,45 @@ export const PackageCatalogPage: React.FC = () => {
 
   useEffect(() => {
     fetchDestinations();
-  }, []);
-
-  useEffect(() => {
     fetchPackages();
+    const handleDataUpdate = () => fetchPackagesSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchPackagesSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, [searchQuery, selectedTheme, selectedRegion, selectedDestination]);
+
+
+
+  const fetchPackagesSilently = async () => {
+    try {
+      let url = `/packages?limit=100`;
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;
+      const res = await apiClient.get(url);
+      let fetched = res.data.data || [];
+      if (selectedTheme !== 'All Themes' && selectedTheme !== 'All') {
+        fetched = fetched.filter((p: any) => isPackageMatchingTheme(p, selectedTheme));
+      }
+      if (selectedRegion === 'Domestic') {
+        fetched = fetched.filter((p: any) => {
+          const d = p.destination;
+          return typeof d === 'object' && d !== null ? (d.category === 'Domestic' || d.isDomestic !== false) : true;
+        });
+      } else if (selectedRegion === 'International') {
+        fetched = fetched.filter((p: any) => {
+          const d = p.destination;
+          return typeof d === 'object' && d !== null ? (d.category === 'International' || d.isDomestic === false) : false;
+        });
+      }
+      setPackages(fetched);
+    } catch (_) {}
+  };
+
 
   const fetchDestinations = async () => {
     try {

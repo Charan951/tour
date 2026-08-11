@@ -39,6 +39,7 @@ export const PackageManagerPage: React.FC = () => {
   const [highlights, setHighlights] = useState('');
   const [inclusions, setInclusions] = useState('');
   const [exclusions, setExclusions] = useState('');
+  const [featured, setFeatured] = useState<boolean>(true);
 
   // Dynamic Day-by-Day Itinerary List
   const [itinerary, setItinerary] = useState<Array<{ day: number; title: string; description: string; time?: string }>>([
@@ -47,7 +48,29 @@ export const PackageManagerPage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    const handleDataUpdate = () => fetchDataSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchDataSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
+  const fetchDataSilently = async () => {
+    try {
+      const [pkgRes, destRes] = await Promise.all([
+        apiClient.get('/packages?limit=100'),
+        apiClient.get('/destinations')
+      ]);
+      if (pkgRes.data?.data) setPackages(pkgRes.data.data);
+      if (destRes.data?.data) setDestinations(destRes.data.data);
+    } catch (_) {}
+  };
 
   const fetchData = async () => {
     try {
@@ -64,6 +87,7 @@ export const PackageManagerPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const handleEdit = (pkg: any) => {
     setEditingId(pkg._id);
@@ -90,6 +114,7 @@ export const PackageManagerPage: React.FC = () => {
     setHighlights(pkg.highlights ? pkg.highlights.join(', ') : '');
     setInclusions(pkg.inclusions ? pkg.inclusions.join(', ') : '');
     setExclusions(pkg.exclusions ? pkg.exclusions.join(', ') : '');
+    setFeatured(pkg.featured !== false);
 
     if (pkg.itinerary && pkg.itinerary.length > 0) {
       setItinerary(pkg.itinerary);
@@ -142,7 +167,9 @@ export const PackageManagerPage: React.FC = () => {
         highlights: highlights ? highlights.split(',').map((s) => s.trim()) : [],
         inclusions: inclusions ? inclusions.split(',').map((s) => s.trim()) : [],
         exclusions: exclusions ? exclusions.split(',').map((s) => s.trim()) : [],
+        featured: featured !== false,
         itinerary: itinerary.map((item, idx) => ({
+
           day: idx + 1,
           title: item.title || `Day ${idx + 1}`,
           description: item.description || ''
@@ -160,8 +187,8 @@ export const PackageManagerPage: React.FC = () => {
       setIsModalOpen(false);
       resetForm();
       fetchData();
-    } catch (err) {
-      toast.error('Failed to save package');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to save package');
     }
   };
 
@@ -171,10 +198,11 @@ export const PackageManagerPage: React.FC = () => {
       await apiClient.delete(`/admin/packages/${id}`);
       toast.success('Package deleted');
       fetchData();
-    } catch (err) {
-      toast.error('Failed to delete package');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete package');
     }
   };
+
 
   const resetForm = () => {
     setEditingId(null);
@@ -191,6 +219,7 @@ export const PackageManagerPage: React.FC = () => {
     setHighlights('');
     setInclusions('');
     setExclusions('');
+    setFeatured(true);
     setItinerary([
       { day: 1, title: 'Day 1: Arrival & Transfer', description: 'Arrival at destination, transfer to pre-booked hotel and evening free for leisure.' }
     ]);
@@ -219,10 +248,27 @@ export const PackageManagerPage: React.FC = () => {
       }
     >
       <div className="space-y-6">
+        <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span>Live Auto-Sync Active <span className="text-slate-400 font-normal">({packages.length} total packages)</span></span>
+          </div>
+          <button
+            onClick={() => fetchData()}
+            className="text-[#0A6FB5] hover:underline font-bold text-xs"
+          >
+            ↻ Refresh Packages
+          </button>
+        </div>
+
         {loading ? (
           <div className="text-center py-12 text-slate-400 text-sm">Loading packages...</div>
         ) : (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>

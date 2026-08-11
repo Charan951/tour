@@ -5,9 +5,13 @@ import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/package_provider.dart';
 import '../../services/enquiry_service.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/package_card.dart';
 import '../auth/login_screen.dart';
+import '../packages/package_detail_screen.dart';
+import '../packages/package_list_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,8 +38,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.fetchCurrentUser();
+    final packageProvider = Provider.of<PackageProvider>(context, listen: false);
+    
+    await Future.wait([
+      authProvider.fetchCurrentUser(),
+      packageProvider.fetchPackages(),
+    ]);
 
+    if (!mounted) return;
     setState(() => _isLoadingEnquiries = true);
     try {
       final enquiries = await _enquiryService.getUserEnquiries();
@@ -217,26 +227,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
 
               // Summary Stat Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.assignment_turned_in,
-                      count: _userEnquiries.length.toString(),
-                      label: 'Enquiries',
-                      color: const Color(0xFF26C6DA),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.bookmark_outlined,
-                      count: '3',
-                      label: 'Saved Deals',
-                      color: AppTheme.accentColor,
-                    ),
-                  ),
-                ],
+              Consumer<PackageProvider>(
+                builder: (context, packageProvider, child) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.assignment_turned_in,
+                          count: _userEnquiries.length.toString(),
+                          label: 'Enquiries',
+                          color: const Color(0xFF26C6DA),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.card_travel_outlined,
+                          count: packageProvider.packages.length.toString(),
+                          label: 'Tour Plans',
+                          color: AppTheme.accentColor,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 28),
 
@@ -293,6 +307,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return _buildEnquiryCard(enquiry);
                   },
                 ),
+
+              const SizedBox(height: 28),
+
+              // Available Holiday Travel Plans Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'All Holiday Travel Plans',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Explore all active package itineraries & pricing tiers',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PackageListScreen()),
+                      );
+                    },
+                    child: const Text('View All', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              Consumer<PackageProvider>(
+                builder: (context, packageProvider, child) {
+                  if (packageProvider.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  if (packageProvider.packages.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'No active travel plans found.',
+                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: packageProvider.packages.length > 3 ? 3 : packageProvider.packages.length,
+                    itemBuilder: (context, index) {
+                      final pkg = packageProvider.packages[index];
+                      return PackageCard(
+                        package: pkg,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PackageDetailScreen(package: pkg),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
 
               const SizedBox(height: 28),
 
@@ -380,25 +487,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                count,
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count,
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -512,12 +623,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: AppTheme.primaryColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: ListTile(
+          leading: Icon(icon, color: AppTheme.primaryColor),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          onTap: onTap,
+        ),
       ),
     );
   }

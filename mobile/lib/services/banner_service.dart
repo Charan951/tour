@@ -18,6 +18,10 @@ class BannerService {
     }
   }
 
+  List<BannerModel> getBannersSync() {
+    return _getFallbackBanners();
+  }
+
   List<BannerModel> _getFallbackBanners() {
     return [
       BannerModel(

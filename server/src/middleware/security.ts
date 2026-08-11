@@ -42,10 +42,10 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Public Lead Enquiries Rate Limiter: 30 mins, max 5 submissions
+// Public Lead Enquiries Rate Limiter: 30 mins, max 100 submissions in dev mode
 export const enquiryRateLimiter = rateLimit({
   windowMs: 30 * 60 * 1000,
-  max: 5,
+  max: process.env.NODE_ENV === 'production' ? 5 : 100,
   message: {
     success: false,
     message: 'Too many enquiry submissions from this IP. Please try again after 30 minutes.'

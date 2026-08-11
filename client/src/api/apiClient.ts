@@ -24,8 +24,16 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config.method?.toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method || '')) {
+      clientCache.clear();
+      window.dispatchEvent(new Event('hc_data_updated'));
+    }
+    return response;
+  },
   (error) => {
+
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       const isExpiredOrInvalid = error.response.data?.message?.toLowerCase().includes('token') ||
         error.response.data?.message?.toLowerCase().includes('forbidden') ||

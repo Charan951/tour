@@ -9,6 +9,10 @@ class DestinationProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  DestinationProvider() {
+    _destinations = _destinationService.getDestinationsSync();
+  }
+
   List<DestinationModel> get destinations => _destinations;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -17,12 +21,17 @@ class DestinationProvider extends ChangeNotifier {
       _destinations.where((d) => d.isPopular).toList();
 
   Future<void> fetchDestinations() async {
-    _isLoading = true;
+    if (_destinations.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
     _errorMessage = null;
-    notifyListeners();
 
     try {
-      _destinations = await _destinationService.getDestinations();
+      final fetched = await _destinationService.getDestinations();
+      if (fetched.isNotEmpty) {
+        _destinations = fetched;
+      }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

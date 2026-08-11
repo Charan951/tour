@@ -70,34 +70,35 @@ router.get('/admin/auth/me', getMe);
 router.get('/admin/enquiries', getEnquiries);
 router.patch('/admin/enquiries/:id/status', updateEnquiryStatus);
 router.post('/admin/enquiries/:id/notes', addEnquiryNote);
-router.delete('/admin/enquiries/:id', requireRole(['Super Admin', 'Admin']), deleteEnquiry);
+router.delete('/admin/enquiries/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteEnquiry);
 
 // Packages CRUD
-router.post('/admin/packages', requireRole(['Super Admin', 'Admin', 'Content Manager']), createPackage);
-router.patch('/admin/packages/:id', requireRole(['Super Admin', 'Admin', 'Content Manager']), updatePackage);
-router.delete('/admin/packages/:id', requireRole(['Super Admin', 'Admin']), deletePackage);
+router.post('/admin/packages', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createPackage);
+router.patch('/admin/packages/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updatePackage);
+router.delete('/admin/packages/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deletePackage);
 
 // Destinations CRUD
-router.post('/admin/destinations', requireRole(['Super Admin', 'Admin', 'Content Manager']), createDestination);
-router.patch('/admin/destinations/:id', requireRole(['Super Admin', 'Admin', 'Content Manager']), updateDestination);
-router.delete('/admin/destinations/:id', requireRole(['Super Admin', 'Admin']), deleteDestination);
+router.post('/admin/destinations', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createDestination);
+router.patch('/admin/destinations/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateDestination);
+router.delete('/admin/destinations/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteDestination);
 
 // CMS CRUD (Blogs, Testimonials, FAQs, Settings)
-router.post('/admin/blogs', requireRole(['Super Admin', 'Admin', 'Content Manager']), createBlog);
-router.patch('/admin/blogs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager']), updateBlog);
-router.delete('/admin/blogs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager']), deleteBlog);
+router.post('/admin/blogs', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createBlog);
+router.patch('/admin/blogs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateBlog);
+router.delete('/admin/blogs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteBlog);
 
 // Banners CRUD
-router.post('/admin/banners', requireRole(['Super Admin', 'Admin', 'Content Manager']), createBanner);
-router.patch('/admin/banners/:id', requireRole(['Super Admin', 'Admin', 'Content Manager']), updateBanner);
-router.delete('/admin/banners/:id', requireRole(['Super Admin', 'Admin']), deleteBanner);
+router.post('/admin/banners', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createBanner);
+router.patch('/admin/banners/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateBanner);
+router.delete('/admin/banners/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteBanner);
 
 // Theme Banners CRUD
-router.post('/admin/themes', requireRole(['Super Admin', 'Admin', 'Content Manager']), upsertThemeBanner);
-router.delete('/admin/themes/:id', requireRole(['Super Admin', 'Admin']), deleteThemeBanner);
+router.post('/admin/themes', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), upsertThemeBanner);
+router.delete('/admin/themes/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteThemeBanner);
 
-router.post('/admin/testimonials', requireRole(['Super Admin', 'Admin', 'Content Manager']), createTestimonial);
-router.post('/admin/faqs', requireRole(['Super Admin', 'Admin', 'Content Manager']), createFAQ);
+router.post('/admin/testimonials', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createTestimonial);
+router.post('/admin/faqs', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createFAQ);
+
 router.patch('/admin/settings', requireRole(['Super Admin', 'Admin']), updateSettings);
 
 export default router;

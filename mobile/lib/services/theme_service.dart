@@ -18,6 +18,10 @@ class ThemeService {
     }
   }
 
+  List<ThemeModel> getThemesSync() {
+    return _getFallbackThemes();
+  }
+
   List<ThemeModel> _getFallbackThemes() {
     return [
       ThemeModel(

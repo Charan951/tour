@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/banner_provider.dart';
+import '../../providers/destination_provider.dart';
+import '../../providers/package_provider.dart';
+import '../../providers/specialization_theme_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../home/home_screen.dart';
@@ -23,7 +27,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final bool _obscurePassword = true;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -98,6 +104,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (success) {
+        await Future.wait([
+          Provider.of<PackageProvider>(context, listen: false).fetchPackages(),
+          Provider.of<DestinationProvider>(context, listen: false).fetchDestinations(),
+          Provider.of<BannerProvider>(context, listen: false).fetchBanners(),
+          Provider.of<SpecializationThemeProvider>(context, listen: false).fetchThemes(),
+        ]);
+
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Account created successfully! Welcome to HolidayCity.'),
@@ -214,6 +229,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   hint: '••••••••',
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Password required';
                     if (value.length < 6) return 'At least 6 characters required';
@@ -227,7 +255,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   label: 'Confirm Password',
                   hint: '••••••••',
                   prefixIcon: Icons.lock_outline,
-                  obscureText: _obscurePassword,
+                  obscureText: _obscureConfirmPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppTheme.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                  ),
                   validator: (value) {
                     if (value != _passwordController.text) {
                       return 'Passwords do not match';

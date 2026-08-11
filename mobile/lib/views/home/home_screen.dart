@@ -42,14 +42,32 @@ class _HomeScreenState extends State<HomeScreen> {
     'Heritage'
   ];
 
+  Timer? _autoSyncTimer;
+
   @override
   void initState() {
     super.initState();
     _bannerPageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchAllData();
+      _autoSyncTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (mounted) {
+          _fetchAllData();
+        }
+      });
+
     });
   }
+
+  @override
+  void dispose() {
+    _autoSyncTimer?.cancel();
+    _bannerTimer?.cancel();
+    _bannerPageController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
 
   Future<void> _fetchAllData() async {
     await Future.wait([
@@ -76,13 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _bannerTimer?.cancel();
-    _bannerPageController.dispose();
-    _searchController.dispose();
-    super.dispose();
-  }
+
 
   void _openEnquirySheet() {
     showModalBottomSheet(
@@ -383,24 +395,31 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 200,
               child: destinationProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: destinationProvider.destinations.length,
-                      itemBuilder: (context, index) {
-                        final dest = destinationProvider.destinations[index];
-                        return DestinationCard(
-                          destination: dest,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => DestinationDetailScreen(destination: dest),
-                              ),
+                  : destinationProvider.destinations.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No destinations available.',
+                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                          ),
+                        )
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: destinationProvider.destinations.length,
+                          itemBuilder: (context, index) {
+                            final dest = destinationProvider.destinations[index];
+                            return DestinationCard(
+                              destination: dest,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DestinationDetailScreen(destination: dest),
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
             ),
             const SizedBox(height: 24),
 

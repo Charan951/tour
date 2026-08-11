@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/banner_provider.dart';
+import '../../providers/destination_provider.dart';
+import '../../providers/package_provider.dart';
+import '../../providers/specialization_theme_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../home/home_screen.dart';
@@ -41,6 +45,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (success) {
+        // Fetch all packages, destinations, banners, and themes for the logged-in user session
+        await Future.wait([
+          Provider.of<PackageProvider>(context, listen: false).fetchPackages(),
+          Provider.of<DestinationProvider>(context, listen: false).fetchDestinations(),
+          Provider.of<BannerProvider>(context, listen: false).fetchBanners(),
+          Provider.of<SpecializationThemeProvider>(context, listen: false).fetchThemes(),
+        ]);
+
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Welcome back to HolidayCity!'),

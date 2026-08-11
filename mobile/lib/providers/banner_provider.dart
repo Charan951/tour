@@ -7,17 +7,25 @@ class BannerProvider extends ChangeNotifier {
   List<BannerModel> _banners = [];
   bool _isLoading = false;
 
+  BannerProvider() {
+    _banners = _bannerService.getBannersSync();
+  }
+
   List<BannerModel> get banners => _banners;
   bool get isLoading => _isLoading;
 
   Future<void> fetchBanners() async {
-    _isLoading = true;
-    notifyListeners();
+    if (_banners.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
-      _banners = await _bannerService.getBanners();
+      final fetched = await _bannerService.getBanners();
+      if (fetched.isNotEmpty) {
+        _banners = fetched;
+      }
     } catch (_) {
-      _banners = [];
     } finally {
       _isLoading = false;
       notifyListeners();

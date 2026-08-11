@@ -27,10 +27,11 @@ const enquirySchema = new Schema(
     },
     status: { 
       type: String, 
-      enum: ['New', 'Contacted', 'FollowupPending', 'QuotationSent', 'Negotiation', 'Confirmed', 'Cancelled', 'Lost', 'Completed'], 
+      enum: ['New', 'Contacted', 'Qualified', 'FollowupPending', 'QuotationSent', 'Negotiation', 'Converted', 'Confirmed', 'Closed Lost', 'Lost', 'Cancelled', 'Completed'], 
       default: 'New', 
       index: true 
     },
+
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     priority: { type: String, enum: ['Low', 'Medium', 'High', 'Urgent'], default: 'Medium' },
     followupDate: { type: Date, default: null },

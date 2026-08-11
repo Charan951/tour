@@ -65,12 +65,14 @@ export const updateBlog = async (req: AuthRequest, res: Response) => {
 export const deleteBlog = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    await Blog.findByIdAndUpdate(id, { isDeleted: true });
-    return res.status(200).json({ success: true, message: 'Blog soft-deleted' });
+    const blog = await Blog.findByIdAndDelete(id);
+    if (!blog) return res.status(404).json({ success: false, message: 'Blog article not found' });
+    return res.status(200).json({ success: true, message: 'Blog deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // --- TESTIMONIALS ---
 export const getTestimonials = async (req: Request, res: Response) => {

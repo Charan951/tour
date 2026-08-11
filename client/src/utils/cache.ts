@@ -40,6 +40,13 @@ class ClientCache {
   }
 
   /**
+   * Clear all cache entries
+   */
+  clear(): void {
+    this.memoryCache.clear();
+  }
+
+  /**
    * Invalidate specific key or prefix pattern
    */
   invalidate(pattern?: string): void {

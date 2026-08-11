@@ -16,7 +16,19 @@ export const AdminDashboardPage: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
+    const handleDataUpdate = () => fetchStats();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
 
   const fetchStats = async () => {
     try {

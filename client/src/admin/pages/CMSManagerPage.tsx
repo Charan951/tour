@@ -35,7 +35,31 @@ export const CMSManagerPage: React.FC = () => {
 
   useEffect(() => {
     fetchCMS();
+    const handleDataUpdate = () => fetchCMSSilently();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => {
+      fetchCMSSilently();
+    }, 800);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+
+
+  const fetchCMSSilently = async () => {
+    try {
+      const [blogRes, testRes, faqRes] = await Promise.all([
+        apiClient.get('/blogs'),
+        apiClient.get('/testimonials'),
+        apiClient.get('/faq')
+      ]);
+      if (blogRes.data?.data) setBlogs(blogRes.data.data);
+      if (testRes.data?.data) setTestimonials(testRes.data.data);
+      if (faqRes.data?.data) setFaqs(faqRes.data.data);
+    } catch (_) {}
+  };
 
   const fetchCMS = async () => {
     try {
@@ -63,6 +87,7 @@ export const CMSManagerPage: React.FC = () => {
       setLoading(false);
     }
   };
+
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();

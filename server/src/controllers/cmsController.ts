@@ -5,8 +5,9 @@ import { AuthRequest } from '../middleware/auth.js';
 // --- BLOGS ---
 export const getBlogs = async (req: Request, res: Response) => {
   try {
-    const { category, search, page = 1, limit = 9 } = req.query;
-    const query: any = { status: 'Published', isDeleted: false };
+    const { category, search, page = 1, limit = 50, status } = req.query;
+    const query: any = { isDeleted: false };
+    if (status) query.status = status;
     if (category) query.category = category;
     if (search) query.title = { $regex: search, $options: 'i' };
 
@@ -41,11 +42,17 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
   }
 };
 
+import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
+
 export const createBlog = async (req: AuthRequest, res: Response) => {
   try {
     const payload = req.body;
     const slug = payload.slug || payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const blog = await Blog.create({ ...payload, slug });
+    const blog = await Blog.create({ status: 'Published', isDeleted: false, ...payload, slug });
+
+    // ✅ Broadcast real-time creation event
+    emitCreate('Blog', blog, 'general_updates');
+
     return res.status(201).json({ success: true, message: 'Blog post created', data: blog });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -54,8 +61,13 @@ export const createBlog = async (req: AuthRequest, res: Response) => {
 
 export const updateBlog = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const blog = await Blog.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    if (!blog) return res.status(404).json({ success: false, message: 'Blog article not found' });
+
+    // ✅ Broadcast real-time update event
+    emitUpdate('Blog', blog, 'general_updates');
+
     return res.status(200).json({ success: true, message: 'Blog updated', data: blog });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -64,9 +76,12 @@ export const updateBlog = async (req: AuthRequest, res: Response) => {
 
 export const deleteBlog = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const blog = await Blog.findByIdAndDelete(id);
-    if (!blog) return res.status(404).json({ success: false, message: 'Blog article not found' });
+    const id = req.params.id as string;
+    await Blog.findByIdAndDelete(id);
+
+    // ✅ Broadcast real-time deletion event
+    emitDelete('Blog', id, 'general_updates');
+
     return res.status(200).json({ success: true, message: 'Blog deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -87,7 +102,40 @@ export const getTestimonials = async (req: Request, res: Response) => {
 export const createTestimonial = async (req: AuthRequest, res: Response) => {
   try {
     const testimonial = await Testimonial.create(req.body);
+
+    // ✅ Broadcast real-time creation event
+    emitCreate('Testimonial', testimonial, 'general_updates');
+
     return res.status(201).json({ success: true, message: 'Testimonial created', data: testimonial });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateTestimonial = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const testimonial = await Testimonial.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    if (!testimonial) return res.status(404).json({ success: false, message: 'Testimonial not found' });
+
+    // ✅ Broadcast real-time update event
+    emitUpdate('Testimonial', testimonial, 'general_updates');
+
+    return res.status(200).json({ success: true, message: 'Testimonial updated', data: testimonial });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteTestimonial = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await Testimonial.findByIdAndDelete(id);
+
+    // ✅ Broadcast real-time deletion event
+    emitDelete('Testimonial', id, 'general_updates');
+
+    return res.status(200).json({ success: true, message: 'Testimonial deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -106,7 +154,40 @@ export const getFAQs = async (req: Request, res: Response) => {
 export const createFAQ = async (req: AuthRequest, res: Response) => {
   try {
     const faq = await FAQ.create(req.body);
+
+    // ✅ Broadcast real-time creation event
+    emitCreate('FAQ', faq, 'general_updates');
+
     return res.status(201).json({ success: true, message: 'FAQ created', data: faq });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateFAQ = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const faq = await FAQ.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    if (!faq) return res.status(404).json({ success: false, message: 'FAQ not found' });
+
+    // ✅ Broadcast real-time update event
+    emitUpdate('FAQ', faq, 'general_updates');
+
+    return res.status(200).json({ success: true, message: 'FAQ updated', data: faq });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteFAQ = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await FAQ.findByIdAndDelete(id);
+
+    // ✅ Broadcast real-time deletion event
+    emitDelete('FAQ', id, 'general_updates');
+
+    return res.status(200).json({ success: true, message: 'FAQ deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

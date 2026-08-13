@@ -8,9 +8,7 @@ class ThemeService {
       final response = await ApiService.get(ApiConfig.themes);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data'];
-        if (list.isNotEmpty) {
-          return list.map((json) => ThemeModel.fromJson(json)).toList();
-        }
+        return list.map((json) => ThemeModel.fromJson(json)).toList();
       }
       return _getFallbackThemes();
     } catch (_) {

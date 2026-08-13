@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import '../config/api_config.dart';
 import '../config/theme.dart';
 import '../models/package_model.dart';
 
@@ -43,7 +44,7 @@ class PackageCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: CachedNetworkImage(
-                    imageUrl: package.mainImage,
+                    imageUrl: ApiConfig.formatImageUrl(package.mainImage),
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -54,10 +55,11 @@ class PackageCard extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
-                    errorWidget: (context, url, error) => Container(
+                    errorWidget: (context, url, error) => Image.network(
+                      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
                       height: 180,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.terrain, size: 48, color: Colors.grey),
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),

@@ -150,24 +150,47 @@ export const getEnquiries = async (req: AuthRequest, res: Response) => {
 export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, assignedTo, priority, followupDate } = req.body;
+    const { 
+      status, assignedTo, priority, followupDate,
+      fullName, email, mobile, destination, package: packageId,
+      travelDate, adults, children, budget, travelType, message
+    } = req.body;
 
     const enquiry = await Enquiry.findById(id);
     if (!enquiry || enquiry.isDeleted) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
     }
 
-    if (status) enquiry.status = status;
-    if (assignedTo) enquiry.assignedTo = assignedTo;
-    if (priority) enquiry.priority = priority;
-    if (followupDate) enquiry.followupDate = new Date(followupDate);
+    if (status !== undefined) enquiry.status = status;
+    if (assignedTo !== undefined) enquiry.assignedTo = assignedTo || null;
+    if (priority !== undefined) enquiry.priority = priority;
+    if (followupDate !== undefined) enquiry.followupDate = followupDate ? new Date(followupDate) : null;
+
+    if (fullName !== undefined) enquiry.fullName = fullName;
+    if (email !== undefined) enquiry.email = email;
+    if (mobile !== undefined) enquiry.mobile = mobile;
+    if (destination !== undefined) enquiry.destination = destination || null;
+    if (packageId !== undefined) enquiry.package = packageId || null;
+    if (travelDate !== undefined) enquiry.travelDate = travelDate ? new Date(travelDate) : null;
+    if (adults !== undefined) enquiry.adults = Number(adults);
+    if (children !== undefined) enquiry.children = Number(children);
+    if (budget !== undefined) enquiry.budget = budget ? Number(budget) : null;
+    if (travelType !== undefined) enquiry.travelType = travelType;
+    if (message !== undefined) enquiry.message = message;
+
+    enquiry.updatedBy = req.user?.id as any;
 
     await enquiry.save();
+
+    const populatedEnquiry = await Enquiry.findById(enquiry._id)
+      .populate('destination', 'name slug banner')
+      .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('assignedTo', 'firstName lastName email');
 
     return res.status(200).json({
       success: true,
       message: 'Enquiry updated successfully',
-      data: enquiry
+      data: populatedEnquiry
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -197,10 +220,45 @@ export const addEnquiryNote = async (req: AuthRequest, res: Response) => {
 
     await enquiry.save();
 
+    const populatedEnquiry = await Enquiry.findById(enquiry._id)
+      .populate('destination', 'name slug banner')
+      .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('assignedTo', 'firstName lastName email');
+
     return res.status(200).json({
       success: true,
       message: 'Note added successfully',
-      data: enquiry
+      data: populatedEnquiry
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMyEnquiries = async (req: AuthRequest, res: Response) => {
+  try {
+    // Email resolved from JWT token (if provided) or from ?email= query param
+    const email = req.user?.email || (req.query.email as string | undefined);
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'User email could not be resolved. Please log in.',
+      });
+    }
+
+    const enquiries = await Enquiry.find({
+      email: email.toLowerCase(),
+      isDeleted: false,
+    })
+      .populate('destination', 'name slug banner')
+      .populate('package', 'title slug packageCode startingPrice duration')
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your enquiries fetched',
+      data: enquiries,
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });

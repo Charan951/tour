@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/package_model.dart';
 import '../../widgets/custom_button.dart';
@@ -59,7 +60,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: package.mainImage,
+                    imageUrl: ApiConfig.formatImageUrl(package.mainImage),
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(color: Colors.grey[300]),
                     errorWidget: (context, url, error) => Container(

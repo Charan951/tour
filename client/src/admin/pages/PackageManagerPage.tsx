@@ -4,6 +4,7 @@ import { Package as PkgIcon, Plus, Trash2, Edit, Sparkles, CheckCircle, Flag, Gl
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
 import { AdminLayout } from '../components/AdminLayout';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 
 const TRAVEL_THEMES = [
@@ -21,6 +22,41 @@ export const PackageManagerPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Real-time updates hook
+  const { isConnected } = useRealtimeUpdates({
+    onPackageUpdate: (updatedData) => {
+      console.log('📡 Real-time package update received:', updatedData);
+      if (updatedData?.deleted) {
+        const targetId = String(updatedData.id || updatedData._id || '');
+        setPackages((prev) => prev.filter((pkg) => String(pkg._id) !== targetId));
+      } else if (updatedData?._id) {
+        const targetId = String(updatedData._id);
+        setPackages((prev) => {
+          const exists = prev.some((pkg) => String(pkg._id) === targetId);
+          if (exists) {
+            return prev.map((pkg) => (String(pkg._id) === targetId ? updatedData : pkg));
+          }
+          return [updatedData, ...prev];
+        });
+      }
+    },
+    onDestinationUpdate: (updatedData) => {
+      if (updatedData?.deleted) {
+        const targetId = String(updatedData.id || updatedData._id || '');
+        setDestinations((prev) => prev.filter((d) => String(d._id) !== targetId));
+      } else if (updatedData?._id) {
+        const targetId = String(updatedData._id);
+        setDestinations((prev) => {
+          const exists = prev.some((d) => String(d._id) === targetId);
+          if (exists) {
+            return prev.map((d) => (String(d._id) === targetId ? updatedData : d));
+          }
+          return [updatedData, ...prev];
+        });
+      }
+    }
+  });
 
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,29 +82,33 @@ export const PackageManagerPage: React.FC = () => {
     { day: 1, title: 'Day 1: Arrival & Transfer', description: 'Arrival at destination, transfer to pre-booked hotel and evening free for leisure.' }
   ]);
 
+  // Load initial data
   useEffect(() => {
     fetchData();
-    const handleDataUpdate = () => fetchDataSilently();
-    window.addEventListener('hc_data_updated', handleDataUpdate);
-    const interval = setInterval(() => {
-      fetchDataSilently();
-    }, 800);
-    return () => {
-      window.removeEventListener('hc_data_updated', handleDataUpdate);
-      clearInterval(interval);
-    };
   }, []);
 
+  // Fetch destinations when modal opens (if needed)
+  useEffect(() => {
+    if (destinations.length === 0) {
+      fetchDestinations();
+    }
+  }, [isModalOpen]);
 
+
+
+  const fetchDestinations = async () => {
+    try {
+      const destRes = await apiClient.get('/destinations');
+      if (destRes.data?.data) setDestinations(destRes.data.data);
+    } catch (err) {
+      console.error('Failed to fetch destinations', err);
+    }
+  };
 
   const fetchDataSilently = async () => {
     try {
-      const [pkgRes, destRes] = await Promise.all([
-        apiClient.get('/packages?limit=100'),
-        apiClient.get('/destinations')
-      ]);
+      const pkgRes = await apiClient.get('/packages?limit=100');
       if (pkgRes.data?.data) setPackages(pkgRes.data.data);
-      if (destRes.data?.data) setDestinations(destRes.data.data);
     } catch (_) {}
   };
 
@@ -177,29 +217,40 @@ export const PackageManagerPage: React.FC = () => {
       };
 
       if (editingId) {
-        await apiClient.patch(`/admin/packages/${editingId}`, payload);
+        const res = await apiClient.patch(`/admin/packages/${editingId}`, payload);
         toast.success('Package updated successfully');
+        if (res.data?.data) {
+          const updatedPkg = res.data.data;
+          setPackages((prev) => prev.map((p) => (p._id === editingId ? updatedPkg : p)));
+        }
       } else {
-        await apiClient.post('/admin/packages', payload);
+        const res = await apiClient.post('/admin/packages', payload);
         toast.success('Package created successfully');
+        if (res.data?.data) {
+          const newPkg = res.data.data;
+          setPackages((prev) => [newPkg, ...prev.filter((p) => p._id !== newPkg._id)]);
+        }
       }
 
       setIsModalOpen(false);
       resetForm();
-      fetchData();
+      fetchDataSilently();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to save package');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to soft-delete this package?')) return;
+    if (!window.confirm('Are you sure you want to delete this package?')) return;
+    const targetId = String(id);
     try {
-      await apiClient.delete(`/admin/packages/${id}`);
-      toast.success('Package deleted');
-      fetchData();
+      setPackages((prev) => prev.filter((pkg) => String(pkg._id) !== targetId));
+      await apiClient.delete(`/admin/packages/${targetId}`);
+      toast.success('Package deleted successfully');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete package');
+    } finally {
+      fetchDataSilently();
     }
   };
 
@@ -251,10 +302,23 @@ export const PackageManagerPage: React.FC = () => {
         <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              {isConnected ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </>
+              ) : (
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+              )}
             </span>
-            <span>Live Auto-Sync Active <span className="text-slate-400 font-normal">({packages.length} total packages)</span></span>
+            <span>
+              {isConnected ? (
+                <>⚡ Live Real-Time Auto-Sync Active</>
+              ) : (
+                <>🔄 Fallback Mode - Polling Updates</>
+              )}
+              <span className="text-slate-400 font-normal"> ({packages.length} total packages)</span>
+            </span>
           </div>
           <button
             onClick={() => fetchData()}

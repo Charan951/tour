@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Package } from '../models/Package.js';
 import { Destination } from '../models/Destination.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 export const getPackages = async (req: Request, res: Response) => {
   try {
@@ -201,6 +202,9 @@ export const createPackage = async (req: AuthRequest, res: Response) => {
       .populate('destination', 'name slug banner country state')
       .lean();
 
+    // ✅ Emit real-time event to all connected clients
+    emitCreate('Package', populatedPackage, 'general_updates');
+
     return res.status(201).json({
       success: true,
       message: 'Package created successfully',
@@ -243,6 +247,9 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Package not found' });
     }
 
+    // ✅ Emit real-time event to all connected clients
+    emitUpdate('Package', tourPackage, 'general_updates');
+
     return res.status(200).json({
       success: true,
       message: 'Package updated successfully',
@@ -265,11 +272,15 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
 export const deletePackage = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tourPackage = await Package.findByIdAndDelete(id);
-
-    if (!tourPackage) {
-      return res.status(404).json({ success: false, message: 'Package not found' });
+    
+    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid package ID' });
     }
+
+    await Package.findByIdAndDelete(id);
+
+    // ✅ Emit real-time deletion event to all connected clients
+    emitDelete('Package', id, 'general_updates');
 
     return res.status(200).json({
       success: true,

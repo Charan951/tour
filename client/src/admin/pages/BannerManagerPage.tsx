@@ -3,6 +3,7 @@ import { Image as ImageIcon, Plus, Trash2, Edit, MapPin, Tag, ExternalLink, Spar
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
 import { AdminLayout } from '../components/AdminLayout';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 
 const ALL_THEME_NAMES = [
@@ -22,6 +23,26 @@ export const BannerManagerPage: React.FC = () => {
   const [destinations, setDestinations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Real-time updates hook
+  const { isConnected } = useRealtimeUpdates({
+    onBannerUpdate: (updatedData) => {
+      if (updatedData?.deleted) {
+        const targetId = String(updatedData.id || updatedData._id || '');
+        setBanners((prev) => prev.filter((b) => String(b._id) !== targetId));
+      } else if (updatedData?._id) {
+        const targetId = String(updatedData._id);
+        setBanners((prev) => {
+          const exists = prev.some((b) => String(b._id) === targetId);
+          if (exists) {
+            return prev.map((b) => (String(b._id) === targetId ? updatedData : b));
+          }
+          return [updatedData, ...prev];
+        });
+      }
+    },
+    onThemeUpdate: () => fetchDataSilently()
+  });
+
   // Destination Banner Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -29,6 +50,10 @@ export const BannerManagerPage: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [destinationId, setDestinationId] = useState('');
   const [targetSection, setTargetSection] = useState<'OfferCard' | 'HomeBanner' | 'DestinationBanner' | 'HeroBanner'>('OfferCard');
+  const [offerText, setOfferText] = useState('Limited Offer');
+  const [priceText, setPriceText] = useState('₹8,500 Per Person');
+  const [durationText, setDurationText] = useState('03 Night / 04 Days');
+  const [linkUrl, setLinkUrl] = useState('');
 
   // Theme Banner Form State
   const [themeModalOpen, setThemeModalOpen] = useState(false);
@@ -42,14 +67,12 @@ export const BannerManagerPage: React.FC = () => {
     window.addEventListener('hc_data_updated', handleDataUpdate);
     const interval = setInterval(() => {
       fetchDataSilently();
-    }, 800);
+    }, 10000);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
       clearInterval(interval);
     };
   }, []);
-
-
 
   const fetchDataSilently = async () => {
     try {
@@ -82,7 +105,6 @@ export const BannerManagerPage: React.FC = () => {
     }
   };
 
-
   const handleEdit = (banner: any) => {
     setEditingId(banner._id);
     setTitle(banner.title || '');
@@ -90,6 +112,10 @@ export const BannerManagerPage: React.FC = () => {
     const destObj = typeof banner.destination === 'object' ? banner.destination : null;
     setDestinationId(destObj?._id || banner.destination || '');
     setTargetSection(banner.targetSection || 'OfferCard');
+    setOfferText(banner.offerText || 'Limited Offer');
+    setPriceText(banner.priceText || '₹8,500 Per Person');
+    setDurationText(banner.durationText || '03 Night / 04 Days');
+    setLinkUrl(banner.linkUrl || '');
     setIsModalOpen(true);
   };
 
@@ -105,20 +131,32 @@ export const BannerManagerPage: React.FC = () => {
         title,
         imageUrl,
         destination: destinationId || null,
-        targetSection
+        targetSection,
+        offerText,
+        priceText,
+        durationText,
+        linkUrl
       };
 
       if (editingId) {
-        await apiClient.patch(`/admin/banners/${editingId}`, payload);
+        const res = await apiClient.patch(`/admin/banners/${editingId}`, payload);
         toast.success('Banner updated successfully');
+        if (res.data?.data) {
+          const updated = res.data.data;
+          setBanners((prev) => prev.map((b) => (String(b._id) === String(editingId) ? updated : b)));
+        }
       } else {
-        await apiClient.post('/admin/banners', payload);
+        const res = await apiClient.post('/admin/banners', payload);
         toast.success('Banner published successfully');
+        if (res.data?.data) {
+          const newBanner = res.data.data;
+          setBanners((prev) => [newBanner, ...prev.filter((b) => String(b._id) !== String(newBanner._id))]);
+        }
       }
 
       setIsModalOpen(false);
       resetForm();
-      fetchData();
+      fetchDataSilently();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to save banner');
     }
@@ -148,15 +186,17 @@ export const BannerManagerPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this promo banner?')) return;
+    const targetId = String(id);
     try {
-      await apiClient.delete(`/admin/banners/${id}`);
+      setBanners((prev) => prev.filter((b) => String(b._id) !== targetId));
+      await apiClient.delete(`/admin/banners/${targetId}`);
       toast.success('Banner deleted');
-      fetchData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete banner');
+    } finally {
+      fetchData();
     }
   };
-
 
   const resetForm = () => {
     setEditingId(null);
@@ -164,6 +204,10 @@ export const BannerManagerPage: React.FC = () => {
     setImageUrl('');
     setDestinationId('');
     setTargetSection('OfferCard');
+    setOfferText('Limited Offer');
+    setPriceText('₹8,500 Per Person');
+    setDurationText('03 Night / 04 Days');
+    setLinkUrl('');
   };
 
   return (
@@ -365,6 +409,52 @@ export const BannerManagerPage: React.FC = () => {
                     <option value="DestinationBanner">Destination Page Hero Banner</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Offer Badge / Tag</label>
+                  <input
+                    type="text"
+                    value={offerText}
+                    onChange={(e) => setOfferText(e.target.value)}
+                    placeholder="e.g. Special Deal 20% OFF"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Price Display Text</label>
+                  <input
+                    type="text"
+                    value={priceText}
+                    onChange={(e) => setPriceText(e.target.value)}
+                    placeholder="e.g. ₹8,500 Per Person"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 mb-1 font-semibold">Duration Display Text</label>
+                  <input
+                    type="text"
+                    value={durationText}
+                    onChange={(e) => setDurationText(e.target.value)}
+                    placeholder="e.g. 03 Night / 04 Days"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Target Redirect URL (Optional)</label>
+                <input
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="e.g. /packages/kedarnath-yatra or https://..."
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">

@@ -64,10 +64,16 @@ class AuthService {
     try {
       final response = await ApiService.get(ApiConfig.me);
       if (response['success'] == true && response['data'] != null) {
-        final userData = response['data']['user'] ?? response['data'];
+        // /admin/auth/me returns data as the user object directly (not data.user)
+        final rawData = response['data'];
+        final userData = rawData is Map && rawData.containsKey('firstName')
+            ? rawData
+            : (rawData['user'] ?? rawData);
         final user = UserModel.fromJson(userData);
-        final token = response['data']['accessToken'] ?? '';
-        await saveSession(token, user);
+        // Preserve existing token — getMe does not return a new accessToken
+        final prefs = await SharedPreferences.getInstance();
+        final existingToken = prefs.getString(tokenKey) ?? '';
+        await saveSession(existingToken, user);
         return user;
       }
     } catch (_) {}

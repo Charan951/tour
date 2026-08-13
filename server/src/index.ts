@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { connectDB } from './config/db.js';
 import mongoSanitize from 'express-mongo-sanitize';
 import { configureSecurityHeaders, configureCORS, globalErrorHandler } from './middleware/security.js';
@@ -11,7 +13,27 @@ import { getCacheStatus } from './config/redis.js';
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT: number = Number(process.env.PORT) || 5000;
+
+// Initialize Socket.io with CORS configuration
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      process.env.CLIENT_URL || '',
+      process.env.ADMIN_URL || ''
+    ].filter(Boolean),
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
+
+// Make Socket.io instance globally accessible
+(global as any).io = io;
+(global as any).socketConnectedUsers = new Map();
 
 // Compression Middleware for fast payloads
 app.use(compression());
@@ -91,13 +113,30 @@ function getLocalNetworkIp(): string {
 connectDB().then(() => {
   const HOST = process.env.HOST || '0.0.0.0';
   const networkIp = process.env.NETWORK_IP || getLocalNetworkIp();
-  app.listen(PORT, HOST, () => {
+  
+  // Socket.io connection handlers
+  io.on('connection', (socket) => {
+    console.log(`✅ Client connected: ${socket.id}`);
+    
+    socket.on('join_updates', (data) => {
+      const room = data?.room || 'general_updates';
+      socket.join(room);
+      console.log(`📡 Socket ${socket.id} joined room: ${room}`);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log(`❌ Client disconnected: ${socket.id}`);
+    });
+  });
+  
+  httpServer.listen(PORT, HOST, () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
     console.log(`=======================================================`);
     console.log(`🌴 HolidayCity API Service Running on Port ${PORT}`);
     console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Local Host:    http://localhost:${PORT}/api/v1`);
     console.log(`📲 Network Access: http://${networkIp}:${PORT}/api/v1`);
+    console.log(`⚡ WebSocket: ws://localhost:${PORT}`);
     console.log(`=======================================================`);
   });
 });

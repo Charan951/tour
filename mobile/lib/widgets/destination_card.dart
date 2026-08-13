@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../config/api_config.dart';
 import '../models/destination_model.dart';
 
 class DestinationCard extends StatelessWidget {
@@ -34,12 +35,15 @@ class DestinationCard extends StatelessWidget {
           child: Stack(
             children: [
               CachedNetworkImage(
-                imageUrl: destination.image,
+                imageUrl: ApiConfig.formatImageUrl(destination.image),
                 height: 200,
                 width: 150,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(color: Colors.grey[300]),
-                errorWidget: (context, url, error) => Container(color: Colors.grey[400]),
+                errorWidget: (context, url, error) => Image.network(
+                  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
+                  fit: BoxFit.cover,
+                ),
               ),
               Container(
                 decoration: BoxDecoration(

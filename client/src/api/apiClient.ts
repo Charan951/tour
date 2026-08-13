@@ -29,6 +29,22 @@ apiClient.interceptors.response.use(
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method || '')) {
       clientCache.clear();
       window.dispatchEvent(new Event('hc_data_updated'));
+      
+      // Extract entity type from URL for targeted real-time updates
+      const url = response.config.url || '';
+      const entityType = extractEntityType(url);
+      
+      if (entityType) {
+        // Emit custom event for real-time data sync
+        window.dispatchEvent(new CustomEvent('realtime:data_changed', {
+          detail: {
+            type: entityType,
+            method: method,
+            data: response.data?.data || response.data,
+            url: url
+          }
+        }));
+      }
     }
     return response;
   },
@@ -50,6 +66,26 @@ apiClient.interceptors.response.use(
 );
 
 /**
+ * Extract entity type from API URL
+ */
+const extractEntityType = (url: string): string | null => {
+  const patterns = [
+    { regex: /\/packages/i, type: 'package' },
+    { regex: /\/destinations/i, type: 'destination' },
+    { regex: /\/blogs/i, type: 'blog' },
+    { regex: /\/themes/i, type: 'theme' },
+    { regex: /\/enquiries/i, type: 'enquiry' },
+  ];
+  
+  for (const pattern of patterns) {
+    if (pattern.regex.test(url)) {
+      return pattern.type;
+    }
+  }
+  return null;
+};
+
+/**
  * Perform a cached GET request.
  * Returns cached result immediately (0ms) if available, while updating in background if stale.
  */
@@ -57,17 +93,7 @@ export const cachedGet = async <T = any>(
   url: string,
   options?: { params?: any; ttlMs?: number; forceRefresh?: boolean }
 ): Promise<{ data: T }> => {
-  const { params, ttlMs = 60000, forceRefresh = false } = options || {};
-  const cacheKey = `get:${url}:${JSON.stringify(params || {})}`;
-
-  if (!forceRefresh) {
-    const cached = clientCache.get<T>(cacheKey);
-    if (cached) {
-      return { data: cached };
-    }
-  }
-
+  const { params } = options || {};
   const response = await apiClient.get<T>(url, { params });
-  clientCache.set<T>(cacheKey, response.data, ttlMs);
   return response;
 };

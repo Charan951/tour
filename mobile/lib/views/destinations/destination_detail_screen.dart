@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/destination_model.dart';
 import '../../widgets/custom_button.dart';
@@ -31,8 +32,13 @@ class DestinationDetailScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: destination.image,
+                    imageUrl: ApiConfig.formatImageUrl(destination.image),
                     fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(color: Colors.grey[300]),
+                    errorWidget: (context, url, error) => Image.network(
+                      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Container(
                     decoration: BoxDecoration(

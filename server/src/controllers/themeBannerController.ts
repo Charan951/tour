@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ThemeBanner } from '../models/ThemeBanner.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 export const getThemeBanners = async (req: Request, res: Response) => {
   try {
@@ -28,6 +29,9 @@ export const upsertThemeBanner = async (req: AuthRequest, res: Response) => {
       { new: true, upsert: true, runValidators: true }
     );
 
+    // ✅ Broadcast real-time update event
+    emitUpdate('Theme', banner, 'general_updates');
+
     return res.status(200).json({
       success: true,
       message: 'Theme banner saved successfully',
@@ -40,8 +44,12 @@ export const upsertThemeBanner = async (req: AuthRequest, res: Response) => {
 
 export const deleteThemeBanner = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await ThemeBanner.findByIdAndDelete(id);
+
+    // ✅ Broadcast real-time deletion event
+    emitDelete('Theme', id, 'general_updates');
+
     return res.status(200).json({ success: true, message: 'Theme banner deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });

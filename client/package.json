@@ -23,6 +23,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^7.0.2",
     "recharts": "^2.15.0",
+    "socket.io-client": "^4.8.3",
     "swiper": "^14.1.0",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.24.1"

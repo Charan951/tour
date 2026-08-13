@@ -1,30 +1,49 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Configured server host IP (127.0.0.1 works seamlessly with adb reverse tcp:5000 tcp:5000 on physical devices)
-  static String hostIp = '127.0.0.1';
+  // Configured server host IP (192.168.1.32 matches local network address for physical Android devices)
+  static String hostIp = '192.168.1.32';
   static String? customHost;
 
-  // Centralized Base API URL
-  static String get baseUrl {
+  static String get serverHost {
     if (customHost != null && customHost!.trim().isNotEmpty) {
       final host = customHost!.trim();
       if (host.startsWith('http')) {
-        return host.endsWith('/api/v1') ? host : '$host/api/v1';
+        return host.endsWith('/api/v1') ? host.replaceAll('/api/v1', '') : host;
       }
-      return 'http://$host:5000/api/v1';
+      return 'http://$host:5000';
     }
 
     if (kIsWeb) {
-      return 'http://localhost:5000/api/v1';
+      return 'http://localhost:5000';
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final ip = hostIp.isNotEmpty ? hostIp : "127.0.0.1";
-      return 'http://$ip:5000/api/v1';
+      final ip = hostIp.isNotEmpty ? hostIp : "192.168.1.32";
+      return 'http://$ip:5000';
     }
 
-    return 'http://localhost:5000/api/v1';
+    return 'http://localhost:5000';
+  }
+
+  // Centralized Base API URL
+  static String get baseUrl => '$serverHost/api/v1';
+
+  static String formatImageUrl(String? url) {
+    if (url == null || url.trim().isEmpty) {
+      return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop';
+    }
+    final cleanUrl = url.trim();
+    if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+      if (cleanUrl.contains(':5000')) {
+        return cleanUrl.replaceFirst(RegExp(r'http://[^/]+:5000'), serverHost);
+      }
+      return cleanUrl;
+    }
+    if (cleanUrl.startsWith('/')) {
+      return '$serverHost$cleanUrl';
+    }
+    return '$serverHost/$cleanUrl';
   }
 
   // Endpoints
@@ -46,5 +65,6 @@ class ApiConfig {
   static String get faqs => '$baseUrl/faq';
 
   static String get enquiries => '$baseUrl/enquiries';
+  static String get myEnquiries => '$baseUrl/enquiries/my';
   static String get contact => '$baseUrl/contact';
 }

@@ -65,9 +65,7 @@ class PackageProvider extends ChangeNotifier {
         category: _selectedCategory,
         search: _searchQuery,
       );
-      if (fetched.isNotEmpty) {
-        _packages = fetched;
-      }
+      _packages = fetched;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

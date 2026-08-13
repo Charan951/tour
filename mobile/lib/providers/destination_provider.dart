@@ -29,9 +29,7 @@ class DestinationProvider extends ChangeNotifier {
 
     try {
       final fetched = await _destinationService.getDestinations();
-      if (fetched.isNotEmpty) {
-        _destinations = fetched;
-      }
+      _destinations = fetched;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

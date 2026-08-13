@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/banner_model.dart';
 import '../../providers/auth_provider.dart';
@@ -17,6 +19,19 @@ import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 import '../packages/package_list_screen.dart';
 import '../profile/profile_screen.dart';
+import '../themes/theme_screen.dart';
+
+class _BottomNavItem {
+  final IconData icon;
+  final String label;
+  final bool selected;
+
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+  });
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -55,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _fetchAllData();
         }
       });
-
     });
   }
 
@@ -68,12 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-
   Future<void> _fetchAllData() async {
     await Future.wait([
       Provider.of<BannerProvider>(context, listen: false).fetchBanners(),
-      Provider.of<SpecializationThemeProvider>(context, listen: false).fetchThemes(),
-      Provider.of<DestinationProvider>(context, listen: false).fetchDestinations(),
+      Provider.of<SpecializationThemeProvider>(context, listen: false)
+          .fetchThemes(),
+      Provider.of<DestinationProvider>(context, listen: false)
+          .fetchDestinations(),
       Provider.of<PackageProvider>(context, listen: false).fetchPackages(),
     ]);
     _startBannerAutoScroll();
@@ -82,9 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startBannerAutoScroll() {
     _bannerTimer?.cancel();
     _bannerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      final bannerProvider = Provider.of<BannerProvider>(context, listen: false);
-      if (bannerProvider.banners.isNotEmpty && _bannerPageController.hasClients) {
-        final nextIndex = (_currentBannerIndex + 1) % bannerProvider.banners.length;
+      final bannerProvider =
+          Provider.of<BannerProvider>(context, listen: false);
+      if (bannerProvider.banners.isNotEmpty &&
+          _bannerPageController.hasClients) {
+        final nextIndex =
+            (_currentBannerIndex + 1) % bannerProvider.banners.length;
         _bannerPageController.animateToPage(
           nextIndex,
           duration: const Duration(milliseconds: 500),
@@ -93,8 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
   }
-
-
 
   void _openEnquirySheet() {
     showModalBottomSheet(
@@ -110,9 +126,31 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Widget> pages = [
       _buildHomeContent(),
       const PackageListScreen(),
+      const ThemeScreen(),
       _buildDestinationsGridTab(),
       const ProfileScreen(),
     ];
+
+    final navItems = const [
+      _BottomNavItem(icon: Icons.home_filled, label: 'Home', selected: false),
+      _BottomNavItem(
+          icon: Icons.card_travel, label: 'Packages', selected: false),
+      _BottomNavItem(
+          icon: Icons.palette_outlined, label: 'Themes', selected: false),
+      _BottomNavItem(
+          icon: Icons.explore, label: 'Destinations', selected: false),
+      _BottomNavItem(icon: Icons.person, label: 'Profile', selected: false),
+    ];
+
+    final selectedNavItems = navItems.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      return _BottomNavItem(
+        icon: item.icon,
+        label: item.label,
+        selected: _currentIndex == index,
+      );
+    }).toList();
 
     return Scaffold(
       body: SafeArea(child: pages[_currentIndex]),
@@ -120,21 +158,112 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: _openEnquirySheet,
         backgroundColor: AppTheme.accentColor,
         icon: const Icon(Icons.headset_mic_outlined, color: Colors.white),
-        label: const Text('Enquire Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text('Enquire Now',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.textSecondary,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.card_travel), label: 'Packages'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Destinations'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          child: Container(
+            height: 78,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                  color: AppTheme.borderLight.withValues(alpha: 0.9), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  offset: const Offset(0, -2),
+                  blurRadius: 16,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(selectedNavItems.length, (index) {
+                final item = selectedNavItems[index];
+                final isSelected = item.selected;
+
+                return Expanded(
+                  child: Semantics(
+                    label: item.label,
+                    button: true,
+                    selected: isSelected,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => _currentIndex = index),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeInOut,
+                        height: 52,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 4),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSelected ? 8 : 0,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.primaryColor.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: isSelected
+                              ? Column(
+                                  key: const ValueKey('selected'),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      item.icon,
+                                      size: 20,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 56,
+                                      ),
+                                      child: Text(
+                                        item.label,
+                                        textAlign: TextAlign.center,
+                                        softWrap: true,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.visible,
+                                        style: const TextStyle(
+                                          fontSize: 8.5,
+                                          height: 1.1,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.primaryColor,
+                                          letterSpacing: 0.1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Icon(
+                                  key: const ValueKey('unselected'),
+                                  item.icon,
+                                  size: 24,
+                                  color: AppTheme.textSecondary,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -174,7 +303,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                color: AppTheme.primaryColor
+                                    .withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -212,7 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      user != null ? 'Hello, ${user.firstName} 👋' : 'Welcome to HolidayCity 👋',
+                      user != null
+                          ? 'Hello, ${user.firstName} 👋'
+                          : 'Welcome to HolidayCity 👋',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -224,33 +356,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 GestureDetector(
                   onTap: () => setState(() => _currentIndex = 3),
                   child: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    child: const Icon(Icons.person, color: AppTheme.primaryColor),
+                    backgroundColor:
+                        AppTheme.primaryColor.withValues(alpha: 0.1),
+                    child:
+                        const Icon(Icons.person, color: AppTheme.primaryColor),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-
-            // Search Bar
-            TextField(
-              controller: _searchController,
-              onChanged: (val) => packageProvider.setSearchQuery(val),
-              decoration: InputDecoration(
-                hintText: 'Search destinations, packages...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          packageProvider.setSearchQuery('');
-                        },
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 18),
 
             // Hero Banner Slider
             if (bannerProvider.banners.isNotEmpty) ...[
@@ -258,7 +372,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 170,
                 child: PageView.builder(
                   controller: _bannerPageController,
-                  onPageChanged: (idx) => setState(() => _currentBannerIndex = idx),
+                  onPageChanged: (idx) =>
+                      setState(() => _currentBannerIndex = idx),
                   itemCount: bannerProvider.banners.length,
                   itemBuilder: (context, index) {
                     final banner = bannerProvider.banners[index];
@@ -301,52 +416,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: themeProvider.themes.length,
                   itemBuilder: (context, index) {
                     final theme = themeProvider.themes[index];
+                    final formattedUrl =
+                        ApiConfig.formatImageUrl(theme.imageUrl);
                     return Container(
                       width: 140,
                       margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        image: DecorationImage(
-                          image: NetworkImage(theme.imageUrl),
-                          fit: BoxFit.cover,
-                          colorFilter: ColorFilter.mode(
-                            Colors.black.withValues(alpha: 0.35),
-                            BlendMode.darken,
-                          ),
-                        ),
-                      ),
-                      child: InkWell(
-                        onTap: () => packageProvider.setCategory(theme.name),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
+                        child: Stack(
+                          children: [
+                            CachedNetworkImage(
+                              imageUrl: formattedUrl,
+                              width: 140,
+                              height: 110,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  Container(color: Colors.grey.shade200),
+                              errorWidget: (context, url, error) =>
+                                  Image.network(
+                                'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.6),
+                                    Colors.transparent,
+                                  ],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              right: 8,
+                              child: Text(
                                 theme.name,
                                 style: GoogleFonts.outfit(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                   color: Colors.white,
+                                  fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              if (theme.rating != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  theme.rating!,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    color: Colors.amberAccent,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -372,7 +491,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: Text(cat),
                       labelStyle: TextStyle(
                         color: isSelected ? Colors.white : AppTheme.textPrimary,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                         fontSize: 12,
                       ),
                       selectedColor: AppTheme.primaryColor,
@@ -399,21 +519,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? const Center(
                           child: Text(
                             'No destinations available.',
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                            style: TextStyle(
+                                color: AppTheme.textSecondary, fontSize: 13),
                           ),
                         )
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: destinationProvider.destinations.length,
                           itemBuilder: (context, index) {
-                            final dest = destinationProvider.destinations[index];
+                            final dest =
+                                destinationProvider.destinations[index];
                             return DestinationCard(
                               destination: dest,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => DestinationDetailScreen(destination: dest),
+                                    builder: (_) => DestinationDetailScreen(
+                                        destination: dest),
                                   ),
                                 );
                               },
@@ -430,10 +553,12 @@ class _HomeScreenState extends State<HomeScreen> {
               onSeeAll: () => setState(() => _currentIndex = 1),
             ),
             if (packageProvider.isLoading)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (packageProvider.packages.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(32.0),
@@ -468,63 +593,88 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroBannerCard(BannerModel banner) {
+    final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        image: DecorationImage(
-          image: NetworkImage(banner.imageUrl),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.35),
-            BlendMode.darken,
-          ),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Stack(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppTheme.accentColor,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'FEATURED DEAL',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            Positioned.fill(
+              child: CachedNetworkImage(
+                imageUrl: formattedUrl,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    Container(color: Colors.grey.shade200),
+                errorWidget: (context, url, error) => Image.network(
+                  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop',
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              banner.title,
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (banner.subtitle != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                banner.subtitle!,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: Colors.white70,
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.7),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.4),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'FEATURED DEAL',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    banner.title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (banner.subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      banner.subtitle!,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -555,7 +705,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => DestinationDetailScreen(destination: dest),
+                        builder: (_) =>
+                            DestinationDetailScreen(destination: dest),
                       ),
                     );
                   },

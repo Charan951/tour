@@ -22,9 +22,7 @@ class BannerProvider extends ChangeNotifier {
 
     try {
       final fetched = await _bannerService.getBanners();
-      if (fetched.isNotEmpty) {
-        _banners = fetched;
-      }
+      _banners = fetched;
     } catch (_) {
     } finally {
       _isLoading = false;

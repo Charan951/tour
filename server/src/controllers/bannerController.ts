@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Banner } from '../models/Banner.js';
 import { AuthRequest } from '../middleware/auth.js';
-
+import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 export const getBanners = async (req: Request, res: Response) => {
   try {
@@ -54,6 +54,9 @@ export const createBanner = async (req: AuthRequest, res: Response) => {
       .populate('destination', 'name slug')
       .lean();
 
+    // ✅ Broadcast real-time creation event
+    emitCreate('Banner', populatedBanner, 'general_updates');
+
     return res.status(201).json({
       success: true,
       message: 'Banner created successfully',
@@ -78,6 +81,10 @@ export const updateBanner = async (req: AuthRequest, res: Response) => {
       .lean();
 
     if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
+
+    // ✅ Broadcast real-time update event
+    emitUpdate('Banner', banner, 'general_updates');
+
     return res.status(200).json({
       success: true,
       message: 'Banner updated successfully',
@@ -88,12 +95,14 @@ export const updateBanner = async (req: AuthRequest, res: Response) => {
   }
 };
 
-
 export const deleteBanner = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const banner = await Banner.findByIdAndDelete(id);
-    if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
+    const id = req.params.id as string;
+    await Banner.findByIdAndDelete(id);
+
+    // ✅ Broadcast real-time deletion event
+    emitDelete('Banner', id, 'general_updates');
+
     return res.status(200).json({ success: true, message: 'Banner deleted successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });

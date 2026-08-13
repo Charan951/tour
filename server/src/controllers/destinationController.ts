@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Destination, Country, State, City } from '../models/Destination.js';
 import { Package } from '../models/Package.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 const resolveCountryAndState = async (payload: any) => {
   let countryId = mongoose.Types.ObjectId.isValid(payload.country) ? payload.country : null;
@@ -158,6 +159,9 @@ export const createDestination = async (req: AuthRequest, res: Response) => {
       createdBy: req.user?.id
     });
 
+    // ✅ Emit real-time event to all connected clients
+    emitCreate('Destination', destination.toObject(), 'general_updates');
+
     return res.status(201).json({
       success: true,
       message: 'Destination created successfully',
@@ -199,6 +203,9 @@ export const updateDestination = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Destination not found' });
     }
 
+    // ✅ Emit real-time event to all connected clients
+    emitUpdate('Destination', destination.toObject(), 'general_updates');
+
     return res.status(200).json({
       success: true,
       message: 'Destination updated successfully',
@@ -219,11 +226,15 @@ export const updateDestination = async (req: AuthRequest, res: Response) => {
 export const deleteDestination = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const destination = await Destination.findByIdAndDelete(id);
-
-    if (!destination) {
-      return res.status(404).json({ success: false, message: 'Destination not found' });
+    
+    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid destination ID' });
     }
+
+    await Destination.findByIdAndDelete(id);
+
+    // ✅ Emit real-time deletion event to all connected clients
+    emitDelete('Destination', id, 'general_updates');
 
     return res.status(200).json({
       success: true,

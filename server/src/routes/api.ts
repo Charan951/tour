@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { login, register, forgotPassword, getMe } from '../controllers/authController.js';
-import { createEnquiry, getEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
+import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getDestinations, getDestinationBySlug, createDestination, updateDestination, deleteDestination } from '../controllers/destinationController.js';
 import { 
   getBlogs, getBlogBySlug, createBlog, updateBlog, deleteBlog, 
-  getTestimonials, createTestimonial, 
-  getFAQs, createFAQ, 
+  getTestimonials, createTestimonial, updateTestimonial, deleteTestimonial,
+  getFAQs, createFAQ, updateFAQ, deleteFAQ,
   subscribeNewsletter, 
   createContactMessage, 
   getSettings, updateSettings 
@@ -21,10 +21,39 @@ import { cacheMiddleware, clearApiCache } from '../middleware/cacheMiddleware.js
 
 const router = Router();
 
-const invalidateCache = (_req: any, _res: any, next: any) => {
-  clearApiCache();
+// Optional auth: attaches req.user from Bearer token if present, never blocks
+const optionalAuth = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
+      const jwt = require('jsonwebtoken');
+      req.user = jwt.verify(token, secret);
+    } catch (_) { /* invalid token — ignore, allow unauthenticated */ }
+  }
   next();
 };
+
+const invalidateCache = (req: any, res: any, next: any) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    res.on('finish', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        clearApiCache()
+          .then(() => {
+            console.log(`🧹 [Cache] Cleared API cache after successful ${req.method} ${req.originalUrl}`);
+          })
+          .catch((err) => {
+            console.warn('⚠️ [Cache] Invalidation error:', err);
+          });
+      }
+    });
+  }
+  next();
+};
+
+// Global Cache Invalidation on all POST/PUT/PATCH/DELETE requests
+router.use(invalidateCache);
 
 // Dynamic XML Sitemap Endpoint
 router.get('/sitemap.xml', cacheMiddleware(300), getSitemapXML);
@@ -37,37 +66,39 @@ router.post('/auth/login', authRateLimiter, login);
 router.post('/auth/register', authRateLimiter, register);
 router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
 
+// Packages Catalog & Detail (Live MongoDB Queries with No-Cache Headers)
+router.get('/packages', getPackages);
+router.get('/packages/:slug', getPackageBySlug);
 
-// Packages Catalog & Detail (10 mins Redis/CDN, 1 min Browser)
-router.get('/packages', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getPackages);
-router.get('/packages/:slug', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getPackageBySlug);
+// Destinations Landing & Detail (Live MongoDB Queries with No-Cache Headers)
+router.get('/destinations', getDestinations);
+router.get('/destinations/:slug', getDestinationBySlug);
 
-// Destinations Landing & Detail (10 mins Redis/CDN, 1 min Browser)
-router.get('/destinations', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getDestinations);
-router.get('/destinations/:slug', cacheMiddleware({ ttlSeconds: 600, browserMaxAge: 60, cdnMaxAge: 600 }), getDestinationBySlug);
+// Banners & Themes (Live MongoDB Queries with No-Cache Headers)
+router.get('/banners', getBanners);
+router.get('/themes', getThemeBanners);
 
-// Banners & Themes (30 mins Redis/CDN, 5 mins Browser)
-router.get('/banners', cacheMiddleware({ ttlSeconds: 1800, browserMaxAge: 300, cdnMaxAge: 1800 }), getBanners);
-router.get('/themes', cacheMiddleware({ ttlSeconds: 1800, browserMaxAge: 300, cdnMaxAge: 1800 }), getThemeBanners);
+// Blogs, Testimonials, FAQ & Settings (Live MongoDB Queries with No-Cache Headers)
+router.get('/blogs', getBlogs);
+router.get('/blogs/:slug', getBlogBySlug);
+router.get('/testimonials', getTestimonials);
+router.get('/faq', getFAQs);
+router.get('/settings', getSettings);
 
-// Blogs, Testimonials, FAQ & Settings (1 Hour Redis/CDN, 10 mins Browser)
-router.get('/blogs', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getBlogs);
-router.get('/blogs/:slug', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getBlogBySlug);
-router.get('/testimonials', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getTestimonials);
-router.get('/faq', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getFAQs);
-router.get('/settings', cacheMiddleware({ ttlSeconds: 3600, browserMaxAge: 600, cdnMaxAge: 3600 }), getSettings);
-
-router.post('/enquiries', enquiryRateLimiter, invalidateCache, createEnquiry);
-router.post('/contact', enquiryRateLimiter, invalidateCache, createContactMessage);
-router.post('/newsletter', invalidateCache, subscribeNewsletter);
+router.post('/enquiries', enquiryRateLimiter, createEnquiry);
+router.get('/enquiries/my', optionalAuth, getMyEnquiries);
+router.post('/contact', enquiryRateLimiter, createContactMessage);
+router.post('/newsletter', subscribeNewsletter);
 
 // --- PROTECTED ADMIN ROUTES ---
-router.use('/admin', invalidateCache, authenticateToken);
+router.use('/admin', authenticateToken);
 
 router.get('/admin/auth/me', getMe);
 
 // Enquiries (CRM) CRUD
 router.get('/admin/enquiries', getEnquiries);
+router.post('/admin/enquiries', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createEnquiry);
+router.patch('/admin/enquiries/:id', updateEnquiryStatus);
 router.patch('/admin/enquiries/:id/status', updateEnquiryStatus);
 router.post('/admin/enquiries/:id/notes', addEnquiryNote);
 router.delete('/admin/enquiries/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteEnquiry);
@@ -97,7 +128,12 @@ router.post('/admin/themes', requireRole(['Super Admin', 'Admin', 'Content Manag
 router.delete('/admin/themes/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteThemeBanner);
 
 router.post('/admin/testimonials', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createTestimonial);
+router.patch('/admin/testimonials/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateTestimonial);
+router.delete('/admin/testimonials/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteTestimonial);
+
 router.post('/admin/faqs', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createFAQ);
+router.patch('/admin/faqs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateFAQ);
+router.delete('/admin/faqs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteFAQ);
 
 router.patch('/admin/settings', requireRole(['Super Admin', 'Admin']), updateSettings);
 

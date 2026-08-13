@@ -66,15 +66,18 @@ tasks.register("copyFrontendLogos") {
         }
         def logoSrc = new File(clientPublic, "logo.png")
         def faviconSrc = new File(clientPublic, "favicon.png")
-        def logoDest = new File(mobileAssets, "logo.png")
-        def faviconDest = new File(mobileAssets, "logo_icon.png")
-        if (logoSrc.exists() && (!logoDest.exists() || logoSrc.length() != logoDest.length())) {
-            java.nio.file.Files.copy(logoSrc.toPath(), logoDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-            println "✅ Copied frontend logo.png to mobile/assets/images/logo.png"
+        if (logoSrc.exists()) {
+            copy {
+                from logoSrc
+                into mobileAssets
+            }
         }
-        if (faviconSrc.exists() && (!faviconDest.exists() || faviconSrc.length() != faviconDest.length())) {
-            java.nio.file.Files.copy(faviconSrc.toPath(), faviconDest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-            println "✅ Copied frontend favicon.png to mobile/assets/images/logo_icon.png"
+        if (faviconSrc.exists()) {
+            copy {
+                from faviconSrc
+                into mobileAssets
+                rename "favicon.png", "logo_icon.png"
+            }
         }
     }
 }

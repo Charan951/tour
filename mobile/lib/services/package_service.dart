@@ -22,9 +22,7 @@ class PackageService {
       final response = await ApiService.get(url);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data'];
-        if (list.isNotEmpty) {
-          return list.map((json) => PackageModel.fromJson(json)).toList();
-        }
+        return list.map((json) => PackageModel.fromJson(json)).toList();
       }
       return _getFallbackPackages();
     } catch (_) {

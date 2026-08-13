@@ -8,9 +8,7 @@ class BannerService {
       final response = await ApiService.get(ApiConfig.banners);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data'];
-        if (list.isNotEmpty) {
-          return list.map((json) => BannerModel.fromJson(json)).toList();
-        }
+        return list.map((json) => BannerModel.fromJson(json)).toList();
       }
       return _getFallbackBanners();
     } catch (_) {

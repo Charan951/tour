@@ -29,7 +29,7 @@ export const DestinationManagerPage: React.FC = () => {
     window.addEventListener('hc_data_updated', handleDataUpdate);
     const interval = setInterval(() => {
       fetchDestinationsSilently();
-    }, 800);
+    }, 10000);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
       clearInterval(interval);
@@ -91,11 +91,19 @@ export const DestinationManagerPage: React.FC = () => {
       };
 
       if (editingId) {
-        await apiClient.patch(`/admin/destinations/${editingId}`, payload);
+        const res = await apiClient.patch(`/admin/destinations/${editingId}`, payload);
         toast.success('Destination updated successfully');
+        if (res.data?.data) {
+          const updatedDest = res.data.data;
+          setDestinations((prev) => prev.map((d) => (d._id === editingId ? updatedDest : d)));
+        }
       } else {
-        await apiClient.post('/admin/destinations', payload);
+        const res = await apiClient.post('/admin/destinations', payload);
         toast.success('Destination created successfully');
+        if (res.data?.data) {
+          const newDest = res.data.data;
+          setDestinations((prev) => [newDest, ...prev.filter((d) => d._id !== newDest._id)]);
+        }
       }
 
       setIsModalOpen(false);
@@ -108,13 +116,16 @@ export const DestinationManagerPage: React.FC = () => {
 
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to soft-delete this destination?')) return;
+    if (!window.confirm('Are you sure you want to delete this destination?')) return;
+    const targetId = String(id);
     try {
-      await apiClient.delete(`/admin/destinations/${id}`);
-      toast.success('Destination deleted');
-      fetchDestinations();
+      setDestinations((prev) => prev.filter((d) => String(d._id) !== targetId));
+      await apiClient.delete(`/admin/destinations/${targetId}`);
+      toast.success('Destination deleted successfully');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete destination');
+    } finally {
+      fetchDestinations();
     }
   };
 

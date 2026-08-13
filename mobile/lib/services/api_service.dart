@@ -4,6 +4,16 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Thrown when the server responds with a non-2xx status code.
+/// This is a logical error (auth, validation, not-found, etc.) — NOT a
+/// network failure — so the IP-fallback loop must NOT retry on this.
+class _ApiException implements Exception {
+  final String message;
+  const _ApiException(this.message);
+  @override
+  String toString() => message;
+}
+
 class ApiService {
   static const int timeoutDuration = 7;
 
@@ -57,6 +67,11 @@ class ApiService {
             .timeout(const Duration(seconds: timeoutDuration));
 
         return _processResponse(response);
+      } on _ApiException {
+        // Server responded with an HTTP error (401, 403, 404, 500…).
+        // This is NOT a network failure — rethrow immediately, do NOT
+        // try fallback IPs.
+        rethrow;
       } catch (e) {
         lastError = e;
         debugPrint('GET ERROR ($targetUrl): $e');
@@ -85,6 +100,8 @@ class ApiService {
             .timeout(const Duration(seconds: timeoutDuration));
 
         return _processResponse(response);
+      } on _ApiException {
+        rethrow;
       } catch (e) {
         lastError = e;
         debugPrint('POST ERROR ($targetUrl): $e');
@@ -105,6 +122,8 @@ class ApiService {
             .put(Uri.parse(targetUrl), headers: headers, body: jsonEncode(body))
             .timeout(const Duration(seconds: timeoutDuration));
         return _processResponse(response);
+      } on _ApiException {
+        rethrow;
       } catch (e) {
         lastError = e;
       }
@@ -124,6 +143,8 @@ class ApiService {
             .delete(Uri.parse(targetUrl), headers: headers)
             .timeout(const Duration(seconds: timeoutDuration));
         return _processResponse(response);
+      } on _ApiException {
+        rethrow;
       } catch (e) {
         lastError = e;
       }
@@ -138,7 +159,9 @@ class ApiService {
       return body;
     } else {
       final message = body['message'] ?? 'An error occurred (${response.statusCode})';
-      throw Exception(message);
+      // Use _ApiException so callers know this was an HTTP-level error
+      // (not a network failure) and should NOT trigger IP fallback.
+      throw _ApiException(message);
     }
   }
 

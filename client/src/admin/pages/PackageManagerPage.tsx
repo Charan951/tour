@@ -292,7 +292,7 @@ export const PackageManagerPage: React.FC = () => {
       action={
         <button
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+          className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
         >
           <Plus className="w-4 h-4" /> Add New Package
         </button>

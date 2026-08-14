@@ -17,7 +17,8 @@ class PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormatter =
+        NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -42,7 +43,8 @@ class PackageCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: CachedNetworkImage(
                     imageUrl: ApiConfig.formatImageUrl(package.mainImage),
                     height: 180,
@@ -68,7 +70,8 @@ class PackageCard extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryColor.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
@@ -88,7 +91,8 @@ class PackageCard extends StatelessWidget {
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(12),
@@ -121,7 +125,8 @@ class PackageCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: AppTheme.primaryColor),
+                      const Icon(Icons.location_on,
+                          size: 16, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -135,7 +140,8 @@ class PackageCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                      const Icon(Icons.access_time,
+                          size: 16, color: AppTheme.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         package.duration,
@@ -166,7 +172,8 @@ class PackageCard extends StatelessWidget {
                         children: [
                           const Text(
                             'Starting from',
-                            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            style: TextStyle(
+                                fontSize: 11, color: AppTheme.textSecondary),
                           ),
                           Row(
                             children: [
@@ -181,7 +188,8 @@ class PackageCard extends StatelessWidget {
                               if (package.originalPrice != null) ...[
                                 const SizedBox(width: 6),
                                 Text(
-                                  currencyFormatter.format(package.originalPrice),
+                                  currencyFormatter
+                                      .format(package.originalPrice),
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey,
@@ -197,12 +205,15 @@ class PackageCard extends StatelessWidget {
                         onPressed: onTap,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.accentColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text('View Deal', style: TextStyle(color: Colors.white, fontSize: 13)),
+                        child: const Text('View Deal',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 13)),
                       ),
                     ],
                   ),

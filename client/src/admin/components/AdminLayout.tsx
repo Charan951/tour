@@ -34,15 +34,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subti
             {/* Hamburger Toggle Button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center gap-2 font-bold text-xs"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center gap-2 font-bold text-sm"
               title="Toggle Menu Sidebar"
             >
               <Menu className="w-5 h-5 text-slate-800" />
             </button>
 
             <div>
-              <h1 className="font-['Outfit'] font-bold text-xl text-slate-900 tracking-tight">{title}</h1>
-              {subtitle && <p className="text-xs text-slate-500 font-medium mt-0.5">{subtitle}</p>}
+              <h1 className="font-poppins font-bold text-3xl text-slate-900 tracking-tight">{title}</h1>
+              {subtitle && <p className="text-sm text-slate-500 font-medium mt-0.5">{subtitle}</p>}
             </div>
           </div>
 

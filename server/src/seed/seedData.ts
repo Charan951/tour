@@ -202,7 +202,63 @@ const seed = async () => {
       status: 'Active'
     });
 
-    // 5. Packages
+    // 5. Theme banners seeded to MongoDB for real app data
+    const { ThemeBanner } = await import('../models/ThemeBanner.js');
+    await ThemeBanner.deleteMany({});
+    const defaultThemes = [
+      {
+        themeName: 'Honeymoon Tour',
+        imageUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=1200&auto=format&fit=crop',
+        description: 'Romantic getaways with candlelight dinners, luxury stays, scenic sunset moments, and memorable couple experiences.',
+        active: true
+      },
+      {
+        themeName: 'Leisure',
+        imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop',
+        description: 'Easygoing holidays that blend beach relaxation, resort stays, and curated city or coastal sightseeing.',
+        active: true
+      },
+      {
+        themeName: 'Hill Station',
+        imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop',
+        description: 'Cool-weather escapes with mountain views, pine valleys, tea gardens, and peaceful nature retreats.',
+        active: true
+      },
+      {
+        themeName: 'Trekking',
+        imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200&auto=format&fit=crop',
+        description: 'Trail-based adventures through scenic mountains, guided treks, camp stays, and landscape-rich routes.',
+        active: true
+      },
+      {
+        themeName: 'Adventure',
+        imageUrl: 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?q=80&w=1200&auto=format&fit=crop',
+        description: 'High-energy trips featuring rafting, zipline rides, off-road thrills, and adrenaline-filled experiences.',
+        active: true
+      },
+      {
+        themeName: 'Religious',
+        imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1200&auto=format&fit=crop',
+        description: 'Sacred journeys to temples, heritage sites, and peaceful spiritual destinations with guided comfort.',
+        active: true
+      },
+      {
+        themeName: 'Family Tour',
+        imageUrl: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1200&auto=format&fit=crop',
+        description: 'Comfort-focused family holidays with sightseeing, kid-friendly activities, and memorable shared experiences.',
+        active: true
+      },
+      {
+        themeName: 'Wildlife Safari',
+        imageUrl: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=1200&auto=format&fit=crop',
+        description: 'Wildlife-rich escapes with jungle safaris, nature lodges, forest drives, and unforgettable animal encounters.',
+        active: true
+      }
+    ];
+    await ThemeBanner.insertMany(defaultThemes);
+    console.log('[Seed] Seeded default theme banners into MongoDB.');
+
+    // 6. Packages
     await Package.deleteMany({});
     await PackageCategory.deleteMany({});
     const domesticCat = await PackageCategory.create({ name: 'Domestic Packages', slug: 'domestic' });

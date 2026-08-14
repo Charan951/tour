@@ -56,7 +56,7 @@ export const ContactPage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             Get In Touch
           </span>
-          <h1 className="font-['Outfit'] font-bold text-4xl text-slate-900 mt-3">Contact HolidayCity</h1>
+          <h1 className="font-poppins font-bold text-4xl text-slate-900 mt-3">Contact HolidayCity</h1>
           <p className="text-slate-600 text-sm mt-2">Have questions about a holiday package? Our consultants are here to help.</p>
         </div>
 
@@ -88,7 +88,7 @@ export const ContactPage: React.FC = () => {
           </div>
 
           <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-            <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900 mb-6">Send Us a Message</h2>
+            <h2 className="font-poppins font-bold text-2xl text-slate-900 mb-6">Send Us a Message</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 text-xs">
               <div>
                 <label className="block text-slate-700 font-bold mb-1.5">Your Name *</label>

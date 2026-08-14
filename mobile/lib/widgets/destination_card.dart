@@ -39,7 +39,8 @@ class DestinationCard extends StatelessWidget {
                 height: 200,
                 width: 150,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: Colors.grey[300]),
+                placeholder: (context, url) =>
+                    Container(color: Colors.grey[300]),
                 errorWidget: (context, url, error) => Image.network(
                   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
                   fit: BoxFit.cover,

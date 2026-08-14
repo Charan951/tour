@@ -194,13 +194,13 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/admin/packages"
-              className="px-5 py-3 rounded-2xl bg-white text-[#0A6FB5] font-bold text-xs shadow-md hover:bg-slate-50 transition-all cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-white text-[#0A6FB5] font-bold text-sm shadow-md hover:bg-slate-50 transition-all cursor-pointer"
             >
               + Create New Package
             </Link>
             <Link
               to="/admin/destinations"
-              className="px-5 py-3 rounded-2xl bg-slate-900/40 border border-white/20 text-white font-bold text-xs hover:bg-slate-900/60 transition-all cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-slate-900/40 border border-white/20 text-white font-bold text-sm hover:bg-slate-900/60 transition-all cursor-pointer"
             >
               + Add Destination
             </Link>
@@ -214,10 +214,10 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">Recent Customer Leads</h3>
-                <p className="text-xs text-slate-500">Latest travel enquiries submitted by users</p>
+                <h3 className="font-poppins font-bold text-2xl text-slate-900">Recent Customer Leads</h3>
+                <p className="text-base text-slate-500">Latest travel enquiries submitted by users</p>
               </div>
-              <Link to="/admin/leads" className="text-xs font-bold text-[#0A6FB5] hover:underline flex items-center gap-1">
+              <Link to="/admin/leads" className="text-sm font-bold text-[#0A6FB5] hover:underline flex items-center gap-1">
                 View All <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -228,7 +228,7 @@ export const AdminDashboardPage: React.FC = () => {
               <div className="text-center py-8 text-slate-400 text-xs">No customer enquiries received yet.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-100">
                       <th className="p-3">Customer</th>
@@ -264,10 +264,10 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">Featured Packages</h3>
-                <p className="text-xs text-slate-500">Recently updated tour itineraries</p>
+                <h3 className="font-poppins font-bold text-2xl text-slate-900">Featured Packages</h3>
+                <p className="text-base text-slate-500">Recently updated tour itineraries</p>
               </div>
-              <Link to="/admin/packages" className="text-xs font-bold text-[#0A6FB5] hover:underline">
+              <Link to="/admin/packages" className="text-sm font-bold text-[#0A6FB5] hover:underline">
                 Manage
               </Link>
             </div>
@@ -286,7 +286,7 @@ export const AdminDashboardPage: React.FC = () => {
                       className="w-12 h-12 rounded-xl object-cover"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-bold text-slate-900 text-xs truncate">{pkg.title}</div>
+                      <div className="font-bold text-slate-900 text-base truncate">{pkg.title}</div>
                       <div className="text-[11px] text-emerald-600 font-extrabold">₹{pkg.startingPrice?.toLocaleString()}</div>
                     </div>
                     <Link to="/admin/packages" className="p-1.5 rounded-lg text-slate-400 hover:text-[#0A6FB5]">

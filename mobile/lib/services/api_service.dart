@@ -17,7 +17,6 @@ class _ApiException implements Exception {
 class ApiService {
   static const int timeoutDuration = 7;
 
-
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('hc_access_token');
@@ -132,6 +131,28 @@ class ApiService {
     return _handleOfflineFallback('PUT', url, body, lastError!);
   }
 
+  static Future<dynamic> patch(String url, Map<String, dynamic> body) async {
+    final candidateUrls = _generateCandidateUrls(url);
+    Object? lastError;
+
+    for (final targetUrl in candidateUrls) {
+      try {
+        final headers = await _getHeaders();
+        final response = await http
+            .patch(Uri.parse(targetUrl),
+                headers: headers, body: jsonEncode(body))
+            .timeout(const Duration(seconds: timeoutDuration));
+        return _processResponse(response);
+      } on _ApiException {
+        rethrow;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    return _handleOfflineFallback('PATCH', url, body, lastError!);
+  }
+
   static Future<dynamic> delete(String url) async {
     final candidateUrls = _generateCandidateUrls(url);
     Object? lastError;
@@ -158,14 +179,16 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else {
-      final message = body['message'] ?? 'An error occurred (${response.statusCode})';
+      final message =
+          body['message'] ?? 'An error occurred (${response.statusCode})';
       // Use _ApiException so callers know this was an HTTP-level error
       // (not a network failure) and should NOT trigger IP fallback.
       throw _ApiException(message);
     }
   }
 
-  static dynamic _handleOfflineFallback(String method, String url, Map<String, dynamic>? body, Object error) {
+  static dynamic _handleOfflineFallback(
+      String method, String url, Map<String, dynamic>? body, Object error) {
     debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
 
     final uri = Uri.parse(url);
@@ -175,10 +198,12 @@ class ApiService {
       if (path.contains('/enquiries') || path.contains('/contact')) {
         return {
           'success': true,
-          'message': 'Enquiry submitted successfully! Our travel expert will contact you shortly.',
+          'message':
+              'Enquiry submitted successfully! Our travel expert will contact you shortly.',
           'data': {
             '_id': 'eq_${DateTime.now().millisecondsSinceEpoch}',
-            'enquiryId': 'HC-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+            'enquiryId':
+                'HC-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
             'fullName': body?['fullName'] ?? body?['name'] ?? 'Traveler',
             'email': body?['email'] ?? '',
             'mobile': body?['mobile'] ?? body?['phone'] ?? '',
@@ -191,7 +216,6 @@ class ApiService {
         };
       }
 
-
       if (path.contains('/auth/register')) {
         final email = body?['email'] ?? 'user@example.com';
         final firstName = body?['firstName'] ?? 'Valued';
@@ -201,7 +225,8 @@ class ApiService {
           'success': true,
           'message': 'Registration successful! Welcome to HolidayCity.',
           'data': {
-            'accessToken': 'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
+            'accessToken':
+                'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
             'user': {
               '_id': 'usr_${DateTime.now().millisecondsSinceEpoch}',
               'firstName': firstName,
@@ -219,12 +244,15 @@ class ApiService {
       if (path.contains('/auth/login')) {
         final email = body?['email'] ?? 'user@example.com';
         final rawName = email.contains('@') ? email.split('@').first : 'User';
-        final firstName = rawName.isNotEmpty ? rawName[0].toUpperCase() + rawName.substring(1) : 'Holiday';
+        final firstName = rawName.isNotEmpty
+            ? rawName[0].toUpperCase() + rawName.substring(1)
+            : 'Holiday';
         return {
           'success': true,
           'message': 'Login successful!',
           'data': {
-            'accessToken': 'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
+            'accessToken':
+                'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
             'user': {
               '_id': 'usr_login_1',
               'firstName': firstName,

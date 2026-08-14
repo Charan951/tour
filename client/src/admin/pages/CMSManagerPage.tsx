@@ -356,19 +356,19 @@ export const CMSManagerPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleOpenCreateBlog}
-            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add Blog Article
           </button>
           <button
             onClick={handleOpenCreateTestimonial}
-            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add Testimonial
           </button>
           <button
             onClick={handleOpenCreateFAQ}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add FAQ
           </button>

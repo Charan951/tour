@@ -16,16 +16,14 @@ const app = express();
 const httpServer = createServer(app);
 const PORT: number = Number(process.env.PORT) || 5000;
 
-// Initialize Socket.io with CORS configuration
+// Initialize Socket.io with permissive CORS for mobile apps, admin panel, and local network clients
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      process.env.CLIENT_URL || '',
-      process.env.ADMIN_URL || ''
-    ].filter(Boolean),
-    methods: ['GET', 'POST'],
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cookie'],
     credentials: true
   },
   transports: ['websocket', 'polling']

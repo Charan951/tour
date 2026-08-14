@@ -21,13 +21,13 @@ export const configureSecurityHeaders = helmet({
 // Enterprise CORS Configuration with dynamic origin reflection matching production specs
 export const configureCORS = cors({
   origin: (origin, callback) => {
-    // Allow requests from any origin (mobile apps, React web client, local network devices)
+    // Allow requests from any origin (mobile apps, React web client, local network devices, admin dashboards)
     callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cookie'],
+  exposedHeaders: ['Set-Cookie', 'Authorization']
 });
 
 // Auth Rate Limiter: 15 mins, max 100 attempts in development for mobile testing

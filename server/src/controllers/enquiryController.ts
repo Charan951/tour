@@ -4,6 +4,7 @@ import { Enquiry } from '../models/Enquiry.js';
 import { Destination } from '../models/Destination.js';
 import { Package } from '../models/Package.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
 
 export const createEnquiry = async (req: Request, res: Response) => {
   try {
@@ -25,6 +26,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
       source 
     } = req.body;
 
+    const normalizedEmail = (email || '').toString().trim().toLowerCase();
     const resolvedFullName = fullName || name || '';
     const resolvedMobile = mobile || phone || '';
     const resolvedAdults = adults || travelers || 1;
@@ -77,7 +79,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
     const enquiry = await Enquiry.create({
       enquiryId,
       fullName: resolvedFullName,
-      email,
+      email: normalizedEmail,
       mobile: resolvedMobile,
       destination: resolvedDestination,
       package: resolvedPackage,
@@ -92,10 +94,18 @@ export const createEnquiry = async (req: Request, res: Response) => {
       priority: 'Medium'
     });
 
+    const populatedEnquiry = await Enquiry.findById(enquiry._id)
+      .populate('destination', 'name slug banner')
+      .populate('package', 'title slug packageCode startingPrice duration')
+      .lean();
+
+    emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
+    emitCreate('Enquiry', populatedEnquiry, 'general_updates');
+
     return res.status(201).json({
       success: true,
       message: 'Enquiry submitted successfully. Our travel expert will contact you within 30 minutes.',
-      data: enquiry
+      data: populatedEnquiry
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -187,6 +197,9 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
       .populate('package', 'title slug packageCode startingPrice duration')
       .populate('assignedTo', 'firstName lastName email');
 
+    emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
+    emitUpdate('Enquiry', populatedEnquiry, 'general_updates');
+
     return res.status(200).json({
       success: true,
       message: 'Enquiry updated successfully',
@@ -247,8 +260,10 @@ export const getMyEnquiries = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const normalizedEmail = email.toString().trim().toLowerCase();
+
     const enquiries = await Enquiry.find({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       isDeleted: false,
     })
       .populate('destination', 'name slug banner')
@@ -267,11 +282,15 @@ export const getMyEnquiries = async (req: AuthRequest, res: Response) => {
 
 export const deleteEnquiry = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const rawId = req.params.id;
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
     const enquiry = await Enquiry.findByIdAndDelete(id);
     if (!enquiry) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
     }
+
+    emitDataUpdate('Enquiry', { id, deleted: true }, 'general_updates');
+    emitDelete('Enquiry', id, 'general_updates');
 
     return res.status(200).json({
       success: true,

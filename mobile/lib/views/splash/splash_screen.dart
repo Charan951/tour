@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Timer? _initialTimer;
 
   @override
   void initState() {
@@ -40,29 +42,31 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkInitialState() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
-    if (!mounted) return;
+    _initialTimer = Timer(const Duration(milliseconds: 2500), () async {
+      if (!mounted) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.initAuth();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.initAuth();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (authProvider.isLoggedIn) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-      );
-    }
+      if (authProvider.isLoggedIn) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _initialTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -161,7 +165,8 @@ class _SplashScreenState extends State<SplashScreen>
                                     style: GoogleFonts.inter(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.9),
                                       letterSpacing: 0.5,
                                     ),
                                   ),
@@ -169,7 +174,6 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ],
                           ),
-
                         ],
                       ),
                     ),
@@ -244,16 +248,20 @@ class SplashBackgroundPainter extends CustomPainter {
     // Flight Path 1: Top Right Arc
     final path1 = Path();
     path1.moveTo(-30, size.height * 0.38);
-    path1.quadraticBezierTo(size.width * 0.45, size.height * 0.22, size.width + 40, size.height * 0.1);
+    path1.quadraticBezierTo(size.width * 0.45, size.height * 0.22,
+        size.width + 40, size.height * 0.1);
     _drawDashedPath(canvas, path1, paintLine, [6, 8]);
-    _drawAirplaneSilhouette(canvas, Offset(size.width * 0.82, size.height * 0.15), -15);
+    _drawAirplaneSilhouette(
+        canvas, Offset(size.width * 0.82, size.height * 0.15), -15);
 
     // Flight Path 2: Middle Left Arc
     final path2 = Path();
     path2.moveTo(-20, size.height * 0.65);
-    path2.quadraticBezierTo(size.width * 0.25, size.height * 0.52, size.width * 0.65, size.height * 0.42);
+    path2.quadraticBezierTo(size.width * 0.25, size.height * 0.52,
+        size.width * 0.65, size.height * 0.42);
     _drawDashedPath(canvas, path2, paintLine, [5, 7]);
-    _drawAirplaneSilhouette(canvas, Offset(size.width * 0.12, size.height * 0.6), -35);
+    _drawAirplaneSilhouette(
+        canvas, Offset(size.width * 0.12, size.height * 0.6), -35);
 
     // Detailed Continental Dotted World Map Mesh at bottom
     final dotPaint = Paint()
@@ -266,19 +274,28 @@ class SplashBackgroundPainter extends CustomPainter {
     // Grid coordinates simulating North America, South America, Europe, Africa, Asia, Australia
     final mapDots = [
       // North America
-      Offset(w * 0.12, bottomY - 30), Offset(w * 0.16, bottomY - 35), Offset(w * 0.20, bottomY - 32),
-      Offset(w * 0.14, bottomY - 22), Offset(w * 0.18, bottomY - 24), Offset(w * 0.22, bottomY - 20),
+      Offset(w * 0.12, bottomY - 30), Offset(w * 0.16, bottomY - 35),
+      Offset(w * 0.20, bottomY - 32),
+      Offset(w * 0.14, bottomY - 22), Offset(w * 0.18, bottomY - 24),
+      Offset(w * 0.22, bottomY - 20),
       // South America
-      Offset(w * 0.24, bottomY - 5), Offset(w * 0.26, bottomY + 10), Offset(w * 0.28, bottomY + 22),
+      Offset(w * 0.24, bottomY - 5), Offset(w * 0.26, bottomY + 10),
+      Offset(w * 0.28, bottomY + 22),
       // Europe & Africa
-      Offset(w * 0.44, bottomY - 35), Offset(w * 0.48, bottomY - 32), Offset(w * 0.52, bottomY - 38),
-      Offset(w * 0.46, bottomY - 18), Offset(w * 0.50, bottomY - 12), Offset(w * 0.48, bottomY + 5),
+      Offset(w * 0.44, bottomY - 35), Offset(w * 0.48, bottomY - 32),
+      Offset(w * 0.52, bottomY - 38),
+      Offset(w * 0.46, bottomY - 18), Offset(w * 0.50, bottomY - 12),
+      Offset(w * 0.48, bottomY + 5),
       // Asia
-      Offset(w * 0.64, bottomY - 40), Offset(w * 0.68, bottomY - 45), Offset(w * 0.74, bottomY - 42),
-      Offset(w * 0.78, bottomY - 38), Offset(w * 0.82, bottomY - 35), Offset(w * 0.86, bottomY - 30),
-      Offset(w * 0.66, bottomY - 25), Offset(w * 0.72, bottomY - 22), Offset(w * 0.76, bottomY - 20),
+      Offset(w * 0.64, bottomY - 40), Offset(w * 0.68, bottomY - 45),
+      Offset(w * 0.74, bottomY - 42),
+      Offset(w * 0.78, bottomY - 38), Offset(w * 0.82, bottomY - 35),
+      Offset(w * 0.86, bottomY - 30),
+      Offset(w * 0.66, bottomY - 25), Offset(w * 0.72, bottomY - 22),
+      Offset(w * 0.76, bottomY - 20),
       // Australia
-      Offset(w * 0.80, bottomY + 10), Offset(w * 0.84, bottomY + 12), Offset(w * 0.88, bottomY + 8),
+      Offset(w * 0.80, bottomY + 10), Offset(w * 0.84, bottomY + 12),
+      Offset(w * 0.88, bottomY + 8),
     ];
 
     for (final dot in mapDots) {
@@ -304,7 +321,8 @@ class SplashBackgroundPainter extends CustomPainter {
     _drawLocationPin(canvas, pin2);
   }
 
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint, List<double> dashArray) {
+  void _drawDashedPath(
+      Canvas canvas, Path path, Paint paint, List<double> dashArray) {
     final metrics = path.computeMetrics();
     for (final metric in metrics) {
       double distance = 0.0;
@@ -322,7 +340,8 @@ class SplashBackgroundPainter extends CustomPainter {
     }
   }
 
-  void _drawAirplaneSilhouette(Canvas canvas, Offset position, double angleDegrees) {
+  void _drawAirplaneSilhouette(
+      Canvas canvas, Offset position, double angleDegrees) {
     final paint = Paint()
       ..color = Colors.white.withValues(alpha: 0.25)
       ..style = PaintingStyle.fill;
@@ -354,20 +373,27 @@ class SplashBackgroundPainter extends CustomPainter {
     final path = Path();
     const pinSize = 14.0;
     final topCenter = Offset(center.dx, center.dy - pinSize);
-    
+
     path.moveTo(center.dx, center.dy);
     path.cubicTo(
-      center.dx - pinSize / 2, center.dy - pinSize / 3,
-      center.dx - pinSize / 2, topCenter.dy - pinSize / 3,
-      center.dx, topCenter.dy - pinSize / 2,
+      center.dx - pinSize / 2,
+      center.dy - pinSize / 3,
+      center.dx - pinSize / 2,
+      topCenter.dy - pinSize / 3,
+      center.dx,
+      topCenter.dy - pinSize / 2,
     );
     path.cubicTo(
-      center.dx + pinSize / 2, topCenter.dy - pinSize / 2,
-      center.dx + pinSize / 2, center.dy - pinSize / 3,
-      center.dx, center.dy,
+      center.dx + pinSize / 2,
+      topCenter.dy - pinSize / 2,
+      center.dx + pinSize / 2,
+      center.dy - pinSize / 3,
+      center.dx,
+      center.dy,
     );
     canvas.drawPath(path, pinPaint);
-    canvas.drawCircle(Offset(center.dx, center.dy - pinSize * 0.9), 2.5, Paint()..color = Colors.white);
+    canvas.drawCircle(Offset(center.dx, center.dy - pinSize * 0.9), 2.5,
+        Paint()..color = Colors.white);
   }
 
   @override
@@ -395,9 +421,12 @@ class HolidayCityLogoPainter extends CustomPainter {
     final swooshPath = Path();
     swooshPath.moveTo(w * 0.08, h * 0.68);
     swooshPath.cubicTo(
-      w * 0.15, h * 0.94,
-      w * 0.62, h * 0.95,
-      w * 0.84, h * 0.42,
+      w * 0.15,
+      h * 0.94,
+      w * 0.62,
+      h * 0.95,
+      w * 0.84,
+      h * 0.42,
     );
     swooshPath.lineTo(w * 0.92, h * 0.22);
 
@@ -481,5 +510,3 @@ class HolidayCityLogoPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
-

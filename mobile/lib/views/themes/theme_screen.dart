@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../providers/specialization_theme_provider.dart';
+import 'theme_detail_screen.dart';
 
 class ThemeScreen extends StatefulWidget {
   const ThemeScreen({super.key});
@@ -15,22 +16,21 @@ class ThemeScreen extends StatefulWidget {
 }
 
 class _ThemeScreenState extends State<ThemeScreen> {
-  // Store a direct reference so we can call stopRealtimeUpdates() in dispose()
-  // without touching `context`, which is unsafe after the widget is deactivated.
-  late SpecializationThemeProvider _themeProvider;
+  SpecializationThemeProvider? _themeProvider;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _themeProvider = context.read<SpecializationThemeProvider>();
-      _themeProvider.fetchThemes();
-      _themeProvider.startRealtimeUpdates();
+      _themeProvider?.fetchThemes();
+      _themeProvider?.startRealtimeUpdates();
     });
   }
 
   @override
   void dispose() {
-    _themeProvider.stopRealtimeUpdates();
+    _themeProvider?.stopRealtimeUpdates();
     super.dispose();
   }
 
@@ -43,7 +43,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
         return RefreshIndicator(
           onRefresh: provider.fetchThemes,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -52,13 +52,16 @@ class _ThemeScreenState extends State<ThemeScreen> {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Themes',
-                        textAlign: TextAlign.left,
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: Text(
+                          'Themes',
+                          textAlign: TextAlign.left,
+                          style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
                     ),
@@ -96,7 +99,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               if (provider.isLoading && themes.isEmpty)
                 const Center(
                   child: Padding(
@@ -132,43 +135,55 @@ class _ThemeScreenState extends State<ThemeScreen> {
                     final theme = themes[index];
                     final imageUrl = ApiConfig.formatImageUrl(theme.imageUrl);
 
-                    return Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      elevation: 2,
-                      child: InkWell(
+                    return SizedBox(
+                      height: 240,
+                      child: Material(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(18),
-                        onTap: () {},
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(18)),
-                              child: CachedNetworkImage(
-                                imageUrl: imageUrl,
-                                height: 135,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  height: 135,
-                                  color: AppTheme.primaryColor
-                                      .withValues(alpha: 0.08),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  height: 135,
-                                  color: AppTheme.primaryColor
-                                      .withValues(alpha: 0.08),
-                                  child: const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      color: AppTheme.textSecondary),
+                        elevation: 2,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ThemeDetailScreen(theme: theme),
+                              ),
+                            );
+                          },
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(18)),
+                                child: AspectRatio(
+                                  aspectRatio: 1.6,
+                                  child: CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      color: AppTheme.primaryColor
+                                          .withValues(alpha: 0.08),
+                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Container(
+                                      color: AppTheme.primaryColor
+                                          .withValues(alpha: 0.08),
+                                      child: const Icon(
+                                          Icons.image_not_supported_outlined,
+                                          color: AppTheme.textSecondary),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 12, 12, 10),
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
@@ -204,8 +219,8 @@ class _ThemeScreenState extends State<ThemeScreen> {
                                   ],
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

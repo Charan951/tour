@@ -71,7 +71,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire }) => {
           </div>
 
           <Link to={`/package/${pkg.slug}`}>
-            <h3 className="font-['Outfit'] font-bold text-lg text-slate-900 group-hover:text-[#0A6FB5] transition-colors line-clamp-2 leading-snug">
+            <h3 className="font-poppins font-bold text-lg text-slate-900 group-hover:text-[#0A6FB5] transition-colors line-clamp-2 leading-snug">
               {pkg.title}
             </h3>
           </Link>
@@ -93,7 +93,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire }) => {
           <div>
             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">Starting From</p>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-['Outfit'] font-extrabold text-xl text-[#063B6D]">
+              <span className="font-poppins font-extrabold text-xl text-[#063B6D]">
                 ₹{pkg.startingPrice.toLocaleString()}
               </span>
               {pkg.discountPrice && (

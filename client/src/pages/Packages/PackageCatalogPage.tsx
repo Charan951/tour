@@ -146,7 +146,7 @@ export const PackageCatalogPage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             Holiday Directory
           </span>
-          <h1 className="font-['Outfit'] font-bold text-4xl text-slate-900">
+          <h1 className="font-poppins font-bold text-4xl text-slate-900">
             Hand-Crafted Tour Packages Catalog
           </h1>
           <p className="text-slate-600 text-sm">

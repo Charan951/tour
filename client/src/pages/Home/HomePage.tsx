@@ -356,7 +356,7 @@ export const HomePage: React.FC = () => {
       {/* SECTION 1: DOMESTIC DESTINATIONS - "Experience India's Magic" */}
       <section className="py-12 px-4 max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-1">
-          <h2 className="font-['Outfit'] font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+          <h2 className="font-poppins font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
             Experience India's Magic, HolidayCity Style
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm italic">
@@ -380,7 +380,7 @@ export const HomePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/30 to-transparent" />
 
               <div className="relative z-10 p-3 text-center text-white">
-                <h3 className="font-['Outfit'] font-bold text-sm uppercase tracking-wider group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
+                <h3 className="font-poppins font-bold text-sm uppercase tracking-wider group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
                   {dest.name}
                 </h3>
                 <span className="text-[10px] text-slate-300 font-medium block mt-0.5 opacity-90">
@@ -395,7 +395,7 @@ export const HomePage: React.FC = () => {
       {/* SECTION 2: INTERNATIONAL DESTINATIONS - "Explore the World, With Us" */}
       <section className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60">
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-1">
-          <h2 className="font-['Outfit'] font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+          <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-slate-900 tracking-tight">
             Explore the World, With Us
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm italic">
@@ -419,7 +419,7 @@ export const HomePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/30 to-transparent" />
 
               <div className="relative z-10 p-3 text-center text-white">
-                <h3 className="font-['Outfit'] font-bold text-sm uppercase tracking-wider group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
+                <h3 className="font-poppins font-bold text-sm uppercase tracking-wider group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
                   {dest.name}
                 </h3>
                 <span className="text-[10px] text-slate-300 font-medium block mt-0.5 opacity-90">
@@ -437,7 +437,7 @@ export const HomePage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             Specialized Collections
           </span>
-          <h2 className="font-['Outfit'] font-extrabold text-3xl text-slate-900">
+          <h2 className="font-poppins font-extrabold text-3xl text-slate-900">
             Our Travel Specialization
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm">
@@ -467,7 +467,7 @@ export const HomePage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
 
                   <div className="absolute inset-0 p-3.5 flex flex-col justify-end text-white z-10">
-                    <h3 className="font-['Outfit'] font-extrabold text-sm sm:text-base group-hover:text-[#57D0C9] transition-colors leading-snug drop-shadow-md">
+                    <h3 className="font-poppins font-extrabold text-sm sm:text-base group-hover:text-[#57D0C9] transition-colors leading-snug drop-shadow-md">
                       {theme.name}
                     </h3>
                     <span className="text-[10px] font-bold text-slate-300 opacity-90 mt-0.5 block">
@@ -565,7 +565,7 @@ export const HomePage: React.FC = () => {
       {/* SECTION 4: PROMO OFFER CARDS ROW (MATCHING IMAGE COPY 8.PNG) */}
       <section className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60">
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-1">
-          <h2 className="font-['Outfit'] font-extrabold text-3xl text-slate-900">
+          <h2 className="font-poppins font-extrabold text-3xl text-slate-900">
             Exclusive Promotional Offers
           </h2>
           <p className="text-slate-500 text-xs sm:text-sm">
@@ -607,7 +607,7 @@ export const HomePage: React.FC = () => {
       <section className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <div>
-            <h2 className="font-['Outfit'] font-extrabold text-3xl text-slate-900">Featured Tour Packages</h2>
+            <h2 className="font-poppins font-extrabold text-3xl text-slate-900">Featured Tour Packages</h2>
             <p className="text-slate-500 text-xs mt-1">Handpicked itineraries with guaranteed price matching & quality resort stays.</p>
           </div>
           <Link to="/packages" className="px-5 py-2.5 rounded-2xl bg-slate-900 text-white font-bold text-xs hover:bg-[#0A6FB5] transition-all flex items-center gap-1.5">

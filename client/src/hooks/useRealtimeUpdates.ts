@@ -196,9 +196,18 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       callbacksRef.current.onBannerUpdate?.({ id: payload.id, deleted: true });
     };
 
-    const handleEnquiryCreated = (payload: any) => callbacksRef.current.onEnquiryUpdate?.(payload.data);
-    const handleEnquiryUpdated = (payload: any) => callbacksRef.current.onEnquiryUpdate?.(payload.data);
-    const handleEnquiryDeleted = (payload: any) => callbacksRef.current.onEnquiryUpdate?.({ id: payload.id, deleted: true });
+    const handleEnquiryCreated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onEnquiryUpdate?.(payload.data);
+    };
+    const handleEnquiryUpdated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onEnquiryUpdate?.(payload.data);
+    };
+    const handleEnquiryDeleted = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onEnquiryUpdate?.({ id: payload.id, deleted: true });
+    };
 
     socket.on('data_updated', handleDataUpdated);
 

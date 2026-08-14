@@ -37,7 +37,7 @@ export const BlogsPage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
             <BookOpen className="w-3.5 h-3.5" /> Travel Stories & Insights
           </span>
-          <h1 className="font-['Outfit'] font-extrabold text-4xl text-slate-900">
+          <h1 className="font-poppins font-extrabold text-4xl text-slate-900">
             Explore Our Latest Travel Guides
           </h1>
           <p className="text-slate-600 text-sm">
@@ -82,7 +82,7 @@ export const BlogsPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <h2 className="font-['Outfit'] font-bold text-xl text-slate-900 group-hover:text-[#0A6FB5] transition-colors line-clamp-2">
+                    <h2 className="font-poppins font-bold text-xl text-slate-900 group-hover:text-[#0A6FB5] transition-colors line-clamp-2">
                       {b.title}
                     </h2>
 

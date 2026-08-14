@@ -218,14 +218,14 @@ export const BannerManagerPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add Destination Banner
           </button>
 
           <button
             onClick={() => { setThemeImageUrl(''); setThemeModalOpen(true); }}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Palette className="w-4 h-4" /> Add Theme Banner
           </button>
@@ -362,7 +362,7 @@ export const BannerManagerPage: React.FC = () => {
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-sm">
               <div>
                 <label className="block text-slate-700 mb-1 font-semibold">Banner Title / Destination Name *</label>
                 <input
@@ -479,7 +479,7 @@ export const BannerManagerPage: React.FC = () => {
               <button onClick={() => setThemeModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
-            <form onSubmit={handleSaveThemeBanner} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveThemeBanner} className="space-y-4 text-sm">
               <div>
                 <label className="block text-slate-700 mb-1 font-semibold">Select Travel Theme</label>
                 <select

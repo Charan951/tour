@@ -74,7 +74,7 @@ export const DestinationsLandingPage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             {selectedCategory === 'Domestic' ? 'India Domestic' : selectedCategory === 'International' ? 'International World' : 'World Directory'}
           </span>
-          <h1 className="font-['Outfit'] font-bold text-3xl sm:text-4xl text-slate-900">
+          <h1 className="font-poppins font-bold text-3xl sm:text-4xl text-slate-900">
             {pageTitle}
           </h1>
           <p className="text-slate-600 text-sm">

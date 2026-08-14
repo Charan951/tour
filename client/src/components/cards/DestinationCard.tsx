@@ -34,7 +34,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({ destination })
           <div className="flex items-center gap-1 text-[#F6C65B] text-xs font-semibold uppercase tracking-wider mb-1">
             <MapPin className="w-3.5 h-3.5" /> Featured Location
           </div>
-          <h3 className="font-['Outfit'] font-bold text-2xl group-hover:text-[#57D0C9] transition-colors">
+          <h3 className="font-poppins font-bold text-2xl group-hover:text-[#57D0C9] transition-colors">
             {destination.name}
           </h3>
           {destination.shortDescription && (

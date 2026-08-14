@@ -59,7 +59,7 @@ export const Footer: React.FC = () => {
 
           {/* Quick Links */}
           <div className="space-y-3">
-            <h4 className="font-['Outfit'] font-bold text-lg text-[#F6C65B]">Popular Destinations</h4>
+            <h4 className="font-poppins font-bold text-lg text-[#F6C65B]">Popular Destinations</h4>
             <ul className="space-y-2 text-sm text-slate-300">
               <li><Link to="/destinations" className="hover:text-[#57D0C9] transition-colors">Kerala Backwaters</Link></li>
               <li><Link to="/destinations" className="hover:text-[#57D0C9] transition-colors">Bali Islands</Link></li>
@@ -71,7 +71,7 @@ export const Footer: React.FC = () => {
 
           {/* Packages */}
           <div className="space-y-3">
-            <h4 className="font-['Outfit'] font-bold text-lg text-[#F6C65B]">Tour Packages</h4>
+            <h4 className="font-poppins font-bold text-lg text-[#F6C65B]">Tour Packages</h4>
             <ul className="space-y-2 text-sm text-slate-300">
               <li><Link to="/packages" className="hover:text-[#57D0C9] transition-colors">Honeymoon Specials</Link></li>
               <li><Link to="/packages" className="hover:text-[#57D0C9] transition-colors">Family Vacation Trips</Link></li>
@@ -83,7 +83,7 @@ export const Footer: React.FC = () => {
 
           {/* DYNAMIC Contact Details */}
           <div className="space-y-3">
-            <h4 className="font-['Outfit'] font-bold text-lg text-[#F6C65B]">Contact Us</h4>
+            <h4 className="font-poppins font-bold text-lg text-[#F6C65B]">Contact Us</h4>
             <ul className="space-y-3 text-sm text-slate-300">
               <li className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#57D0C9] shrink-0" /> {address}</li>
               <li className="flex items-center gap-2"><Phone className="w-4 h-4 text-[#57D0C9] shrink-0" /> {phone}</li>

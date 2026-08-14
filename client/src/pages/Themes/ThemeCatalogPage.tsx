@@ -86,7 +86,7 @@ export const ThemeCatalogPage: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             Specialized Vacation Styles
           </span>
-          <h1 className="font-['Outfit'] font-bold text-4xl text-slate-900">
+          <h1 className="font-poppins font-bold text-4xl text-slate-900">
             🎨 Theme-Based Holiday Collections
           </h1>
           <p className="text-slate-600 text-sm">
@@ -133,7 +133,7 @@ export const ThemeCatalogPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <h3 className="font-['Outfit'] font-extrabold text-xl group-hover:text-[#57D0C9] transition-colors">{theme.name}</h3>
+                    <h3 className="font-poppins font-extrabold text-xl group-hover:text-[#57D0C9] transition-colors">{theme.name}</h3>
                     <p className="text-[11px] text-slate-200 line-clamp-2 mt-1 font-medium">{uploadedBanner?.description || theme.desc}</p>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export const ThemeCatalogPage: React.FC = () => {
               <span className="text-[10px] font-extrabold tracking-widest text-[#0A6FB5] uppercase bg-[#0A6FB5]/10 px-3 py-1 rounded-full">
                 {selectedTheme === 'All' ? 'ALL THEMES' : selectedTheme.toUpperCase()}
               </span>
-              <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900 mt-1">
+              <h2 className="font-poppins font-bold text-2xl text-slate-900 mt-1">
                 {selectedTheme === 'All' ? 'All Theme Tour Packages' : `${selectedTheme} Packages`} ({packages.length})
               </h2>
             </div>

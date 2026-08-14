@@ -34,7 +34,8 @@ class DestinationDetailScreen extends StatelessWidget {
                   CachedNetworkImage(
                     imageUrl: ApiConfig.formatImageUrl(destination.image),
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey[300]),
+                    placeholder: (context, url) =>
+                        Container(color: Colors.grey[300]),
                     errorWidget: (context, url, error) => Image.network(
                       'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
                       fit: BoxFit.cover,
@@ -64,7 +65,8 @@ class DestinationDetailScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.public, color: AppTheme.primaryColor, size: 20),
+                      const Icon(Icons.public,
+                          color: AppTheme.primaryColor, size: 20),
                       const SizedBox(width: 6),
                       Text(
                         '${destination.state}, ${destination.country}',
@@ -79,26 +81,33 @@ class DestinationDetailScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   Text(
                     'About Destination',
-                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     destination.description,
-                    style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.6),
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                        height: 1.6),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     'Best Time to Visit',
-                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.outfit(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month_outlined, color: AppTheme.accentColor),
+                      const Icon(Icons.calendar_month_outlined,
+                          color: AppTheme.accentColor),
                       const SizedBox(width: 8),
                       Text(
                         destination.bestTimeToVisit.join(', '),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

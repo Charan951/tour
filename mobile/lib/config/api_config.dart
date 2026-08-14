@@ -66,5 +66,11 @@ class ApiConfig {
 
   static String get enquiries => '$baseUrl/enquiries';
   static String get myEnquiries => '$baseUrl/enquiries/my';
+  static String myEnquiriesForEmail(String email) =>
+      '$baseUrl/enquiries/my?email=${Uri.encodeQueryComponent(email)}';
+  static String get adminEnquiries => '$baseUrl/admin/enquiries';
+  static String adminEnquiryById(String id) => '$baseUrl/admin/enquiries/$id';
+  static String adminEnquiryStatus(String id) =>
+      '$baseUrl/admin/enquiries/$id/status';
   static String get contact => '$baseUrl/contact';
 }

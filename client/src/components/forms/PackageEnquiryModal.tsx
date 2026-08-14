@@ -111,7 +111,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <span className="inline-block px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-extrabold uppercase tracking-wider mb-1 text-white border border-white/30">
                 Booking Open For 2026
               </span>
-              <h3 className="font-['Outfit'] font-black text-xl drop-shadow-md text-white">
+              <h3 className="font-poppins font-black text-xl drop-shadow-md text-white">
                 {selectedPackage ? selectedPackage.title : 'Char Dham & Luxury Holiday Packages'}
               </h3>
             </div>
@@ -123,7 +123,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div className="w-8 h-8 rounded-full bg-[#0A6FB5]/10 text-[#0A6FB5] flex items-center justify-center mx-auto mb-1">
                 <Users className="w-4 h-4" />
               </div>
-              <div className="font-['Outfit'] font-extrabold text-lg text-slate-900 leading-tight">25k</div>
+              <div className="font-poppins font-extrabold text-lg text-slate-900 leading-tight">25k</div>
               <div className="text-[11px] font-semibold text-slate-500">Happy Traveler</div>
             </div>
 
@@ -131,7 +131,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div className="w-8 h-8 rounded-full bg-[#0A6FB5]/10 text-[#0A6FB5] flex items-center justify-center mx-auto mb-1">
                 <Award className="w-4 h-4" />
               </div>
-              <div className="font-['Outfit'] font-extrabold text-lg text-slate-900 leading-tight">45k</div>
+              <div className="font-poppins font-extrabold text-lg text-slate-900 leading-tight">45k</div>
               <div className="text-[11px] font-semibold text-slate-500">Tours Success</div>
             </div>
 
@@ -139,7 +139,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div className="w-8 h-8 rounded-full bg-[#0A6FB5]/10 text-[#0A6FB5] flex items-center justify-center mx-auto mb-1">
                 <ThumbsUp className="w-4 h-4" />
               </div>
-              <div className="font-['Outfit'] font-extrabold text-lg text-slate-900 leading-tight">30k</div>
+              <div className="font-poppins font-extrabold text-lg text-slate-900 leading-tight">30k</div>
               <div className="text-[11px] font-semibold text-slate-500">Positives Review</div>
             </div>
           </div>
@@ -195,7 +195,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
           </button>
 
           <div>
-            <h3 className="font-['Outfit'] font-extrabold text-2xl text-white mb-6 pr-8">
+            <h3 className="font-poppins font-extrabold text-2xl text-white mb-6 pr-8">
               Get in touch with us
             </h3>
 

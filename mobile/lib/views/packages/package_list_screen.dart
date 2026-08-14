@@ -25,6 +25,107 @@ class _PackageListScreenState extends State<PackageListScreen> {
     'Heritage',
   ];
 
+  void _showFilterSheet() {
+    final provider = Provider.of<PackageProvider>(context, listen: false);
+    final selectedCategory = provider.selectedCategory;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            String localSelected = selectedCategory;
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Filters',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            provider.setCategory('All');
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: _categories.map((category) {
+                        final isSelected = localSelected == category;
+                        return ChoiceChip(
+                          label: Text(category),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            localSelected = category;
+                            setSheetState(() {});
+                            provider.setCategory(category);
+                            Navigator.of(context).pop();
+                          },
+                          selectedColor: AppTheme.primaryColor,
+                          labelStyle: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : AppTheme.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          backgroundColor: Colors.grey.shade100,
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Apply Filters'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -54,7 +155,7 @@ class _PackageListScreenState extends State<PackageListScreen> {
         child: packageProvider.isLoading
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 children: [
                   Row(
                     children: [
@@ -94,51 +195,12 @@ class _PackageListScreenState extends State<PackageListScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: IconButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Filter options coming soon'),
-                              ),
-                            );
-                          },
+                          onPressed: _showFilterSheet,
                           icon: const Icon(Icons.filter_list_rounded,
                               color: AppTheme.primaryColor),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
-                      itemBuilder: (context, index) {
-                        final category = _categories[index];
-                        final isSelected =
-                            packageProvider.selectedCategory == category;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            selected: isSelected,
-                            label: Text(category),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppTheme.textPrimary,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 12,
-                            ),
-                            selectedColor: AppTheme.primaryColor,
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            onSelected: (_) =>
-                                packageProvider.setCategory(category),
-                          ),
-                        );
-                      },
-                    ),
                   ),
                   const SizedBox(height: 16),
                   if (packageProvider.packages.isEmpty)
@@ -151,7 +213,7 @@ class _PackageListScreenState extends State<PackageListScreen> {
                   else ...[
                     for (final pkg in packageProvider.packages)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: PackageCard(
                           package: pkg,
                           onTap: () {

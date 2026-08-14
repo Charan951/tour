@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
@@ -10,6 +11,7 @@ import '../../services/enquiry_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/package_card.dart';
 import '../auth/login_screen.dart';
+import '../enquiry/enquiry_detail_screen.dart';
 import '../packages/package_detail_screen.dart';
 import '../packages/package_list_screen.dart';
 
@@ -20,49 +22,114 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
   final _ipController = TextEditingController();
   final EnquiryService _enquiryService = EnquiryService();
 
-  List<EnquiryModel> _userEnquiries = [];
-  bool _isLoadingEnquiries = false;
+  late List<EnquiryModel> _userEnquiries;
+  late bool _isLoadingEnquiries;
+  Timer? _enquiryStatusListener;
+  bool _isInitialLoadComplete = false;
 
   @override
   void initState() {
     super.initState();
+    _userEnquiries = [];
+    _isLoadingEnquiries = false;
+    WidgetsBinding.instance.addObserver(this);
     _ipController.text = ApiConfig.customHost ?? '';
+
+    // Load cached enquiries immediately for instant display
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+    if (user?.email != null) {
+      _userEnquiries = EnquiryService.getCachedEnquiries(user!.email);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserData();
+      // Removed automatic polling - only refresh on app resume
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUserData();
+    }
+  }
+
+  void _startEnquiryStatusListener() {
+    // Only start polling after initial load is complete, and use longer interval
+    if (!_isInitialLoadComplete) return;
+
+    _enquiryStatusListener?.cancel();
+    _enquiryStatusListener = Timer.periodic(
+      const Duration(
+          seconds: 30), // Increased from 3s to 30s to reduce server load
+      (_) async {
+        if (!mounted) return;
+
+        try {
+          final authUser =
+              Provider.of<AuthProvider>(context, listen: false).user;
+          final enquiries = await _enquiryService.getProfileEnquiries(
+            role: authUser?.role,
+            email: authUser?.email,
+          );
+          if (mounted) {
+            setState(() => _userEnquiries = enquiries);
+          }
+        } catch (_) {
+          // Silent refresh failure is ignored so the user keeps the latest valid list.
+        }
+      },
+    );
   }
 
   Future<void> _loadUserData() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-    
-    await Future.wait([
-      authProvider.fetchCurrentUser(),
-      packageProvider.fetchPackages(),
-    ]);
+    final packageProvider =
+        Provider.of<PackageProvider>(context, listen: false);
 
-    if (!mounted) return;
-    setState(() => _isLoadingEnquiries = true);
-    try {
-      final enquiries = await _enquiryService.getUserEnquiries();
-      if (mounted) {
-        setState(() {
-          _userEnquiries = enquiries;
-          _isLoadingEnquiries = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isLoadingEnquiries = false);
+    // Fire all requests in TRUE PARALLEL without awaiting
+    // Cached data displays immediately while background fetches happen
+    unawaited(authProvider.fetchCurrentUser());
+    unawaited(packageProvider.fetchPackages());
+
+    // Fire enquiry fetch in background without blocking
+    final user = authProvider.user;
+    if (user?.email != null && mounted) {
+      unawaited(
+        _enquiryService
+            .getProfileEnquiries(
+          role: user!.role,
+          email: user.email,
+        )
+            .then((enquiries) {
+          if (mounted) {
+            setState(() {
+              _userEnquiries = enquiries;
+              // Mark initial load complete and start polling
+              if (!_isInitialLoadComplete) {
+                _isInitialLoadComplete = true;
+                _startEnquiryStatusListener();
+              }
+            });
+          }
+        }).catchError((_) {
+          // Silent error - keep cached data visible
+        }),
+      );
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ipController.dispose();
+    _enquiryStatusListener?.cancel();
     super.dispose();
   }
 
@@ -90,7 +157,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 8),
             Text(
               'Current Active Base URL: ${ApiConfig.baseUrl}',
-              style: const TextStyle(fontSize: 11, color: AppTheme.primaryColor),
+              style:
+                  const TextStyle(fontSize: 11, color: AppTheme.primaryColor),
             ),
           ],
         ),
@@ -106,7 +174,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Server endpoint updated to: ${ApiConfig.baseUrl}'),
+                  content:
+                      Text('Server endpoint updated to: ${ApiConfig.baseUrl}'),
                   backgroundColor: AppTheme.successColor,
                 ),
               );
@@ -143,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onRefresh: _loadUserData,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 100.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -196,7 +265,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      user != null ? user.email : 'Sign in to access custom tour quotes',
+                      user != null
+                          ? user.email
+                          : 'Sign in to access custom tour quotes',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: Colors.white70,
@@ -205,7 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (user != null) ...[
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -293,7 +365,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Text(
                       'No enquiries submitted yet. Tap "Enquire Now" on any package to request a custom quote!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                          fontSize: 13, color: AppTheme.textSecondary),
                     ),
                   ),
                 )
@@ -343,10 +416,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PackageListScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const PackageListScreen()),
                       );
                     },
-                    child: const Text('View All', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('View All',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -374,7 +449,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: const Center(
                         child: Text(
                           'No active travel plans found.',
-                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                              fontSize: 13, color: AppTheme.textSecondary),
                         ),
                       ),
                     );
@@ -382,7 +458,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: packageProvider.packages.length > 3 ? 3 : packageProvider.packages.length,
+                    itemCount: packageProvider.packages.length > 3
+                        ? 3
+                        : packageProvider.packages.length,
                     itemBuilder: (context, index) {
                       final pkg = packageProvider.packages[index];
                       return PackageCard(
@@ -519,92 +597,183 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildEnquiryCard(EnquiryModel enquiry) {
     Color statusColor;
     switch (enquiry.status.toLowerCase()) {
-      case 'in contact':
       case 'contacted':
+      case 'qualified':
+      case 'followuppending':
         statusColor = const Color(0xFF0284C7);
         break;
-      case 'quote sent':
+      case 'quotationsent':
       case 'confirmed':
+      case 'completed':
         statusColor = AppTheme.successColor;
+        break;
+      case 'closed lost':
+      case 'lost':
+      case 'cancelled':
+        statusColor = AppTheme.errorColor;
         break;
       default:
         statusColor = AppTheme.accentColor;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  enquiry.destination,
-                  style: GoogleFonts.outfit(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+    final displayStatus = enquiry.status.isNotEmpty ? enquiry.status : 'New';
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EnquiryDetailScreen(enquiry: enquiry),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      enquiry.destination,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 1,
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.18),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    displayStatus,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 14,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                _buildInfoPill(
+                  icon: Icons.calendar_today_outlined,
+                  text: enquiry.travelDate,
+                ),
+                _buildInfoPill(
+                  icon: Icons.people_outline_rounded,
+                  text: '${enquiry.travelers} Travelers',
+                ),
+              ],
+            ),
+            if (enquiry.message.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFEBF0F5)),
+                ),
+                child: Text(
+                  '"${enquiry.message}"',
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    fontStyle: FontStyle.italic,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  enquiry.status.toUpperCase(),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'View details',
                   style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+                    fontSize: 11.5,
+                    color: const Color(0xFF0284C7),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined, size: 13, color: AppTheme.textSecondary),
-              const SizedBox(width: 4),
-              Text(
-                'Travel Date: ${enquiry.travelDate}',
-                style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(width: 16),
-              const Icon(Icons.people_outline, size: 14, color: AppTheme.textSecondary),
-              const SizedBox(width: 4),
-              Text(
-                '${enquiry.travelers} Travelers',
-                style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-            ],
-          ),
-          if (enquiry.message.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              '"${enquiry.message}"',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey.shade700,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 11,
+                  color: Color(0xFF0284C7),
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoPill({required IconData icon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12.5, color: AppTheme.textSecondary),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 11.5,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -628,10 +797,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(14),
         child: ListTile(
           leading: Icon(icon, color: AppTheme.primaryColor),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          title: Text(title,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          subtitle: Text(subtitle,
+              style:
+                  const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
           trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           onTap: onTap,
         ),
       ),

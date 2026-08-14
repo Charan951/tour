@@ -52,7 +52,7 @@ export const DestinationDetailPage: React.FC = () => {
   if (!dest) {
     return (
       <div className="pt-32 pb-20 text-center max-w-md mx-auto">
-        <h2 className="font-['Outfit'] font-bold text-2xl text-slate-800">Destination Not Found</h2>
+        <h2 className="font-poppins font-bold text-2xl text-slate-800">Destination Not Found</h2>
         <p className="text-xs text-slate-500 mt-2">Could not find tour itineraries for this destination.</p>
         <Link to="/destinations" className="mt-4 inline-block px-4 py-2 bg-[#0A6FB5] text-white rounded-xl text-xs font-bold">
           Explore All Destinations
@@ -113,7 +113,7 @@ export const DestinationDetailPage: React.FC = () => {
           <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#F6C65B] bg-slate-900/60 px-3.5 py-1 rounded-full border border-white/20">
             TRAVEL GUIDE & PACKAGES
           </span>
-          <h1 className="font-['Outfit'] font-extrabold text-3xl sm:text-5xl tracking-tight leading-tight">{dest.name}</h1>
+          <h1 className="font-poppins font-extrabold text-3xl sm:text-5xl tracking-tight leading-tight">{dest.name}</h1>
         </div>
       </div>
 
@@ -121,13 +121,13 @@ export const DestinationDetailPage: React.FC = () => {
         {/* Destination Guide Overview & Dynamic Quick Facts */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 glass-card rounded-3xl p-6 sm:p-8 space-y-3">
-            <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900">About {dest.name}</h2>
+            <h2 className="font-poppins font-bold text-2xl text-slate-900">About {dest.name}</h2>
             <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">{dest.overview || dest.shortDescription}</p>
           </div>
 
           {/* DYNAMIC QUICK FACTS CARD */}
           <div className="glass-card rounded-3xl p-6 space-y-4 border border-slate-200/80">
-            <h3 className="font-['Outfit'] font-bold text-lg text-slate-900 flex items-center gap-2">
+            <h3 className="font-poppins font-bold text-lg text-slate-900 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-[#0A6FB5]" /> Quick Facts
             </h3>
             <div className="space-y-3 text-xs text-slate-600">
@@ -145,7 +145,7 @@ export const DestinationDetailPage: React.FC = () => {
               <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3 py-1 rounded-full">
                 Customized Itineraries
               </span>
-              <h2 className="font-['Outfit'] font-bold text-3xl text-slate-900 mt-2">
+              <h2 className="font-poppins font-bold text-3xl text-slate-900 mt-2">
                 All {dest.name} Tour Packages
               </h2>
             </div>

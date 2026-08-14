@@ -90,7 +90,7 @@ export const PackageDetailPage: React.FC = () => {
   if (!pkg) {
     return (
       <div className="pt-32 pb-20 text-center max-w-md mx-auto">
-        <h2 className="font-['Outfit'] font-bold text-2xl text-slate-800">Package Not Found</h2>
+        <h2 className="font-poppins font-bold text-2xl text-slate-800">Package Not Found</h2>
         <p className="text-xs text-slate-500 mt-2">The requested tour package itinerary could not be loaded.</p>
         <Link to="/packages" className="mt-4 inline-block px-4 py-2 bg-[#0A6FB5] text-white rounded-xl text-xs font-bold">
           View All Packages
@@ -192,7 +192,7 @@ export const PackageDetailPage: React.FC = () => {
           <div className="mb-8 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 space-y-4">
             
             {/* Title & Package Code */}
-            <h1 className="font-['Outfit'] font-bold text-3xl sm:text-4xl text-slate-900 leading-tight">
+            <h1 className="font-poppins font-bold text-3xl sm:text-4xl text-slate-900 leading-tight">
               {pkg.title} <span className="text-slate-500 font-semibold text-2xl sm:text-3xl">({pkg.packageCode})</span>
             </h1>
 
@@ -273,7 +273,7 @@ export const PackageDetailPage: React.FC = () => {
               {/* SECTION: OUR TOUR ITINERARY (ACCORDION) */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80">
                 <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200">
-                  <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900">Our Tour Itinerary</h2>
+                  <h2 className="font-poppins font-bold text-2xl text-slate-900">Our Tour Itinerary</h2>
                   <span className="text-xs text-slate-500 font-semibold">{pkg.itinerary?.length || pkg.duration.days} Days Covered</span>
                 </div>
 
@@ -313,7 +313,7 @@ export const PackageDetailPage: React.FC = () => {
 
               {/* SECTION: OUR TOUR INFORMATION (MINTO STYLED TABS) */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80">
-                <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900 mb-6">Our Tour Information</h2>
+                <h2 className="font-poppins font-bold text-2xl text-slate-900 mb-6">Our Tour Information</h2>
                 
                 {/* Tab Switcher Buttons */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
@@ -385,7 +385,7 @@ export const PackageDetailPage: React.FC = () => {
 
               {/* SECTION: OUR TOUR DETAILS (NARRATIVE OVERVIEW) */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
-                <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900">Our Tour Details</h2>
+                <h2 className="font-poppins font-bold text-2xl text-slate-900">Our Tour Details</h2>
                 <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs leading-relaxed whitespace-pre-line font-medium">
                   {pkg.overview || `Thrilling ${pkg.title}! Get ready for an adrenaline-pumping adventure with our holiday package. Perfect for adventure lovers, couples, and family trips!`}
                 </div>
@@ -394,7 +394,7 @@ export const PackageDetailPage: React.FC = () => {
               {/* SECTION: OUR SIMILAR PACKAGES */}
               {similarPackages.length > 0 && (
                 <div className="space-y-6">
-                  <h2 className="font-['Outfit'] font-bold text-2xl text-slate-900">Our Similar Packages</h2>
+                  <h2 className="font-poppins font-bold text-2xl text-slate-900">Our Similar Packages</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {similarPackages.map((simPkg) => (
                       <PackageCard key={simPkg._id || simPkg.slug} pkg={simPkg} onEnquire={() => setEnquiryModalOpen(true)} />
@@ -413,7 +413,7 @@ export const PackageDetailPage: React.FC = () => {
                   <span className="text-xs font-semibold text-rose-500 block">Starting from</span>
                   
                   <div className="flex items-center justify-center gap-2">
-                    <span className="font-['Outfit'] font-extrabold text-4xl text-slate-900">
+                    <span className="font-poppins font-extrabold text-4xl text-slate-900">
                       ₹{pkg.startingPrice.toLocaleString()}/-
                     </span>
                   </div>
@@ -491,7 +491,7 @@ export const PackageDetailPage: React.FC = () => {
                 {/* EMBEDDED DIRECT LEAD ENQUIRY FORM */}
                 <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-200 space-y-4">
                   <div className="border-b border-slate-200 pb-3 text-center">
-                    <h3 className="font-['Outfit'] font-bold text-base text-slate-900">
+                    <h3 className="font-poppins font-bold text-base text-slate-900">
                       Get a Free Quote Submit Your Details Below
                     </h3>
                   </div>

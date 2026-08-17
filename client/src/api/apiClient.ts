@@ -14,7 +14,9 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('hc_access_token');
+  // Try user token first (stored by UserAuthModal as 'hc_token')
+  // Then fall back to admin token ('hc_access_token')
+  const token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }

@@ -1,6 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --font-poppins: 'Poppins', sans-serif;
+  --font-times-roman: 'Times New Roman', 'Times', serif;
+  --font-sans: 'Poppins', sans-serif;
+  --font-serif: 'Times New Roman', 'Times', serif;
+
+  --color-primary-ocean: #0A6FB5;
+  --color-secondary-ocean: #58B8E8;
+  --color-tropical-aqua: #57D0C9;
+  --color-sunset-gold: #F6C65B;
+  --color-deep-sea: #063B6D;
+  --color-sand: #F8F7F3;
+  --color-bg-light: #FCFCFC;
+  --color-text-main: #1F2937;
+}
+
 @layer base {
   :root {
     --color-primary-ocean: #0A6FB5;

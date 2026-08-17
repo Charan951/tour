@@ -8,12 +8,11 @@ import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/package_provider.dart';
 import '../../services/enquiry_service.dart';
+import '../../services/booking_service.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/package_card.dart';
 import '../auth/login_screen.dart';
-import '../enquiry/enquiry_detail_screen.dart';
-import '../packages/package_detail_screen.dart';
-import '../packages/package_list_screen.dart';
+import '../booking/my_bookings_screen.dart';
+import '../enquiry/my_enquiries_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,17 +25,21 @@ class _ProfileScreenState extends State<ProfileScreen>
     with WidgetsBindingObserver {
   final _ipController = TextEditingController();
   final EnquiryService _enquiryService = EnquiryService();
+  final BookingService _bookingService = BookingService();
 
   late List<EnquiryModel> _userEnquiries;
-  late bool _isLoadingEnquiries;
+  List<Map<String, dynamic>> _userBookings = [];
+
   Timer? _enquiryStatusListener;
   bool _isInitialLoadComplete = false;
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _userEnquiries = [];
-    _isLoadingEnquiries = false;
+    _userBookings = [];
     WidgetsBinding.instance.addObserver(this);
     _ipController.text = ApiConfig.customHost ?? '';
 
@@ -78,8 +81,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             role: authUser?.role,
             email: authUser?.email,
           );
+          final bookings = await _bookingService.getUserBookings(email: authUser?.email);
           if (mounted) {
-            setState(() => _userEnquiries = enquiries);
+            setState(() {
+              _userEnquiries = enquiries;
+              _userBookings = bookings;
+            });
           }
         } catch (_) {
           // Silent refresh failure is ignored so the user keeps the latest valid list.
@@ -98,29 +105,38 @@ class _ProfileScreenState extends State<ProfileScreen>
     unawaited(authProvider.fetchCurrentUser());
     unawaited(packageProvider.fetchPackages());
 
-    // Fire enquiry fetch in background without blocking
+    // Fire enquiry & booking fetch in background without blocking
     final user = authProvider.user;
-    if (user?.email != null && mounted) {
+    if (mounted) {
+      if (user?.email != null) {
+        unawaited(
+          _enquiryService
+              .getProfileEnquiries(
+            role: user!.role,
+            email: user.email,
+          )
+              .then((enquiries) {
+            if (mounted) {
+              setState(() {
+                _userEnquiries = enquiries;
+                if (!_isInitialLoadComplete) {
+                  _isInitialLoadComplete = true;
+                  _startEnquiryStatusListener();
+                }
+              });
+            }
+          }).catchError((_) {}),
+        );
+      }
+
       unawaited(
-        _enquiryService
-            .getProfileEnquiries(
-          role: user!.role,
-          email: user.email,
-        )
-            .then((enquiries) {
+        _bookingService.getUserBookings(email: user?.email).then((bookings) {
           if (mounted) {
             setState(() {
-              _userEnquiries = enquiries;
-              // Mark initial load complete and start polling
-              if (!_isInitialLoadComplete) {
-                _isInitialLoadComplete = true;
-                _startEnquiryStatusListener();
-              }
+              _userBookings = bookings;
             });
           }
-        }).catchError((_) {
-          // Silent error - keep cached data visible
-        }),
+        }).catchError((_) {}),
       );
     }
   }
@@ -130,6 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     WidgetsBinding.instance.removeObserver(this);
     _ipController.dispose();
     _enquiryStatusListener?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -197,11 +214,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         title: const Text('My Profile & Account'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Profile Data',
-            onPressed: _loadUserData,
-          ),
-          IconButton(
             icon: const Icon(Icons.settings_ethernet),
             tooltip: 'Server Settings',
             onPressed: _showServerConfigDialog,
@@ -211,6 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       body: RefreshIndicator(
         onRefresh: _loadUserData,
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 100.0),
           child: Column(
@@ -298,183 +311,77 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 24),
 
-              // Summary Stat Cards
-              Consumer<PackageProvider>(
-                builder: (context, packageProvider, child) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.assignment_turned_in,
-                          count: _userEnquiries.length.toString(),
-                          label: 'Enquiries',
-                          color: const Color(0xFF26C6DA),
-                        ),
+              // Summary Stat Cards (Enquiries & Bookings)
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MyEnquiriesScreen()),
+                        );
+                      },
+                      child: _buildStatCard(
+                        icon: Icons.assignment_turned_in,
+                        count: _userEnquiries.length.toString(),
+                        label: 'Enquiries',
+                        color: const Color(0xFF26C6DA),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.card_travel_outlined,
-                          count: packageProvider.packages.length.toString(),
-                          label: 'Tour Plans',
-                          color: AppTheme.accentColor,
-                        ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+                        );
+                      },
+                      child: _buildStatCard(
+                        icon: Icons.shopping_bag_outlined,
+                        count: _userBookings.length.toString(),
+                        label: 'Bookings',
+                        color: const Color(0xFF10B981),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // My Enquiries & Quotes History Section
+              // Activity & Tracking Options Section
               Text(
-                'My Enquiries & Custom Quotes',
+                'My Travel Activity',
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Track responses from HolidayCity travel experts',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
               const SizedBox(height: 12),
 
-              if (_isLoadingEnquiries)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              else if (_userEnquiries.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'No enquiries submitted yet. Tap "Enquire Now" on any package to request a custom quote!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 13, color: AppTheme.textSecondary),
-                    ),
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _userEnquiries.length,
-                  itemBuilder: (context, index) {
-                    final enquiry = _userEnquiries[index];
-                    return _buildEnquiryCard(enquiry);
-                  },
-                ),
-
-              const SizedBox(height: 28),
-
-              // Available Holiday Travel Plans Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'All Holiday Travel Plans',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Explore all active package itineraries & pricing tiers',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const PackageListScreen()),
-                      );
-                    },
-                    child: const Text('View All',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
+              _buildListTile(
+                icon: Icons.assignment_turned_in_outlined,
+                title: 'My Enquiries & Custom Quotes',
+                subtitle: 'Track custom trip quotes, responses & status',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyEnquiriesScreen()),
+                  );
+                },
               ),
-              const SizedBox(height: 12),
 
-              Consumer<PackageProvider>(
-                builder: (context, packageProvider, child) {
-                  if (packageProvider.isLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-                  if (packageProvider.packages.isEmpty) {
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'No active travel plans found.',
-                          style: TextStyle(
-                              fontSize: 13, color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: packageProvider.packages.length > 3
-                        ? 3
-                        : packageProvider.packages.length,
-                    itemBuilder: (context, index) {
-                      final pkg = packageProvider.packages[index];
-                      return PackageCard(
-                        package: pkg,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PackageDetailScreen(package: pkg),
-                            ),
-                          );
-                        },
-                      );
-                    },
+              _buildListTile(
+                icon: Icons.shopping_bag_outlined,
+                title: 'My Bookings & Payments',
+                subtitle: 'Track active bookings, payment status & pay balance',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
                   );
                 },
               ),
@@ -594,190 +501,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildEnquiryCard(EnquiryModel enquiry) {
-    Color statusColor;
-    switch (enquiry.status.toLowerCase()) {
-      case 'contacted':
-      case 'qualified':
-      case 'followuppending':
-        statusColor = const Color(0xFF0284C7);
-        break;
-      case 'quotationsent':
-      case 'confirmed':
-      case 'completed':
-        statusColor = AppTheme.successColor;
-        break;
-      case 'closed lost':
-      case 'lost':
-      case 'cancelled':
-        statusColor = AppTheme.errorColor;
-        break;
-      default:
-        statusColor = AppTheme.accentColor;
-    }
 
-    final displayStatus = enquiry.status.isNotEmpty ? enquiry.status : 'New';
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EnquiryDetailScreen(enquiry: enquiry),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      enquiry.destination,
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                        height: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.18),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    displayStatus,
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 14,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _buildInfoPill(
-                  icon: Icons.calendar_today_outlined,
-                  text: enquiry.travelDate,
-                ),
-                _buildInfoPill(
-                  icon: Icons.people_outline_rounded,
-                  text: '${enquiry.travelers} Travelers',
-                ),
-              ],
-            ),
-            if (enquiry.message.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFEBF0F5)),
-                ),
-                child: Text(
-                  '"${enquiry.message}"',
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    fontStyle: FontStyle.italic,
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'View details',
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    color: const Color(0xFF0284C7),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 11,
-                  color: Color(0xFF0284C7),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoPill({required IconData icon, required String text}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12.5, color: AppTheme.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: GoogleFonts.inter(
-              fontSize: 11.5,
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildListTile({
     required IconData icon,

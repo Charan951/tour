@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, LayoutDashboard, Users, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
+import { Compass, LayoutDashboard, Users, ShoppingBag, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -23,6 +23,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
       label: 'Executive Overview',
       path: '/admin/dashboard',
       icon: LayoutDashboard
+    },
+    {
+      label: 'Bookings & Orders',
+      path: '/admin/bookings',
+      icon: ShoppingBag
     },
     {
       label: 'Lead CRM (Enquiries)',

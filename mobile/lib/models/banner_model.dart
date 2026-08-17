@@ -9,6 +9,8 @@ class BannerModel {
   final String? priceText;
   final String? durationText;
   final String? destinationName;
+  final String? destinationSlug;
+  final String? destinationId;
 
   BannerModel({
     required this.id,
@@ -21,13 +23,24 @@ class BannerModel {
     this.priceText,
     this.durationText,
     this.destinationName,
+    this.destinationSlug,
+    this.destinationId,
   });
 
   factory BannerModel.fromJson(Map<String, dynamic> json) {
     final destinationObj = json['destination'];
-    final destinationName = destinationObj is Map
-        ? (destinationObj['name'] ?? '').toString()
-        : (destinationObj ?? '').toString();
+    String? destName;
+    String? destSlug;
+    String? destId;
+
+    if (destinationObj is Map) {
+      destName = destinationObj['name']?.toString();
+      destSlug = destinationObj['slug']?.toString();
+      destId = (destinationObj['_id'] ?? destinationObj['id'])?.toString();
+    } else if (destinationObj != null) {
+      destId = destinationObj.toString();
+      destName = destinationObj.toString();
+    }
 
     return BannerModel(
       id: json['_id'] ?? json['id'] ?? '',
@@ -41,7 +54,9 @@ class BannerModel {
       offerText: json['offerText']?.toString() ?? 'Limited Offer',
       priceText: json['priceText']?.toString() ?? '₹8,500 Per Person',
       durationText: json['durationText']?.toString() ?? '03 Night / 04 Days',
-      destinationName: destinationName.isNotEmpty ? destinationName : null,
+      destinationName: destName != null && destName.isNotEmpty ? destName : null,
+      destinationSlug: destSlug != null && destSlug.isNotEmpty ? destSlug : null,
+      destinationId: destId != null && destId.isNotEmpty ? destId : null,
     );
   }
 }

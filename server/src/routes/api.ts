@@ -14,6 +14,7 @@ import {
 import { getBanners, createBanner, updateBanner, deleteBanner } from '../controllers/bannerController.js';
 import { getThemeBanners, upsertThemeBanner, deleteThemeBanner } from '../controllers/themeBannerController.js';
 import { getSitemapXML } from '../controllers/sitemapController.js';
+import { createBooking, getAdminBookings, getUserBookings, updateBookingStatus, deleteBooking, payRemainingBalance } from '../controllers/bookingController.js';
 import uploadRoutes from './uploadRoutes.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { authRateLimiter, enquiryRateLimiter, contactRateLimiter } from '../middleware/security.js';
@@ -87,6 +88,10 @@ router.get('/settings', getSettings);
 
 router.post('/enquiries', enquiryRateLimiter, createEnquiry);
 router.get('/enquiries/my', optionalAuth, getMyEnquiries);
+router.post('/bookings', enquiryRateLimiter, createBooking);
+router.get('/bookings/my', optionalAuth, getUserBookings);
+router.patch('/bookings/:id/pay-remaining', payRemainingBalance);
+router.post('/bookings/:id/pay-remaining', payRemainingBalance);
 router.post('/contact', enquiryRateLimiter, createContactMessage);
 router.post('/newsletter', subscribeNewsletter);
 
@@ -94,6 +99,12 @@ router.post('/newsletter', subscribeNewsletter);
 router.use('/admin', authenticateToken);
 
 router.get('/admin/auth/me', getMe);
+
+// Bookings CRUD
+router.get('/admin/bookings', getAdminBookings);
+router.post('/admin/bookings', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createBooking);
+router.patch('/admin/bookings/:id', updateBookingStatus);
+router.delete('/admin/bookings/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteBooking);
 
 // Enquiries (CRM) CRUD
 router.get('/admin/enquiries', getEnquiries);

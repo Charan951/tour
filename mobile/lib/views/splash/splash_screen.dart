@@ -19,6 +19,8 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _floatAnimation;
+  late Animation<double> _dotPulseAnimation;
   Timer? _initialTimer;
 
   @override
@@ -26,42 +28,82 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2200),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(0.0), weight: 20),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 60,
+      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 20),
+    ]).animate(_controller);
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.9, end: 1.0)
+              .chain(CurveTween(curve: Curves.easeOutBack)),
+          weight: 75),
+      TweenSequenceItem(
+        tween: ConstantTween(1.0),
+        weight: 25,
+      ),
+    ]).animate(_controller);
+
+    _floatAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+          tween: Tween<double>(begin: 0.0, end: -6.0)
+              .chain(CurveTween(curve: Curves.easeInOutCubic)),
+          weight: 50),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: -6.0, end: 0.0)
+              .chain(CurveTween(curve: Curves.easeInOutCubic)),
+          weight: 50),
+    ]).animate(_controller);
+
+    _dotPulseAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(0.7), weight: 25),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.7, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 50,
+      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 25),
+    ]).animate(_controller);
 
     _controller.forward();
     _checkInitialState();
   }
 
   Future<void> _checkInitialState() async {
-    _initialTimer = Timer(const Duration(milliseconds: 2500), () async {
-      if (!mounted) return;
+    final startTime = DateTime.now();
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.initAuth();
+    // Start auth initialization immediately in parallel with splash display
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.initAuth();
 
-      if (!mounted) return;
+    // Keep the splash visible long enough for the brand name to be read clearly
+    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+    const minSplashDuration = 2000;
+    if (elapsed < minSplashDuration) {
+      await Future.delayed(Duration(milliseconds: minSplashDuration - elapsed));
+    }
 
-      if (authProvider.isLoggedIn) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-        );
-      }
-    });
+    if (!mounted) return;
+
+    if (authProvider.isLoggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+      );
+    }
   }
 
   @override
@@ -73,165 +115,178 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background Gradient Layer
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF022B58),
-                  Color(0xFF064B88),
-                  Color(0xFF0A6FB5),
-                ],
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Scaffold(
+          body: Stack(
+            children: [
+              // Background Gradient Layer
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF022B58),
+                      Color(0xFF064B88),
+                      Color(0xFF0A6FB5),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          // Custom Background Flight Trails & Dotted World Map Painter
-          Positioned.fill(
-            child: CustomPaint(
-              painter: SplashBackgroundPainter(),
-            ),
-          ),
+              // Custom Background Flight Trails & Dotted World Map Painter
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: SplashBackgroundPainter(),
+                ),
+              ),
 
-          // Main Foreground Content Layout
-          SafeArea(
-            child: Column(
-              children: [
-                const Spacer(flex: 3),
+              // Main Foreground Content Layout
+              SafeArea(
+                child: Column(
+                  children: [
+                    const Spacer(flex: 3),
 
-                // Animated Logo and Branding Block
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Logo Row: Emblem + Brand Title
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Custom Vector Emblem (H + Cyan Swoosh + Airplane)
-                              SizedBox(
-                                width: 72,
-                                height: 72,
-                                child: CustomPaint(
-                                  painter: HolidayCityLogoPainter(),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-
-                              // Text Group: HolidayCity Pvt. Ltd.
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  RichText(
-                                    text: TextSpan(
+                    // Animated Logo and Branding Block
+                    Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Transform.translate(
+                        offset: Offset(0, _floatAnimation.value),
+                        child: Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 72,
+                                      height: 72,
+                                      child: CustomPaint(
+                                        painter: HolidayCityLogoPainter(),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        TextSpan(
-                                          text: 'Holiday',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 34,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: -0.5,
+                                        RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: 'Holiday',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 34,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Colors.white,
+                                                  letterSpacing: -0.5,
+                                                ),
+                                              ),
+                                              TextSpan(
+                                                text: 'City',
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 34,
+                                                  fontWeight: FontWeight.w800,
+                                                  color:
+                                                      const Color(0xFF26C6DA),
+                                                  letterSpacing: -0.5,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        TextSpan(
-                                          text: 'City',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 34,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color(0xFF26C6DA),
-                                            letterSpacing: -0.5,
+                                        Text(
+                                          'Pvt. Ltd.',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.9),
+                                            letterSpacing: 0.5,
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  Text(
-                                    'Pvt. Ltd.',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.9),
-                                      letterSpacing: 0.5,
-                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const Spacer(flex: 3),
+
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Transform.scale(
+                            scale: _dotPulseAnimation.value,
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Transform.scale(
+                            scale:
+                                0.8 + ((1 - _dotPulseAnimation.value) * 0.15),
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Transform.scale(
+                            scale: 0.7 + ((1 - _dotPulseAnimation.value) * 0.1),
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.35),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-
-                const Spacer(flex: 3),
-
-                // Bottom 3-Dot Page Indicators matching screenshot
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Active glowing white dot
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // 2nd Medium Dot
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // 3rd Small Dot
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.35),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

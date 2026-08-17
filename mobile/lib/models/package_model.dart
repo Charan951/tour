@@ -40,6 +40,7 @@ class PackageModel {
   final double price;
   final double? originalPrice;
   final String category;
+  final String? themeName;
   final List<String> images;
   final String overview;
   final List<String> highlights;
@@ -60,6 +61,7 @@ class PackageModel {
     required this.price,
     this.originalPrice,
     required this.category,
+    this.themeName,
     required this.images,
     required this.overview,
     required this.highlights,
@@ -82,6 +84,16 @@ class PackageModel {
       }
     } else if (json['duration'] != null) {
       resolvedDuration = json['duration'].toString();
+    }
+
+    // Determine themeName if present
+    String? resolvedThemeName;
+    if (json['themeName'] != null) {
+      resolvedThemeName = json['themeName'].toString();
+    } else if (json['theme'] is Map) {
+      resolvedThemeName = json['theme']['name']?.toString();
+    } else if (json['theme'] is String) {
+      resolvedThemeName = json['theme'];
     }
 
     // Determine the main category name from populated list/array if present
@@ -159,6 +171,7 @@ class PackageModel {
           ? (json['discountPrice'] ?? json['originalPrice']).toDouble()
           : null,
       category: resolvedCategory,
+      themeName: resolvedThemeName,
       images: resolvedImages,
       overview: json['overview'] ?? '',
       highlights: (json['highlights'] as List<dynamic>?)

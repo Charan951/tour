@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Star, Clock, MapPin, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { formatImageUrl } from '../../utils/imageUrl';
+
 interface PackageCardProps {
   pkg: {
     _id?: string;
@@ -32,7 +34,7 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire }) => {
       {/* Cover Image Container (Clickable) */}
       <Link to={`/package/${pkg.slug}`} className="relative h-56 overflow-hidden block">
         <img
-          src={pkg.coverImage}
+          src={formatImageUrl(pkg.coverImage)}
           alt={pkg.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           loading="lazy"

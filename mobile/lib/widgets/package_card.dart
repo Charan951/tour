@@ -4,16 +4,28 @@ import 'package:intl/intl.dart';
 import '../config/api_config.dart';
 import '../config/theme.dart';
 import '../models/package_model.dart';
+import '../views/booking/booking_bottom_sheet.dart';
 
 class PackageCard extends StatelessWidget {
   final PackageModel package;
   final VoidCallback onTap;
+  final VoidCallback? onBookNow;
 
   const PackageCard({
     super.key,
     required this.package,
     required this.onTap,
+    this.onBookNow,
   });
+
+  void _openBookingSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BookingBottomSheet(package: package),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,18 +192,18 @@ class PackageCard extends StatelessWidget {
                               Text(
                                 currencyFormatter.format(package.price),
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryColor,
                                 ),
                               ),
                               if (package.originalPrice != null) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 4),
                                 Text(
                                   currencyFormatter
                                       .format(package.originalPrice),
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     color: Colors.grey,
                                     decoration: TextDecoration.lineThrough,
                                   ),
@@ -201,19 +213,42 @@ class PackageCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accentColor,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      Row(
+                        children: [
+                          OutlinedButton(
+                            onPressed: onTap,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppTheme.accentColor),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text('View Deal',
+                                style: TextStyle(
+                                    color: AppTheme.accentColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
                           ),
-                        ),
-                        child: const Text('View Deal',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 13)),
+                          const SizedBox(width: 6),
+                          ElevatedButton(
+                            onPressed: onBookNow ?? () => _openBookingSheet(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text('Book Now',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ],
                       ),
                     ],
                   ),

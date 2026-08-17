@@ -268,6 +268,20 @@ class ApiService {
       }
     }
 
+    if (path.contains('/pay-remaining')) {
+      return {
+        'success': true,
+        'message': 'Remaining balance payment recorded successfully!',
+        'data': {
+          'paymentStatus': 'Full Paid',
+          'advancePaid': true,
+          'remainingBalance': 0,
+          'paymentMethod': body?['paymentMethod'] ?? 'UPI / Online',
+          'transactionId': body?['transactionId'] ?? 'REM-PAY-SUCCESS',
+        }
+      };
+    }
+
     return {
       'success': false,
       'data': null,

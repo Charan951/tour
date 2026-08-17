@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/package_model.dart';
 import '../../widgets/custom_button.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
+import '../booking/booking_bottom_sheet.dart';
 
 class PackageDetailScreen extends StatefulWidget {
   final PackageModel package;
@@ -40,6 +41,15 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
         defaultDestination:
             '${widget.package.title} ${note.isNotEmpty ? "[$note]" : ""}',
       ),
+    );
+  }
+
+  void _openBookPackageSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BookingBottomSheet(package: widget.package),
     );
   }
 
@@ -640,19 +650,28 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   currencyFormatter.format(
                       activeTier != null ? activeTier.price : package.price),
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primaryColor,
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: CustomButton(
-                text: 'Get Free Quote',
-                backgroundColor: AppTheme.accentColor,
+                text: 'Enquire',
+                isOutlined: true,
                 onPressed: _openBookingSheet,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: CustomButton(
+                text: 'Book Package Now',
+                backgroundColor: AppTheme.primaryColor,
+                onPressed: _openBookPackageSheet,
               ),
             ),
           ],

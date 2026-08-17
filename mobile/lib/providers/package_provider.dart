@@ -45,6 +45,8 @@ class PackageProvider extends ChangeNotifier {
     return list;
   }
 
+  List<PackageModel> get allPackages => _packages;
+
   bool get isLoading => _isLoading;
   String get selectedCategory => _selectedCategory;
   String get searchQuery => _searchQuery;

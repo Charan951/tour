@@ -3,13 +3,24 @@ import '../models/package_model.dart';
 import 'api_service.dart';
 
 class PackageService {
-  Future<List<PackageModel>> getPackages({String? category, String? search}) async {
+  Future<List<PackageModel>> getPackages({
+    String? category,
+    String? search,
+    String? theme,
+    String? destination,
+  }) async {
     try {
       String url = ApiConfig.packages;
       List<String> queryParams = [];
 
       if (category != null && category.isNotEmpty && category != 'All') {
         queryParams.add('category=${Uri.encodeComponent(category)}');
+      }
+      if (theme != null && theme.isNotEmpty && theme != 'All') {
+        queryParams.add('theme=${Uri.encodeComponent(theme)}');
+      }
+      if (destination != null && destination.isNotEmpty && destination != 'All') {
+        queryParams.add('destination=${Uri.encodeComponent(destination)}');
       }
       if (search != null && search.isNotEmpty) {
         queryParams.add('search=${Uri.encodeComponent(search)}');
@@ -60,6 +71,7 @@ class PackageService {
         price: 12900,
         originalPrice: 15900,
         category: 'Domestic',
+        themeName: 'Leisure',
         images: [
           'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1200&auto=format&fit=crop',
           'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop',
@@ -92,6 +104,7 @@ class PackageService {
         price: 16500,
         originalPrice: 19500,
         category: 'Domestic',
+        themeName: 'Hill Station',
         images: [
           'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=1200&auto=format&fit=crop',
         ],
@@ -124,6 +137,7 @@ class PackageService {
         price: 59000,
         originalPrice: 68000,
         category: 'International',
+        themeName: 'Honeymoon Tour',
         images: [
           'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=1200&auto=format&fit=crop',
         ],
@@ -156,6 +170,7 @@ class PackageService {
         price: 26500,
         originalPrice: 31000,
         category: 'Domestic',
+        themeName: 'Family Tour',
         images: [
           'https://images.unsplash.com/photo-1477587458883-47145ed94245?q=80&w=1200&auto=format&fit=crop',
         ],
@@ -189,6 +204,7 @@ class PackageService {
         price: 48500,
         originalPrice: 55000,
         category: 'International',
+        themeName: 'Adventure',
         images: [
           'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=1200&auto=format&fit=crop',
         ],

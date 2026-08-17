@@ -24,16 +24,21 @@ export const getPackages = async (req: Request, res: Response) => {
       if (mongoose.Types.ObjectId.isValid(destination as string)) {
         query.destination = destination;
       } else {
-        const foundDest = await Destination.findOne({
+        const destStr = (destination as string).trim();
+        const cleanName = destStr.split(',')[0].trim();
+        const matchingDests = await Destination.find({
+          isDeleted: false,
           $or: [
-            { slug: destination as string },
-            { name: { $regex: destination as string, $options: 'i' } }
+            { slug: { $regex: destStr, $options: 'i' } },
+            { name: { $regex: cleanName, $options: 'i' } }
           ]
-        });
-        if (foundDest) {
-          query.destination = foundDest._id;
+        }).select('_id').lean();
+        
+        const destIds = matchingDests.map(d => d._id);
+        if (destIds.length > 0) {
+          query.destination = { $in: destIds };
         } else {
-          query.destination = null;
+          query.destination = new mongoose.Types.ObjectId();
         }
       }
     }
@@ -56,9 +61,25 @@ export const getPackages = async (req: Request, res: Response) => {
 
     if (theme) {
       if (mongoose.Types.ObjectId.isValid(theme as string)) {
-        query.theme = theme;
+        query.$or = [
+          { theme: theme },
+          { themeName: { $regex: theme as string, $options: 'i' } }
+        ];
       } else {
-        query.themeName = { $regex: new RegExp(`^${(theme as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+        const themeStr = (theme as string).trim();
+        const cleanTheme = themeStr.replace(/tour/gi, '').trim();
+        const keywords = cleanTheme.split(/\s+/).filter((k) => k.length > 2);
+
+        query.$or = [
+          { themeName: { $regex: themeStr, $options: 'i' } },
+          { themeName: { $regex: cleanTheme, $options: 'i' } },
+          { title: { $regex: cleanTheme, $options: 'i' } },
+          { overview: { $regex: cleanTheme, $options: 'i' } },
+          { highlights: { $regex: cleanTheme, $options: 'i' } },
+          ...keywords.map((kw) => ({ title: { $regex: kw, $options: 'i' } })),
+          ...keywords.map((kw) => ({ highlights: { $regex: kw, $options: 'i' } })),
+          ...keywords.map((kw) => ({ overview: { $regex: kw, $options: 'i' } }))
+        ];
       }
     }
 

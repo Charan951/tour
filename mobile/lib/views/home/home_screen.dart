@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/banner_model.dart';
+import '../../models/destination_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/banner_provider.dart';
 import '../../providers/destination_provider.dart';
@@ -21,7 +22,7 @@ import '../packages/package_list_screen.dart';
 import '../profile/profile_screen.dart';
 import '../themes/theme_screen.dart';
 import '../themes/theme_detail_screen.dart';
-import 'banner_detail_screen.dart';
+import '../offers/offer_packages_screen.dart';
 
 class _BottomNavItem {
   final IconData icon;
@@ -48,16 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late PageController _bannerPageController;
   Timer? _bannerTimer;
   final TextEditingController _searchController = TextEditingController();
-
-  final List<String> _categories = [
-    'All',
-    'Honeymoon',
-    'Family',
-    'Adventure',
-    'Wildlife',
-    'Beach',
-    'Heritage'
-  ];
 
   Timer? _autoSyncTimer;
 
@@ -382,15 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (context, index) {
                       final banner = bannerProvider.banners[index];
                       return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  BannerDetailScreen(banner: banner),
-                            ),
-                          );
-                        },
+                        onTap: () => _handleBannerTap(banner),
                         child: _buildHeroBannerCard(banner),
                       );
                     },
@@ -418,22 +401,26 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
             ],
 
-            // Specialization Themes Section
+            // Specialization Themes Horizontal Scroller
             if (themeProvider.themes.isNotEmpty) ...[
               SectionHeader(
                 title: 'Specialization Themes',
                 subtitle: 'Find tours tailored to your travel style',
-                onSeeAll: () => setState(() => _currentIndex = 1),
+                onSeeAll: () => setState(() => _currentIndex = 2),
               ),
               SizedBox(
-                height: 110,
+                height: 210,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: themeProvider.themes.length,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: themeProvider.themes.length > 4
+                      ? 4
+                      : themeProvider.themes.length,
                   itemBuilder: (context, index) {
                     final theme = themeProvider.themes[index];
                     final formattedUrl =
                         ApiConfig.formatImageUrl(theme.imageUrl);
+
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -444,50 +431,69 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                       child: Container(
-                        width: 140,
-                        margin: const EdgeInsets.only(right: 12),
+                        width: 155,
+                        margin: const EdgeInsets.only(right: 14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(18),
                           child: Stack(
                             children: [
-                              CachedNetworkImage(
-                                imageUrl: formattedUrl,
-                                width: 140,
-                                height: 110,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    Container(color: Colors.grey.shade200),
-                                errorWidget: (context, url, error) =>
-                                    Image.network(
-                                  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop',
+                              Positioned.fill(
+                                child: CachedNetworkImage(
+                                  imageUrl: formattedUrl,
                                   fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Container(color: Colors.grey[300]),
+                                  errorWidget: (context, url, error) =>
+                                      Image.network(
+                                    'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop',
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.black.withValues(alpha: 0.6),
-                                      Colors.transparent,
-                                    ],
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.2),
+                                        Colors.black.withValues(alpha: 0.8),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                               Positioned(
-                                bottom: 8,
-                                left: 8,
-                                right: 8,
-                                child: Text(
-                                  theme.name,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                bottom: 12,
+                                left: 12,
+                                right: 12,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      theme.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.15,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -501,75 +507,136 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
             ],
 
-            // Category Filter Chips
-            SizedBox(
-              height: 38,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final cat = _categories[index];
-                  final isSelected = packageProvider.selectedCategory == cat;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      selected: isSelected,
-                      label: Text(cat),
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppTheme.textPrimary,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                      selectedColor: AppTheme.primaryColor,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      onSelected: (_) => packageProvider.setCategory(cat),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Popular Destinations Horizontal Scroll
+            // Popular Destinations Horizontal Scroller
             SectionHeader(
               title: 'Popular Destinations',
               subtitle: 'Top places travelers are loving',
               onSeeAll: () => setState(() => _currentIndex = 1),
             ),
-            SizedBox(
-              height: 200,
-              child: destinationProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : destinationProvider.destinations.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No destinations available.',
-                            style: TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 13),
+            if (destinationProvider.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (destinationProvider.destinations.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text(
+                    'No destinations available.',
+                    style:
+                        TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                height: 210,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: destinationProvider.destinations.length > 4
+                      ? 4
+                      : destinationProvider.destinations.length,
+                  itemBuilder: (context, index) {
+                    final dest = destinationProvider.destinations[index];
+                    final formattedUrl = ApiConfig.formatImageUrl(dest.image);
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                DestinationDetailScreen(destination: dest),
                           ),
-                        )
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: destinationProvider.destinations.length,
-                          itemBuilder: (context, index) {
-                            final dest =
-                                destinationProvider.destinations[index];
-                            return DestinationCard(
-                              destination: dest,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DestinationDetailScreen(
-                                        destination: dest),
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                        );
+                      },
+                      child: Container(
+                        width: 155,
+                        margin: const EdgeInsets.only(right: 14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-            ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: CachedNetworkImage(
+                                  imageUrl: formattedUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Container(color: Colors.grey[300]),
+                                  errorWidget: (context, url, error) =>
+                                      Image.network(
+                                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.2),
+                                        Colors.black.withValues(alpha: 0.8),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 12,
+                                left: 12,
+                                right: 12,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${dest.state}, ${dest.country}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      dest.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             const SizedBox(height: 24),
 
             // Trending Tour Packages
@@ -618,90 +685,103 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleBannerTap(BannerModel banner) {
+    final destinationProvider =
+        Provider.of<DestinationProvider>(context, listen: false);
+    final themeProvider =
+        Provider.of<SpecializationThemeProvider>(context, listen: false);
+
+    final titleLower = banner.title.toLowerCase();
+    final subLower = (banner.subtitle ?? '').toLowerCase();
+    final destNameLower = (banner.destinationName ?? '').toLowerCase();
+    final destSlugLower = (banner.destinationSlug ?? '').toLowerCase();
+    final destIdLower = (banner.destinationId ?? '').toLowerCase();
+
+    // 1. Try finding matching destination by ID, Slug, or Name
+    DestinationModel? matchedDest;
+
+    if (destIdLower.isNotEmpty ||
+        destSlugLower.isNotEmpty ||
+        destNameLower.isNotEmpty) {
+      matchedDest = destinationProvider.destinations.where((d) {
+        final dId = d.id.toLowerCase();
+        final dSlug = d.slug.toLowerCase();
+        final dName = d.name.toLowerCase();
+        return (destIdLower.isNotEmpty && dId == destIdLower) ||
+            (destSlugLower.isNotEmpty && dSlug == destSlugLower) ||
+            (destNameLower.isNotEmpty &&
+                (dName.contains(destNameLower) ||
+                    destNameLower.contains(dName)));
+      }).firstOrNull;
+    }
+
+    // 2. If not matched yet, search for destination substring in banner title or subtitle
+    matchedDest ??= destinationProvider.destinations.where((d) {
+      final dName = d.name.toLowerCase().split(',')[0].trim();
+      final dSlug = d.slug.toLowerCase().split('-')[0].trim();
+      return titleLower.contains(dName) ||
+          titleLower.contains(dSlug) ||
+          subLower.contains(dName) ||
+          subLower.contains(dSlug);
+    }).firstOrNull;
+
+    // If destination is matched, open DestinationDetailScreen!
+    if (matchedDest != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DestinationDetailScreen(destination: matchedDest!),
+        ),
+      );
+      return;
+    }
+
+    // 3. Try matching with themes
+    final matchedTheme = themeProvider.themes.where((t) {
+      final tName = t.name.toLowerCase().replaceAll('tour', '').trim();
+      return titleLower.contains(tName) || subLower.contains(tName);
+    }).firstOrNull;
+
+    if (matchedTheme != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ThemeDetailScreen(theme: matchedTheme),
+        ),
+      );
+      return;
+    }
+
+    // 4. Fallback: Open OfferPackagesScreen showing related offer packages for this banner
+    final tag = banner.destinationName ?? banner.title;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OfferPackagesScreen(
+          offerTitle: banner.title,
+          filterTag: tag,
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeroBannerCard(BannerModel banner) {
     final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CachedNetworkImage(
-                imageUrl: formattedUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    Container(color: Colors.grey.shade200),
-                errorWidget: (context, url, error) => Image.network(
-                  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                ),
-              ),
+        child: SizedBox.expand(
+          child: CachedNetworkImage(
+            imageUrl: formattedUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) =>
+                Container(color: Colors.grey.shade200),
+            errorWidget: (context, url, error) => Image.network(
+              'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop',
+              fit: BoxFit.cover,
             ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.black.withValues(alpha: 0.72),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.42),
-                    ],
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'FEATURED DEAL',
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    banner.title,
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (banner.subtitle != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      banner.subtitle!,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: Colors.white70,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

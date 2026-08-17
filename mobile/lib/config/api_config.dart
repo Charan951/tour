@@ -72,5 +72,12 @@ class ApiConfig {
   static String adminEnquiryById(String id) => '$baseUrl/admin/enquiries/$id';
   static String adminEnquiryStatus(String id) =>
       '$baseUrl/admin/enquiries/$id/status';
+
+  static String get bookings => '$baseUrl/bookings';
+  static String get myBookings => '$baseUrl/bookings/my';
+  static String myBookingsForEmail(String email) =>
+      '$baseUrl/bookings/my?email=${Uri.encodeQueryComponent(email)}';
+  static String get adminBookings => '$baseUrl/admin/bookings';
+
   static String get contact => '$baseUrl/contact';
 }

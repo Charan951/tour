@@ -9,6 +9,8 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _errorMessage;
+  bool _disposed = false;
+  bool _notifyQueued = false;
 
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
@@ -16,9 +18,34 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _user != null;
   String? get errorMessage => _errorMessage;
 
+  @override
+  void dispose() {
+    _disposed = true;
+    _notifyQueued = false;
+    super.dispose();
+  }
+
+  void _safeNotifyListeners() {
+    if (_disposed || !hasListeners) {
+      return;
+    }
+
+    if (_notifyQueued) {
+      return;
+    }
+
+    _notifyQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifyQueued = false;
+      if (!_disposed && hasListeners) {
+        notifyListeners();
+      }
+    });
+  }
+
   Future<void> initAuth() async {
     _isLoading = true;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final savedUser = await _authService.fetchCurrentUser();
@@ -30,7 +57,7 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       _isInitialized = true;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -39,7 +66,7 @@ class AuthProvider extends ChangeNotifier {
       final updatedUser = await _authService.fetchCurrentUser();
       if (updatedUser != null) {
         _user = updatedUser;
-        notifyListeners();
+        _safeNotifyListeners();
       }
     } catch (_) {}
   }
@@ -47,17 +74,17 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       _user = await _authService.login(email, password);
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
   }
@@ -71,7 +98,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       _user = await _authService.register(
@@ -82,12 +109,12 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
   }
@@ -95,17 +122,17 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> forgotPassword(String email) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       final success = await _authService.forgotPassword(email);
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return success;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
       return false;
     }
   }
@@ -113,6 +140,6 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await _authService.logout();
     _user = null;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 }

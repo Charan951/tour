@@ -6,6 +6,18 @@ import { apiClient } from '../../api/apiClient';
 import { PackageCard } from '../../components/cards/PackageCard';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { SEO } from '../../components/common/SEO';
+import { MobileHomePage } from './MobileHomePage';
+import { FALLBACK_PACKAGES, FALLBACK_DESTINATIONS, FALLBACK_THEMES } from '../../utils/mobileDataFallback';
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 1024);
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return mobile;
+}
 
 const SPECIALIZATION_THEMES = [
   { name: 'Honeymoon Tour', rating: '4.9 ★ (348 Reviews)', defaultBanner: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Honeymoon+Tour' },
@@ -60,6 +72,7 @@ const DEFAULT_HERO_BANNERS = [
 ];
 
 export const HomePage: React.FC = () => {
+  const isMobile = useIsMobile();
   const [destinations, setDestinations] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
@@ -105,17 +118,32 @@ export const HomePage: React.FC = () => {
         apiClient.get('/themes')
       ]);
 
-      if (destRes.status === 'fulfilled' && destRes.value.data?.data) {
-        setDestinations(destRes.value.data.data);
+      if (destRes.status === 'fulfilled') {
+        const apiDests = destRes.value.data?.data || [];
+        const map = new Map<string, any>();
+        apiDests.forEach((d: any) => map.set(d.slug || d._id || d.id, d));
+        FALLBACK_DESTINATIONS.forEach(d => { if (!map.has(d.slug)) map.set(d.slug, d); });
+        setDestinations(Array.from(map.values()));
       }
-      if (pkgRes.status === 'fulfilled' && pkgRes.value.data?.data) {
-        setPackages(pkgRes.value.data.data);
+
+      if (pkgRes.status === 'fulfilled') {
+        const apiPkgs = pkgRes.value.data?.data || [];
+        const map = new Map<string, any>();
+        apiPkgs.forEach((p: any) => map.set(p.slug || p._id || p.id, p));
+        FALLBACK_PACKAGES.forEach(p => { if (!map.has(p.slug)) map.set(p.slug, p); });
+        setPackages(Array.from(map.values()));
       }
+
       if (banRes.status === 'fulfilled' && banRes.value.data?.data) {
         setBanners(banRes.value.data.data);
       }
-      if (themeRes.status === 'fulfilled' && themeRes.value.data?.data) {
-        setThemeBanners(themeRes.value.data.data);
+
+      if (themeRes.status === 'fulfilled') {
+        const apiThemes = themeRes.value.data?.data || [];
+        const map = new Map<string, any>();
+        apiThemes.forEach((t: any) => map.set(t.slug || t._id || t.id, t));
+        FALLBACK_THEMES.forEach(t => { if (!map.has(t.slug)) map.set(t.slug, t); });
+        setThemeBanners(Array.from(map.values()));
       }
     } catch (_) {}
   };
@@ -205,6 +233,23 @@ export const HomePage: React.FC = () => {
     return `/packages?search=${encodeURIComponent(b.title || '')}`;
   };
 
+  // ── Mobile: render Flutter-matching MobileHomePage ──
+  if (isMobile) {
+    return (
+      <>
+        <SEO title="HolidayCity | Explore. Experience. Enjoy." description="Book domestic & international tour packages with HolidayCity." />
+        <MobileHomePage
+          destinations={destinations}
+          packages={packages}
+          banners={effectiveHeroBanners}
+          themeBanners={themeBanners}
+          defaultHeroBanners={DEFAULT_HERO_BANNERS}
+          defaultThemes={SPECIALIZATION_THEMES}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <SEO
@@ -222,8 +267,8 @@ export const HomePage: React.FC = () => {
         <span className="tracking-widest uppercase text-[11px]">Enquiry Now</span>
       </button>
 
-      {/* Dynamic Hero Banner Carousel Section (Pure 1000x400 / 5:2 ratio banner slider) */}
-      <section className="relative w-full overflow-hidden pt-28 sm:pt-32">
+      {/* Dynamic Hero Banner Carousel Section */}
+      <section className="relative w-full overflow-hidden pt-32">
         <div
           className="relative w-full select-none overflow-hidden"
           style={{ aspectRatio: '1000 / 400' }}

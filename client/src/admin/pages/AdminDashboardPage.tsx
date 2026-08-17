@@ -182,25 +182,25 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Action Banner */}
-        <div className="bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] rounded-3xl p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] rounded-3xl p-5 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-1">
-            <h3 className="font-['Outfit'] font-bold text-2xl flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-amber-300" /> Quick Package & Destination Actions
+            <h3 className="font-['Outfit'] font-bold text-xl sm:text-2xl flex items-center gap-2">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300 shrink-0" /> Quick Package & Destination Actions
             </h3>
             <p className="text-xs text-white/90 max-w-xl">
               Add new tour itineraries, set domestic vs international categories, or update quick facts and pricing instantly.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <Link
               to="/admin/packages"
-              className="px-5 py-3 rounded-2xl bg-white text-[#0A6FB5] font-bold text-sm shadow-md hover:bg-slate-50 transition-all cursor-pointer"
+              className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-white text-[#0A6FB5] font-bold text-xs sm:text-sm shadow-md hover:bg-slate-50 transition-all cursor-pointer text-center"
             >
               + Create New Package
             </Link>
             <Link
               to="/admin/destinations"
-              className="px-5 py-3 rounded-2xl bg-slate-900/40 border border-white/20 text-white font-bold text-sm hover:bg-slate-900/60 transition-all cursor-pointer"
+              className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-slate-900/40 border border-white/20 text-white font-bold text-xs sm:text-sm hover:bg-slate-900/60 transition-all cursor-pointer text-center"
             >
               + Add Destination
             </Link>

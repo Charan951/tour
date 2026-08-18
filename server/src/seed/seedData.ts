@@ -6,6 +6,7 @@ import { Role } from '../models/Role.js';
 import { Continent, Country, State, Destination } from '../models/Destination.js';
 import { Package, TravelTheme, PackageCategory } from '../models/Package.js';
 import { Blog, Testimonial, FAQ, Setting } from '../models/CMS.js';
+import { Enquiry } from '../models/Enquiry.js';
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ const seed = async () => {
     const singapore = await Country.create({ continent: asia._id, name: 'Singapore', slug: 'singapore', isoCode: 'SG', currency: 'SGD' });
 
     // States
+    const telanganaState = await State.create({ country: india._id, name: 'Telangana', slug: 'telangana' });
     const keralaState = await State.create({ country: india._id, name: 'Kerala', slug: 'kerala' });
     const kashmirState = await State.create({ country: india._id, name: 'Jammu & Kashmir', slug: 'kashmir' });
     const goaState = await State.create({ country: india._id, name: 'Goa', slug: 'goa' });
@@ -70,6 +72,18 @@ const seed = async () => {
     const singaporeState = await State.create({ country: singapore._id, name: 'Marina Bay', slug: 'marina-bay' });
 
     // 4. Destinations
+    const telaganaDest = await Destination.create({
+      country: india._id,
+      state: telanganaState._id,
+      name: 'TELAGANA',
+      slug: 'telagana',
+      banner: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop',
+      shortDescription: 'Charminar, Golconda Fort sound & light show, Ramoji Film City & Hussain Sagar lake.',
+      bestTime: 'Nov - Feb',
+      featured: true,
+      status: 'Active'
+    });
+
     const himachalDest = await Destination.create({
       country: india._id,
       state: himachalState._id,
@@ -147,6 +161,8 @@ const seed = async () => {
       state: baliState._id,
       name: 'Bali Island Paradise',
       slug: 'bali',
+      category: 'International',
+      isDomestic: false,
       banner: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1200&auto=format&fit=crop',
       shortDescription: 'Tropical paradise known for private pool villas & Nusa Penida.',
       bestTime: 'Apr - Oct',
@@ -159,6 +175,8 @@ const seed = async () => {
       state: dubaiState._id,
       name: 'Dubai Futuristic Oasis',
       slug: 'dubai',
+      category: 'International',
+      isDomestic: false,
       banner: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1200&auto=format&fit=crop',
       shortDescription: 'Burj Khalifa skyline, luxury desert safari & theme parks.',
       bestTime: 'Nov - Mar',
@@ -171,6 +189,8 @@ const seed = async () => {
       state: vietnamState._id,
       name: 'Vietnam & Ha Long Bay',
       slug: 'vietnam',
+      category: 'International',
+      isDomestic: false,
       banner: 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1200&auto=format&fit=crop',
       shortDescription: 'Emerald bay cruises, Golden Hand bridge & lantern cities.',
       bestTime: 'Sep - Apr',
@@ -183,6 +203,8 @@ const seed = async () => {
       state: maldivesState._id,
       name: 'Maldives Overwater Bungalows',
       slug: 'maldives',
+      category: 'International',
+      isDomestic: false,
       banner: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=1200&auto=format&fit=crop',
       shortDescription: 'Turquoise lagoons, private island resorts & coral reefs.',
       bestTime: 'Nov - Apr',
@@ -195,6 +217,8 @@ const seed = async () => {
       state: singaporeState._id,
       name: 'Singapore & Sentosa Island',
       slug: 'singapore',
+      category: 'International',
+      isDomestic: false,
       banner: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=1200&auto=format&fit=crop',
       shortDescription: 'Gardens by the Bay, Universal Studios & luxury shopping.',
       bestTime: 'Year Round',
@@ -264,6 +288,37 @@ const seed = async () => {
     const domesticCat = await PackageCategory.create({ name: 'Domestic Packages', slug: 'domestic' });
     const intlCat = await PackageCategory.create({ name: 'International Packages', slug: 'international' });
 
+    // TELANGANA PACKAGES
+    await Package.create({
+      packageCode: 'PKG-TEL-001',
+      title: 'Telangana & Hyderabad City of Pearls Heritage Tour',
+      slug: 'telagana-hyderabad-heritage-tour-4-days',
+      destination: telaganaDest._id,
+      category: [domesticCat._id],
+      duration: { nights: 3, days: 4 },
+      startingPrice: 11900,
+      discountPrice: 14500,
+      coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop',
+      rating: 4.85,
+      overview: 'Explore Charminar, Golconda Fort sound & light show, Ramoji Film City day excursion & Hussain Sagar lake.',
+      highlights: ['Golconda Fort Light & Sound Show', 'Full Day Ramoji Film City Pass', 'Hussain Sagar Sunset Boat Cruise'],
+      inclusions: ['4-Star City Hotel Stay', 'Daily Buffet Breakfast', 'Private AC Vehicle'],
+      exclusions: ['Airfare / Train Tickets'],
+      pricingTiers: [
+        { category: 'Standard', price: 11900, hotel: '3 Star Business Hotel', meal: 'Breakfast Included', transport: 'Shared AC Coach', availability: true },
+        { category: 'Deluxe', price: 14900, hotel: '4 Star Luxury Hotel', meal: 'Breakfast & Dinner', transport: 'Private AC Sedan', availability: true },
+        { category: 'Luxury', price: 24900, hotel: '5 Star Taj Falaknuma Palace', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
+      ],
+      itinerary: [
+        { day: 1, title: 'Arrival & Old City Walk', description: 'Check-in to hotel, visit Charminar and Laad Bazaar.' },
+        { day: 2, title: 'Golconda Fort & Qutb Shahi Tombs', description: 'Guided tour of Golconda Fort and evening sound & light show.' },
+        { day: 3, title: 'Ramoji Film City Excursion', description: 'Full day magical film city tour with live stunt shows and studio sets.' },
+        { day: 4, title: 'Hussain Sagar & Departure', description: 'Visit Buddha Statue, Salar Jung Museum and airport drop.' }
+      ],
+      featured: true,
+      status: 'Active'
+    });
+
     // HIMACHAL PACKAGES
     await Package.create({
       packageCode: 'PKG-HIM-001',
@@ -291,38 +346,6 @@ const seed = async () => {
         { day: 3, title: 'Solang Valley Adventure', description: 'Paragliding, ropeway & snow sports.' },
         { day: 4, title: 'Atal Tunnel & Sissu', description: 'Excursion to Lahaul valley via Atal Tunnel.' },
         { day: 5, title: 'Departure', description: 'Breakfast & Volvo bus drop.' }
-      ],
-      featured: true,
-      status: 'Active'
-    });
-
-    await Package.create({
-      packageCode: 'PKG-HIM-002',
-      title: 'Shimla & Manali Complete Hill Station Tour',
-      slug: 'shimla-manali-complete-hill-tour-6-days',
-      destination: himachalDest._id,
-      category: [domesticCat._id],
-      duration: { nights: 5, days: 6 },
-      startingPrice: 21900,
-      discountPrice: 25500,
-      coverImage: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?q=80&w=1200&auto=format&fit=crop',
-      rating: 4.88,
-      overview: 'Experience Kufri horse riding, Shimla Mall Road, Kasol riverfront, and Manali pine forests.',
-      highlights: ['Shimla Kufri Fun World', 'Kasol & Manikaran Sahib', 'Atal Tunnel Drive'],
-      inclusions: ['MAP Breakfast & Dinner', 'Private Car Transfers'],
-      exclusions: ['Flight Airfare'],
-      pricingTiers: [
-        { category: 'Standard', price: 21900, hotel: '3 Star Shimla/Manali Hotel', meal: 'Breakfast & Dinner', transport: 'Private AC Car', availability: true },
-        { category: 'Deluxe', price: 28500, hotel: '4 Star Valley View Resort', meal: 'Breakfast & Dinner', transport: 'Private Sedan', availability: true },
-        { category: 'Luxury', price: 42000, hotel: '5 Star Heritage Resort', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
-      ],
-      itinerary: [
-        { day: 1, title: 'Arrival in Shimla', description: 'Check-in to hotel & Mall Road evening walk.' },
-        { day: 2, title: 'Kufri & Chail Excursion', description: 'Horse riding & Himalayan Nature Park.' },
-        { day: 3, title: 'Shimla to Manali Scenic Drive', description: 'Drive past Kullu valley & river rafting point.' },
-        { day: 4, title: 'Manali Local & Solang', description: 'Hadimba Temple & Solang valley snow point.' },
-        { day: 5, title: 'Kasol & Manikaran Day Trip', description: 'Parvati valley riverfront & Manikaran Sahib hot springs.' },
-        { day: 6, title: 'Departure', description: 'Breakfast & departure transfer.' }
       ],
       featured: true,
       status: 'Active'
@@ -359,36 +382,6 @@ const seed = async () => {
       status: 'Active'
     });
 
-    await Package.create({
-      packageCode: 'PKG-GOA-002',
-      title: 'Luxury Goa Honeymoon & Pool Villa Retreat',
-      slug: 'luxury-goa-honeymoon-villa-5-days',
-      destination: goaDest._id,
-      category: [domesticCat._id],
-      duration: { nights: 4, days: 5 },
-      startingPrice: 24900,
-      discountPrice: 29900,
-      coverImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop',
-      rating: 4.95,
-      overview: 'Indulge in a 5-star private pool resort stay in South Goa with romantic candle-light dinner on the beach.',
-      highlights: ['5-Star Private Pool Resort Stay', 'Romantic Candlelight Dinner', 'Couples Spa Massage Session'],
-      inclusions: ['Daily Breakfast & 1 Romantic Dinner', 'Private SUV Transfers'],
-      exclusions: ['Flight Airfare'],
-      pricingTiers: [
-        { category: 'Deluxe', price: 24900, hotel: '4 Star Boutique Pool Resort', meal: 'Breakfast & Candlelight Dinner', transport: 'Private AC Sedan', availability: true },
-        { category: 'Luxury', price: 34900, hotel: '5 Star Private Beach Villa', meal: 'All Meals Included', transport: 'Private Luxury SUV', availability: true }
-      ],
-      itinerary: [
-        { day: 1, title: 'VIP Arrival & Pool Villa Welcome', description: 'Private SUV transfer & welcome drinks at South Goa resort.' },
-        { day: 2, title: 'Couples Spa & Private Beach Stroll', description: 'Ayurvedic couples massage & private sunset beach walk.' },
-        { day: 3, title: 'Yacht Cruise & Candlelight Dinner', description: 'Private catamaran sunset cruise & beachside dining.' },
-        { day: 4, title: 'Leisure & Shopping', description: 'Explore Panjim French quarter & craft markets.' },
-        { day: 5, title: 'Departure', description: 'Breakfast & luxury drop to airport.' }
-      ],
-      featured: true,
-      status: 'Active'
-    });
-
     // RAJASTHAN PACKAGES
     await Package.create({
       packageCode: 'PKG-RAJ-001',
@@ -417,38 +410,6 @@ const seed = async () => {
         { day: 4, title: 'Udaipur City of Lakes', description: 'Jagdish Temple, City Palace Udaipur, and Lake Pichola boat cruise.' },
         { day: 5, title: 'Saheliyon Ki Bari & Crafts', description: 'Visit Saheliyon ki Bari gardens and local handicrafts market.' },
         { day: 6, title: 'Departure', description: 'Breakfast & airport/railway station drop.' }
-      ],
-      featured: true,
-      status: 'Active'
-    });
-
-    // GOLDEN TRIANGLE
-    await Package.create({
-      packageCode: 'PKG-TAJ-001',
-      title: 'Golden Triangle Taj Mahal & Jaipur Heritage Tour',
-      slug: 'golden-triangle-taj-mahal-5-days',
-      destination: tajDest._id,
-      category: [domesticCat._id],
-      duration: { nights: 4, days: 5 },
-      startingPrice: 19800,
-      discountPrice: 23500,
-      coverImage: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?q=80&w=1200&auto=format&fit=crop',
-      rating: 4.94,
-      overview: 'Sunrise Taj Mahal tour in Agra, Fatehpur Sikri, Jaipur City Palace & Delhi Qutub Minar.',
-      highlights: ['Sunrise Taj Mahal Guided Visit', 'Jaipur City Palace & Hawa Mahal', 'Fatehpur Sikri Excursion'],
-      inclusions: ['Breakfast & Private Sedan Transfer'],
-      exclusions: ['Flight Airfare'],
-      pricingTiers: [
-        { category: 'Standard', price: 19800, hotel: '3 Star City Hotel', meal: 'Daily Breakfast', transport: 'Private AC Sedan', availability: true },
-        { category: 'Deluxe', price: 25900, hotel: '4 Star Taj View Hotel', meal: 'Breakfast & Dinner', transport: 'Private AC Sedan', availability: true },
-        { category: 'Luxury', price: 42000, hotel: '5 Star Oberoi Amarvilas Agra', meal: 'All Meals Included', transport: 'Private SUV', availability: true }
-      ],
-      itinerary: [
-        { day: 1, title: 'Delhi Sightseeing & Drive to Agra', description: 'Qutub Minar, India Gate, and drive via Yamuna Expressway.' },
-        { day: 2, title: 'Sunrise Taj Mahal & Agra Fort', description: 'Early morning Taj Mahal visit & Agra Fort tour.' },
-        { day: 3, title: 'Fatehpur Sikri & Drive to Jaipur', description: 'Buland Darwaza visit & check-in to Jaipur hotel.' },
-        { day: 4, title: 'Jaipur Forts & Shopping', description: 'Amer Fort, Hawa Mahal photoshoot & Johari bazaar.' },
-        { day: 5, title: 'Departure to Delhi', description: 'Breakfast & drop to Delhi IGI airport.' }
       ],
       featured: true,
       status: 'Active'
@@ -518,7 +479,103 @@ const seed = async () => {
       status: 'Active'
     });
 
-    console.log('[Seed] Database seeded with packages for ALL destinations including Himachal!');
+    // SEED 7 CUSTOMER ENQUIRIES (LEADS)
+    await Enquiry.deleteMany({});
+    await Enquiry.create([
+      {
+        fullName: 'Ramesh Kumar',
+        email: 'ramesh.kumar@gmail.com',
+        mobile: '+91 98490 12345',
+        destination: telaganaDest._id,
+        travelDate: new Date('2026-08-25'),
+        adults: 2,
+        children: 1,
+        budget: 35000,
+        status: 'New',
+        priority: 'High',
+        message: 'Interested in family package with Ramoji Film City pass and 4-star stay.'
+      },
+      {
+        fullName: 'Sunita Verma',
+        email: 'sunita.v@outlook.com',
+        mobile: '+91 97012 88452',
+        destination: keralaDest._id,
+        travelDate: new Date('2026-09-10'),
+        adults: 2,
+        children: 0,
+        budget: 48000,
+        status: 'Contacted',
+        priority: 'Urgent',
+        message: 'Looking for honeymoon villa in Munnar with private pool and Alleppey luxury houseboat.'
+      },
+      {
+        fullName: 'Amit Patel',
+        email: 'amit.patel@techcorp.in',
+        mobile: '+91 99887 65432',
+        destination: maldivesDest._id,
+        travelDate: new Date('2026-10-05'),
+        adults: 2,
+        children: 0,
+        budget: 185000,
+        status: 'Qualified',
+        priority: 'High',
+        message: 'Require all-inclusive resort with speed boat transfer and sunset dinner.'
+      },
+      {
+        fullName: 'Priya Sharma',
+        email: 'priya.sharma@yahoo.com',
+        mobile: '+91 98112 34567',
+        destination: himachalDest._id,
+        travelDate: new Date('2026-11-20'),
+        adults: 4,
+        children: 2,
+        budget: 65000,
+        status: 'Converted',
+        priority: 'Medium',
+        message: 'Family vacation requesting Rohtang Pass permit and local AC Volvo transport.'
+      },
+      {
+        fullName: 'Vikram Singh',
+        email: 'vikram.singh@gmail.com',
+        mobile: '+91 96543 21098',
+        destination: rajasthanDest._id,
+        travelDate: new Date('2026-11-15'),
+        adults: 3,
+        children: 1,
+        budget: 55000,
+        status: 'New',
+        priority: 'Medium',
+        message: 'Interested in Jaisalmer desert camel safari and heritage palace stays.'
+      },
+      {
+        fullName: 'Ananya Roy',
+        email: 'ananya.roy@gmail.com',
+        mobile: '+91 98300 44556',
+        destination: singaporeDest._id,
+        travelDate: new Date('2026-12-01'),
+        adults: 2,
+        children: 1,
+        budget: 120000,
+        status: 'Contacted',
+        priority: 'High',
+        message: 'Universal Studios express pass + Marina Bay Sands skypark entry needed.'
+      },
+      {
+        fullName: 'Rajesh Naidu',
+        email: 'rajesh.naidu@gmail.com',
+        mobile: '+91 94401 98765',
+        destination: baliDest._id,
+        travelDate: new Date('2026-09-25'),
+        adults: 2,
+        children: 0,
+        budget: 95000,
+        status: 'Qualified',
+        priority: 'Medium',
+        message: 'Ubud jungle resort + Seminyak beach club pass.'
+      }
+    ]);
+
+    console.log('[Seed] Database seeded with packages for ALL destinations including Telangana!');
     process.exit(0);
   } catch (err) {
     console.error('[Seed Error]:', err);

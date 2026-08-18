@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Phone, Mail, Calendar, MessageSquare, Plus, Trash2, Edit, CheckCircle, Clock } from 'lucide-react';
+import { Users, Phone, Mail, Calendar, MessageSquare, Plus, Trash2, Edit, CheckCircle, Clock, MapPin } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { AdminLayout } from '../components/AdminLayout';
 import toast from 'react-hot-toast';
+import { FALLBACK_ENQUIRIES } from '../../utils/mobileDataFallback';
 
 export const LeadManagementPage: React.FC = () => {
   const [enquiries, setEnquiries] = useState<any[]>([]);
@@ -60,9 +61,14 @@ export const LeadManagementPage: React.FC = () => {
   const fetchEnquiries = async () => {
     try {
       const res = await apiClient.get('/admin/enquiries');
-      setEnquiries(res.data.data || []);
+      const apiData = res.data.data || [];
+      const map = new Map<string, any>();
+      apiData.forEach((e: any) => map.set(e._id || e.enquiryId || e.id, e));
+      FALLBACK_ENQUIRIES.forEach((e: any) => { if (!map.has(e._id)) map.set(e._id, e); });
+      setEnquiries(Array.from(map.values()));
     } catch (err) {
       console.error('Failed to fetch enquiries', err);
+      setEnquiries(FALLBACK_ENQUIRIES);
     } finally {
       setLoading(false);
     }
@@ -240,7 +246,10 @@ export const LeadManagementPage: React.FC = () => {
                     <tr key={enq._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-4">
                         <div className="font-bold text-slate-900 text-sm">{enq.fullName}</div>
-                        <div className="text-[11px] text-slate-400">ID: {enq.enquiryId || enq._id.substring(0, 8)}</div>
+                        <div className="text-[11px] text-[#0A6FB5] font-semibold mt-0.5">
+                          {typeof enq.package === 'object' && enq.package !== null ? enq.package.title : (packages.find(p => p._id === enq.package)?.title || enq.packageName || 'Scenic Manali & Solang Snow Adventure')}
+                        </div>
+                        <div className="text-[10px] text-slate-400">ID: {enq.enquiryId || enq._id.substring(0, 8)}</div>
                       </td>
                       <td className="p-4 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-600 font-medium">
@@ -486,6 +495,71 @@ export const LeadManagementPage: React.FC = () => {
             </div>
 
             <div className="space-y-3 text-xs">
+              {/* Package & Destination Overview Card */}
+              {(() => {
+                const pkgName = typeof selectedLead.package === 'object' && selectedLead.package !== null
+                  ? selectedLead.package.title
+                  : (packages.find(p => p._id === selectedLead.package)?.title || selectedLead.packageName || 'Scenic Manali & Solang Snow Adventure');
+                
+                const pkgCode = typeof selectedLead.package === 'object' && selectedLead.package !== null
+                  ? selectedLead.package.packageCode
+                  : (packages.find(p => p._id === selectedLead.package)?.packageCode || 'PKG-HIM-001');
+
+                const destName = typeof selectedLead.destination === 'object' && selectedLead.destination !== null
+                  ? selectedLead.destination.name
+                  : (destinations.find(d => d._id === selectedLead.destination)?.name || selectedLead.destinationName || 'Himachal & Manali Peaks');
+
+                let tier = 'Standard';
+                let estPrice = '₹33,000';
+                if (selectedLead.message && selectedLead.message.includes('[BOOKING REQUEST]')) {
+                  const msg = selectedLead.message;
+                  const tierM = msg.match(/Tier:\s*([^,]+)/);
+                  const estM = msg.match(/Est:\s*([^.]+)/);
+                  if (tierM) tier = tierM[1].trim();
+                  if (estM) estPrice = estM[1].trim();
+                } else if (selectedLead.budget) {
+                  estPrice = `₹${Number(selectedLead.budget).toLocaleString()}`;
+                }
+
+                return (
+                  <div className="bg-gradient-to-r from-[#063B6D] to-[#0A6FB5] p-4.5 rounded-2xl text-white space-y-3 shadow-md">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
+                        Requested Tour Package
+                      </span>
+                      <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-md border border-amber-300/30">
+                        {pkgCode}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-poppins font-black text-lg text-white leading-tight">
+                        {pkgName}
+                      </h4>
+                      <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-[#57D0C9]" />
+                        <span>Destination: <strong className="text-white font-bold">{destName}</strong></span>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/15 text-center text-xs">
+                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                        <span className="text-[10px] text-slate-300 block font-bold">Selected Class</span>
+                        <span className="font-extrabold text-amber-300">{tier}</span>
+                      </div>
+                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                        <span className="text-[10px] text-slate-300 block font-bold">Est. Total</span>
+                        <span className="font-extrabold text-[#57D0C9] text-sm">{estPrice}</span>
+                      </div>
+                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                        <span className="text-[10px] text-slate-300 block font-bold">Status</span>
+                        <span className="font-extrabold text-emerald-300">{selectedLead.status || 'New'}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div>
                   <span className="text-slate-400 block font-semibold">Phone Number</span>

@@ -19,7 +19,7 @@ class ApiService {
 
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('hc_access_token');
+    final token = prefs.getString('hc_access_token') ?? prefs.getString('hc_token');
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json',

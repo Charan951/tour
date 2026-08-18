@@ -80,7 +80,7 @@ export const ThemeCatalogPage: React.FC = () => {
         description={`Browse hand-crafted ${selectedTheme === 'All' ? 'Honeymoon, Leisure, Hill Station, Trekking, Adventure, Religious, Family, and Wildlife Safari' : selectedTheme} holiday tour packages.`}
       />
 
-      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto space-y-12">
+      <div className="pt-18 sm:pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
@@ -110,11 +110,11 @@ export const ThemeCatalogPage: React.FC = () => {
                 }`}
               >
                 <img src={bannerImg} alt={theme.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                 
                 <div className="absolute inset-0 p-5 flex flex-col justify-between text-white z-10">
                   <div className="flex justify-between items-start">
-                    <span className="text-2xl p-2 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30">
+                    <span className="text-2xl p-2 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-md">
                       {theme.icon}
                     </span>
                     {isSelected ? (
@@ -133,8 +133,7 @@ export const ThemeCatalogPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <h3 className="font-poppins font-extrabold text-xl group-hover:text-[#57D0C9] transition-colors">{theme.name}</h3>
-                    <p className="text-[11px] text-slate-200 line-clamp-2 mt-1 font-medium">{uploadedBanner?.description || theme.desc}</p>
+                    <h3 className="font-poppins font-black text-base sm:text-lg text-white group-hover:text-[#57D0C9] transition-colors drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{theme.name}</h3>
                   </div>
                 </div>
               </div>

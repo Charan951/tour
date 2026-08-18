@@ -15,8 +15,8 @@ class AuthService {
     });
 
     if (response['success'] == true && response['data'] != null) {
-      final token = response['data']['accessToken'];
-      final userData = response['data']['user'];
+      final token = response['data']['accessToken'] ?? response['data']['token'] ?? '';
+      final userData = response['data']['user'] ?? response['data'];
 
       final user = UserModel.fromJson(userData);
       await saveSession(token, user);
@@ -42,8 +42,8 @@ class AuthService {
     });
 
     if (response['success'] == true && response['data'] != null) {
-      final token = response['data']['accessToken'];
-      final userData = response['data']['user'];
+      final token = response['data']['accessToken'] ?? response['data']['token'] ?? '';
+      final userData = response['data']['user'] ?? response['data'];
 
       final user = UserModel.fromJson(userData);
       await saveSession(token, user);

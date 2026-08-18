@@ -7,7 +7,7 @@ export const AboutPage: React.FC = () => {
     <>
       <SEO title="About Us | HolidayCity" description="Learn about HolidayCity's mission to deliver memorable holiday experiences." />
 
-      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto space-y-16">
+      <div className="pt-18 sm:pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3 py-1 rounded-full">
             Our Story

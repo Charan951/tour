@@ -22,7 +22,6 @@ const enquirySchema = new Schema(
     message: { type: String, default: '' },
     source: { 
       type: String, 
-      enum: ['PackagePage', 'DestinationPage', 'ContactForm', 'WhatsApp', 'CallRequest', 'PopupModal'], 
       default: 'PackagePage' 
     },
     status: { 

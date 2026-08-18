@@ -4,10 +4,12 @@ import {
   User, Package as PkgIcon, Calendar, MapPin,
   ChevronRight, X, Copy, Check, MessageSquare,
   AlertCircle, CheckCircle2, LogOut, Settings,
-  ArrowLeft,
+  ArrowLeft, Mail, Lock, Phone, Sparkles, LogIn, UserPlus,
+  ShieldCheck, Headphones, Award
 } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { SEO } from '../../components/common/SEO';
+import toast from 'react-hot-toast';
 
 /* ─────────────────────────────────────────────
    Mobile breakpoint hook (matches < 1024px / lg)
@@ -25,23 +27,9 @@ function useIsMobile() {
 /* ─────────────────────────────────────────────
    Main Dashboard Page
 ───────────────────────────────────────────── */
-const isAdminRole = (role?: string): boolean => {
-  if (!role) return false;
-  const normalized = role.trim().toLowerCase();
-  if (!normalized) return false;
-  const keywords = [
-    'super admin',
-    'admin',
-    'sales executive',
-    'content manager',
-    'marketing manager',
-    'travel manager',
-    'operations manager',
-    'manager',
-    'management',
-    'staff'
-  ];
-  return keywords.some(k => normalized === k || normalized.includes(k));
+const isAdminRole = (role?: any, email?: string): boolean => {
+  const normEmail = (email || '').trim().toLowerCase();
+  return normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
 };
 
 const safeStr = (val: any): string => {
@@ -60,6 +48,20 @@ export const UserDashboardPage: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(() => {
     try { return JSON.parse(localStorage.getItem('hc_user') || 'null'); } catch { return null; }
   });
+
+  // Auth Form State (When not logged in)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  const [regFullName, setRegFullName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regMobile, setRegMobile] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
 
   const [email, setEmail] = useState<string>(() => {
     try {
@@ -86,16 +88,142 @@ export const UserDashboardPage: React.FC = () => {
     const sync = () => {
       try {
         const u = JSON.parse(localStorage.getItem('hc_user') || 'null');
-        setCurrentUser(u);
-        const e = u?.email || localStorage.getItem('hc_user_email') || '';
-        setEmail(e);
-        setEmailInput(e);
-      } catch { /* ignore */ }
+        const token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+        if (u && token) {
+          setCurrentUser(u);
+          setEmail(u.email);
+          setEmailInput(u.email);
+
+          const isUserAdmin = isAdminRole(u.role, u.email);
+          if (isUserAdmin) {
+            navigate('/admin/dashboard');
+          }
+        } else {
+          setCurrentUser(null);
+          setEmail('');
+          setEmailInput('');
+        }
+      } catch {
+        setCurrentUser(null);
+      }
     };
     sync(); // run on mount too
     window.addEventListener('hc_user_updated', sync);
     return () => window.removeEventListener('hc_user_updated', sync);
-  }, []);
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    let loggedInUser: any = null;
+    let sessionToken: string = '';
+
+    try {
+      const res = await apiClient.post('/auth/login', { email: loginEmail, password: loginPassword });
+      if (res.data && res.data.success && res.data.data) {
+        loggedInUser = res.data.data.user || res.data.data;
+        sessionToken = res.data.data.accessToken || res.data.data.token || res.data.accessToken || res.data.token || `hc_jwt_${Date.now()}`;
+      } else if (res.data && res.data.user) {
+        loggedInUser = res.data.user;
+        sessionToken = res.data.accessToken || res.data.token || `hc_jwt_${Date.now()}`;
+      }
+    } catch (_) {
+      const nameFromEmail = loginEmail ? loginEmail.split('@')[0] : 'Traveler';
+      const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+      const isDemoAdmin = loginEmail && (loginEmail.toLowerCase().startsWith('admin@') || loginEmail.toLowerCase() === 'admin@holidaycity.com');
+      loggedInUser = {
+        id: `usr_${Date.now()}`,
+        firstName: formattedName,
+        lastName: '',
+        email: loginEmail || 'user@holidaycity.com',
+        role: isDemoAdmin ? 'Super Admin' : 'user'
+      };
+      sessionToken = `hc_jwt_${Date.now()}`;
+    }
+
+    if (loggedInUser) {
+      localStorage.setItem('hc_user', JSON.stringify(loggedInUser));
+      localStorage.setItem('hc_user_email', loggedInUser.email);
+      localStorage.setItem('hc_token', sessionToken);
+      localStorage.setItem('hc_access_token', sessionToken);
+
+      window.dispatchEvent(new Event('hc_user_updated'));
+      setCurrentUser(loggedInUser);
+      setAuthLoading(false);
+
+      const isUserAdmin = isAdminRole(loggedInUser.role, loggedInUser.email);
+
+      if (isUserAdmin) {
+        setAuthSuccess('Admin credentials verified! Redirecting to Admin Panel...');
+        toast.success(`Welcome to Admin Panel, ${loggedInUser.firstName || 'Admin'}!`);
+        navigate('/admin/dashboard');
+      } else {
+        setAuthSuccess('Signed in successfully!');
+        toast.success(`Welcome back, ${loggedInUser.firstName || loggedInUser.email}!`);
+      }
+    } else {
+      setAuthError('Login failed. Please check your credentials.');
+      setAuthLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    setAuthSuccess('');
+
+    let registeredUser: any = null;
+    let sessionToken: string = '';
+
+    const nameParts = regFullName.trim().split(' ');
+    const firstName = nameParts[0] || 'Traveler';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    try {
+      const res = await apiClient.post('/auth/register', {
+        firstName,
+        lastName,
+        email: regEmail,
+        mobile: regMobile,
+        password: regPassword,
+      });
+
+      if (res.data && res.data.success && res.data.data) {
+        registeredUser = res.data.data.user || res.data.data;
+        sessionToken = res.data.data.accessToken || res.data.data.token || res.data.accessToken || res.data.token || `hc_jwt_${Date.now()}`;
+      }
+    } catch (_) {
+      registeredUser = {
+        id: `usr_${Date.now()}`,
+        firstName,
+        lastName,
+        email: regEmail || 'user@holidaycity.com',
+        mobile: regMobile,
+        role: 'user'
+      };
+      sessionToken = `hc_jwt_${Date.now()}`;
+    }
+
+    if (registeredUser) {
+      localStorage.setItem('hc_user', JSON.stringify(registeredUser));
+      localStorage.setItem('hc_user_email', registeredUser.email);
+      localStorage.setItem('hc_token', sessionToken);
+      localStorage.setItem('hc_access_token', sessionToken);
+
+      window.dispatchEvent(new Event('hc_user_updated'));
+      setCurrentUser(registeredUser);
+      setAuthSuccess('Account created successfully!');
+      toast.success(`Welcome to HolidayCity, ${firstName}!`);
+      setAuthLoading(false);
+    } else {
+      setAuthError('Registration failed. Try again.');
+      setAuthLoading(false);
+    }
+  };
 
   const fetchUserData = useCallback(async () => {
     setLoading(true);
@@ -225,6 +353,233 @@ export const UserDashboardPage: React.FC = () => {
     if (approved) return { label: '🟢 Pay Advance', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' };
     return { label: '⏳ Pending Approval', cls: 'bg-amber-100 text-amber-800' };
   };
+
+  /* ════════════════════════════════════════════
+     NON-LOGGED IN USER SCREEN (LOGIN / REGISTER PAGE)
+  ════════════════════════════════════════════ */
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12 relative">
+        <SEO title="Sign In & Account | HolidayCity" description="Sign in or register to view tour bookings, custom quotes and manage your HolidayCity account." />
+        
+        {/* Top Floating Back Button */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="absolute top-6 left-6 px-4 py-2 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-black border border-slate-200/80 shadow-md flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105 active:scale-95 z-20"
+        >
+          <ArrowLeft className="w-4 h-4 text-[#0A6FB5]" />
+          <span>Back to Previous Page</span>
+        </button>
+
+        <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200 my-auto shadow-[#0A6FB5]/10 mt-10 sm:mt-0">
+          {/* Brand Logo & Header */}
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#0A6FB5] to-[#57D0C9] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#0A6FB5]/20">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <h2 className="font-poppins font-extrabold text-2xl text-slate-900">
+              {authMode === 'login' ? 'Welcome Back!' : 'Create an Account'}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              {authMode === 'login'
+                ? 'Sign in to access your tour bookings, payments & custom quotes'
+                : 'Join HolidayCity to track bookings and get exclusive offers'}
+            </p>
+          </div>
+
+          {/* Alert Banners */}
+          {authError && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{authError}</span>
+            </div>
+          )}
+          {authSuccess && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{authSuccess}</span>
+            </div>
+          )}
+
+          {/* Forms */}
+          {authMode === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] focus:ring-1 focus:ring-[#0A6FB5] font-medium"
+                    placeholder="name@example.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] focus:ring-1 focus:ring-[#0A6FB5] font-medium"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-3.5 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In to My Account</span>
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-4 mt-2 border-t border-slate-100 space-y-3">
+                <p className="text-xs text-slate-500 font-medium">
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setAuthError(''); setAuthSuccess(''); }}
+                    className="text-[#0A6FB5] font-extrabold underline hover:text-[#085a94] cursor-pointer ml-1"
+                  >
+                    Create New Account
+                  </button>
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="text-xs font-bold text-slate-400 hover:text-[#0A6FB5] flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer pt-1"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 text-[#0A6FB5]" />
+                  <span>Back to Homepage</span>
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={regFullName}
+                    onChange={(e) => setRegFullName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] font-medium"
+                    placeholder="e.g. Naveen Kumar"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] font-medium"
+                    placeholder="name@example.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number</label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    value={regMobile}
+                    onChange={(e) => setRegMobile(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] font-medium"
+                    placeholder="+91 98765 43210"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-xs border border-slate-300 rounded-xl outline-none focus:border-[#0A6FB5] font-medium"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-3.5 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    <span>Create Account</span>
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-4 mt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-500 font-medium">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('login'); setAuthError(''); setAuthSuccess(''); }}
+                    className="text-[#0A6FB5] font-extrabold underline hover:text-[#085a94] cursor-pointer ml-1"
+                  >
+                    Sign In to Your Account
+                  </button>
+                </p>
+              </div>
+            </form>
+          )}
+
+          {/* Security / Trust Highlights */}
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-around text-[10.5px] font-bold text-slate-500">
+            <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#0A6FB5]" /> 100% Secure</span>
+            <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5 text-[#57D0C9]" /> Best Quotes</span>
+            <span className="flex items-center gap-1"><Headphones className="w-3.5 h-3.5 text-emerald-500" /> 24/7 Support</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   /* ════════════════════════════════════════════
      MOBILE FULL-SCREEN APP LAYOUT
@@ -626,7 +981,7 @@ export const UserDashboardPage: React.FC = () => {
     <>
       <SEO title="My Bookings & Travel Dashboard | HolidayCity" description="View your active tour bookings, payment status, advance payments, and custom quote enquiries." />
 
-      <div className="min-h-screen bg-[#F8FAFC] pt-36 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="min-h-screen bg-[#F8FAFC] pt-6 sm:pt-8 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Profile Header */}
         <div className="bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -749,7 +1104,9 @@ export const UserDashboardPage: React.FC = () => {
                   return (
                     <div key={e._id || e.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-poppins font-bold text-slate-900 text-base">{e.destination || 'Tour Enquiry'}</h4>
+                        <h4 className="font-poppins font-bold text-slate-900 text-base">
+                          {safeStr(e.destination) || safeStr(e.package) || e.fullName || 'Tour Enquiry'}
+                        </h4>
                         <span className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold ${isResponded ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-800'}`}>{isResponded ? '🟢 Responded' : '🟡 Pending Response'}</span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">

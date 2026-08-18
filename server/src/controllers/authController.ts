@@ -49,7 +49,7 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
 
-    const roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Sales Executive';
+    const roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Customer';
 
     const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(
@@ -76,6 +76,7 @@ export const login = async (req: Request, res: Response) => {
       success: true,
       message: 'Login successful',
       data: {
+        token: accessToken,
         accessToken,
         user: {
           id: user._id,
@@ -145,6 +146,7 @@ export const register = async (req: Request, res: Response) => {
       success: true,
       message: 'Account created successfully',
       data: {
+        token: accessToken,
         accessToken,
         user: {
           id: newUser._id,

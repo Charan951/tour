@@ -5,6 +5,8 @@ import { DestinationCard } from '../../components/cards/DestinationCard';
 import { SEO } from '../../components/common/SEO';
 import { Flag, Globe } from 'lucide-react';
 
+import { FALLBACK_DESTINATIONS } from '../../utils/mobileDataFallback';
+
 export const DestinationsLandingPage: React.FC = () => {
   const [destinations, setDestinations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +27,6 @@ export const DestinationsLandingPage: React.FC = () => {
       clearInterval(interval);
     };
   }, []);
-
-
 
   const fetchDestinationsSilently = async () => {
     try {
@@ -49,12 +49,18 @@ export const DestinationsLandingPage: React.FC = () => {
     }
   };
 
+  const effectiveDestinations = (() => {
+    const map = new Map<string, any>();
+    destinations.forEach(d => map.set(d.slug || d._id || d.id, d));
+    FALLBACK_DESTINATIONS.forEach(d => { if (!map.has(d.slug)) map.set(d.slug, d); });
+    return Array.from(map.values());
+  })();
 
   const filteredDestinations = selectedCategory === 'Domestic'
-    ? destinations.filter((d) => d.category === 'Domestic' || d.isDomestic !== false)
+    ? effectiveDestinations.filter((d) => d.category === 'Domestic' || (d.isDomestic !== false && (d.country?.isoCode === 'IN' || d.country?.name === 'India' || d.country === 'India')))
     : selectedCategory === 'International'
-    ? destinations.filter((d) => d.category === 'International' || d.isDomestic === false)
-    : destinations;
+    ? effectiveDestinations.filter((d) => d.category === 'International' || d.isDomestic === false || (d.country && d.country !== 'India' && d.country?.isoCode !== 'IN' && d.country?.name !== 'India'))
+    : effectiveDestinations;
 
   const pageTitle = selectedCategory === 'Domestic'
     ? 'India Tour Destinations'
@@ -69,7 +75,7 @@ export const DestinationsLandingPage: React.FC = () => {
         description="Explore handpicked domestic and international holiday destinations with HolidayCity."
       />
 
-      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto space-y-10">
+      <div className="pt-18 sm:pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-10">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             {selectedCategory === 'Domestic' ? 'India Domestic' : selectedCategory === 'International' ? 'International World' : 'World Directory'}

@@ -51,7 +51,7 @@ export const ContactPage: React.FC = () => {
     <>
       <SEO title="Contact Us | HolidayCity" description="Get in touch with HolidayCity travel experts." />
 
-      <div className="pt-28 pb-20 px-4 max-w-7xl mx-auto space-y-16">
+      <div className="pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-12">
         <div className="text-center max-w-2xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
             Get In Touch

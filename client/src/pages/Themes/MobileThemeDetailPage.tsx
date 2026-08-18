@@ -46,6 +46,18 @@ export const MobileThemeDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
 
+  const handleBack = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/themes');
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -199,10 +211,12 @@ export const MobileThemeDetailPage: React.FC = () => {
         {/* Floating Back Button Top Bar */}
         <div className="flex items-center">
           <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-2xl bg-white/90 shadow-md flex items-center justify-center text-slate-800 active:scale-95 transition-transform"
+            type="button"
+            onClick={(e) => handleBack(e)}
+            className="w-11 h-11 rounded-2xl bg-white/95 shadow-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all z-50 relative cursor-pointer pointer-events-auto border border-slate-200/50"
+            aria-label="Go Back"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-6 h-6 text-slate-900 stroke-[2.5]" />
           </button>
         </div>
 

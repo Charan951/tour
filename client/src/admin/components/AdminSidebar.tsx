@@ -12,10 +12,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    localStorage.removeItem('hc_token');
     localStorage.removeItem('hc_access_token');
     localStorage.removeItem('hc_user');
+    localStorage.removeItem('hc_user_email');
+    window.dispatchEvent(new Event('hc_user_updated'));
     onClose();
-    navigate('/admin/login');
+    navigate('/my-bookings');
   };
 
   const navItems = [

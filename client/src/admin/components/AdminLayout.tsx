@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { Menu } from 'lucide-react';
 
@@ -9,9 +10,32 @@ interface AdminLayoutProps {
   action?: React.ReactNode;
 }
 
+const isAdminUser = (): boolean => {
+  try {
+    const raw = localStorage.getItem('hc_user');
+    if (!raw) return false;
+    const u = JSON.parse(raw);
+    const normEmail = (u.email || '').trim().toLowerCase();
+    return normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
+  } catch {
+    return false;
+  }
+};
+
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subtitle, action }) => {
-  // Sidebar is closed by default, opens on hamburger click!
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const authorized = isAdminUser();
+
+  useEffect(() => {
+    if (!authorized) {
+      navigate('/my-bookings', { replace: true });
+    }
+  }, [authorized, navigate]);
+
+  if (!authorized) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800 relative overflow-x-hidden">

@@ -6,6 +6,17 @@ import { CloudinaryImageUploader } from '../../components/common/CloudinaryImage
 import { AdminLayout } from '../components/AdminLayout';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
+import { FALLBACK_PACKAGES } from '../../utils/mobileDataFallback';
+
+const mergePackagesWithFallback = (apiPkgs: any[]) => {
+  const map = new Map<string, any>();
+  (apiPkgs || []).forEach((p: any) => map.set(p._id || p.packageCode || p.slug || p.id, p));
+  FALLBACK_PACKAGES.forEach((p: any) => {
+    const idKey = p._id || p.packageCode || p.slug || p.id;
+    if (!map.has(idKey)) map.set(idKey, p);
+  });
+  return Array.from(map.values());
+};
 
 const TRAVEL_THEMES = [
   { name: 'Honeymoon Tour', icon: '💖', color: 'bg-rose-50 border-rose-200 text-rose-700' },
@@ -108,7 +119,7 @@ export const PackageManagerPage: React.FC = () => {
   const fetchDataSilently = async () => {
     try {
       const pkgRes = await apiClient.get('/packages?limit=100');
-      if (pkgRes.data?.data) setPackages(pkgRes.data.data);
+      setPackages(mergePackagesWithFallback(pkgRes.data?.data || []));
     } catch (_) {}
   };
 
@@ -119,10 +130,11 @@ export const PackageManagerPage: React.FC = () => {
         apiClient.get('/packages?limit=100'),
         apiClient.get('/destinations')
       ]);
-      setPackages(pkgRes.data.data || []);
-      setDestinations(destRes.data.data || []);
+      setPackages(mergePackagesWithFallback(pkgRes.data?.data || []));
+      setDestinations(destRes.data?.data || []);
     } catch (err) {
       console.error('Failed to fetch package manager data', err);
+      setPackages(FALLBACK_PACKAGES);
     } finally {
       setLoading(false);
     }

@@ -67,14 +67,18 @@ export const App: React.FC = () => {
 
   // On mobile → hide ALL website chrome (navbar, footer, FAB, splash)
   // Mobile navigates entirely via bottom tab bar — matches Flutter app
-  const hideWebChrome = isMobile;
+  const isAuthPath = ['/my-bookings', '/profile', '/dashboard', '/my-enquiries', '/login'].some(p => location.pathname.startsWith(p));
+  const isUserLoggedIn = (() => {
+    try { return !!localStorage.getItem('hc_user') && !!localStorage.getItem('hc_token'); } catch { return false; }
+  })();
+  const isLoginPage = isAuthPath && !isUserLoggedIn;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFCFC] text-[#1F2937]">
       {!isAdminRoute && !hideWebChrome && <SplashScreen />}
       {!isAdminRoute && !hideWebChrome && <Navbar />}
 
-      <main className="flex-1">
+      <main className={`flex-1 ${!isAdminRoute && !hideWebChrome && !isLoginPage ? 'pt-[64px]' : ''}`}>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* ── PUBLIC ROUTES — desktop always, mobile shows mobile-optimised version ── */}

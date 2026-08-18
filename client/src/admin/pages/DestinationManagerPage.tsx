@@ -5,6 +5,17 @@ import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
 import { AdminLayout } from '../components/AdminLayout';
 import toast from 'react-hot-toast';
+import { FALLBACK_DESTINATIONS } from '../../utils/mobileDataFallback';
+
+const mergeDestinationsWithFallback = (apiDests: any[]) => {
+  const map = new Map<string, any>();
+  (apiDests || []).forEach((d: any) => map.set(d._id || d.slug || d.id || d.name, d));
+  FALLBACK_DESTINATIONS.forEach((d: any) => {
+    const idKey = d._id || d.slug || d.id || d.name;
+    if (!map.has(idKey)) map.set(idKey, d);
+  });
+  return Array.from(map.values());
+};
 
 export const DestinationManagerPage: React.FC = () => {
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -36,14 +47,10 @@ export const DestinationManagerPage: React.FC = () => {
     };
   }, []);
 
-
-
   const fetchDestinationsSilently = async () => {
     try {
       const res = await apiClient.get('/destinations');
-      if (res.data?.data) {
-        setDestinations(res.data.data);
-      }
+      setDestinations(mergeDestinationsWithFallback(res.data?.data || []));
     } catch (_) {}
   };
 
@@ -51,9 +58,10 @@ export const DestinationManagerPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await apiClient.get('/destinations');
-      setDestinations(res.data.data || []);
+      setDestinations(mergeDestinationsWithFallback(res.data?.data || []));
     } catch (err) {
       console.error('Failed to fetch destination manager data', err);
+      setDestinations(FALLBACK_DESTINATIONS);
     } finally {
       setLoading(false);
     }

@@ -57,10 +57,14 @@ apiClient.interceptors.response.use(
         error.response.data?.message?.toLowerCase().includes('forbidden') ||
         error.response.status === 401;
 
-      if (isExpiredOrInvalid && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
+      const hasSession = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+
+      if (!hasSession && isExpiredOrInvalid && window.location.pathname.startsWith('/admin')) {
         localStorage.removeItem('hc_access_token');
+        localStorage.removeItem('hc_token');
         localStorage.removeItem('hc_user');
-        window.location.href = '/admin/login?session_expired=1';
+        localStorage.removeItem('hc_user_email');
+        window.location.href = '/my-bookings';
       }
     }
     return Promise.reject(error);

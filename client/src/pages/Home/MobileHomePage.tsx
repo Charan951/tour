@@ -44,7 +44,12 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   };
 
   const loadUser = () => {
-    try { setCurrentUser(JSON.parse(localStorage.getItem('hc_user') || 'null')); } catch { setCurrentUser(null); }
+    try {
+      const u = JSON.parse(localStorage.getItem('hc_user') || 'null');
+      const token = localStorage.getItem('hc_token');
+      if (u && token) setCurrentUser(u);
+      else setCurrentUser(null);
+    } catch { setCurrentUser(null); }
   };
 
   useEffect(() => {

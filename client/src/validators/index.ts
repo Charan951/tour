@@ -12,7 +12,7 @@ export const enquirySchema = z.object({
   budget: z.number().optional(),
   travelType: z.enum(['Solo', 'Couple', 'Family', 'Friends', 'Corporate']).optional(),
   message: z.string().max(1000, 'Message cannot exceed 1000 characters').optional(),
-  source: z.enum(['PackagePage', 'DestinationPage', 'ContactForm', 'WhatsApp', 'CallRequest', 'PopupModal']).default('PackagePage')
+  source: z.string().optional().default('PackagePage')
 });
 
 export const loginSchema = z.object({

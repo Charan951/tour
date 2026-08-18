@@ -36,6 +36,20 @@ export const MobilePackageDetailPage: React.FC = () => {
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
 
+  const handleBack = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/packages');
+    }
+  };
+
+  const [modalMode, setModalMode] = useState<'enquiry' | 'booking'>('enquiry');
+
   useEffect(() => {
     const fetchPackage = async () => {
       try {
@@ -70,7 +84,7 @@ export const MobilePackageDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-white p-6 text-center">
         <h2 className="text-lg font-bold text-slate-800">Package Not Found</h2>
-        <button onClick={() => navigate(-1)} className="mt-4 px-4 py-2 bg-[#0A6FB5] text-white rounded-xl text-xs font-bold">
+        <button onClick={handleBack} className="mt-4 px-4 py-2 bg-[#0A6FB5] text-white rounded-xl text-xs font-bold">
           Go Back
         </button>
       </div>
@@ -116,13 +130,15 @@ export const MobilePackageDetailPage: React.FC = () => {
       {/* ── TOP HERO COVER IMAGE WITH FLOATING BACK BUTTON ── */}
       <div className="h-64 relative bg-slate-900">
         <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
         {/* Floating Back Button */}
         <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-9 h-9 rounded-2xl bg-white/80 backdrop-blur-md flex items-center justify-center text-slate-800 active:scale-95 transition-transform shadow-md"
+          type="button"
+          onClick={(e) => handleBack(e)}
+          className="absolute top-4 left-4 z-50 w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md flex items-center justify-center text-slate-900 active:scale-90 transition-all shadow-xl cursor-pointer pointer-events-auto border border-slate-200/50"
+          aria-label="Go Back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-6 h-6 text-slate-900 stroke-[2.5]" />
         </button>
       </div>
 
@@ -325,23 +341,25 @@ export const MobilePackageDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* ── STICKY BOTTOM BAR ── (Matches Images 1 & 2 bottom bar) */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-2xl z-40 flex items-center justify-between gap-2">
+      {/* ── STICKY BOTTOM BAR ── (Matches Flutter mobile app package detail action bar) */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.15)] z-50 flex items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] text-slate-400">{activeTier.category} Plan</p>
-          <p className="font-extrabold text-[#0A6FB5] text-base">₹{Number(activeTier.price).toLocaleString()}</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{activeTier.category} Plan</p>
+          <p className="font-poppins font-extrabold text-[#0A6FB5] text-lg leading-tight">₹{Number(activeTier.price).toLocaleString()}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setEnquiryOpen(true)}
-            className="px-4 py-2.5 rounded-xl border-2 border-[#0A6FB5] text-[#0A6FB5] text-xs font-bold active:scale-95 transition-transform"
+            type="button"
+            onClick={() => { setModalMode('enquiry'); setEnquiryOpen(true); }}
+            className="px-4 py-2.5 rounded-xl border-2 border-[#0A6FB5] text-[#0A6FB5] text-xs font-extrabold active:scale-95 transition-all hover:bg-[#0A6FB5]/5 cursor-pointer"
           >
             Enquire
           </button>
           <button
-            onClick={() => setEnquiryOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] text-white text-xs font-bold shadow-md active:scale-95 transition-transform"
+            type="button"
+            onClick={() => { setModalMode('booking'); setEnquiryOpen(true); }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white text-xs font-extrabold shadow-md active:scale-95 transition-all hover:opacity-95 cursor-pointer"
           >
             Book Package Now
           </button>
@@ -352,6 +370,7 @@ export const MobilePackageDetailPage: React.FC = () => {
         isOpen={enquiryOpen}
         onClose={() => setEnquiryOpen(false)}
         selectedPackage={pkg}
+        initialMode={modalMode}
       />
     </div>
   );

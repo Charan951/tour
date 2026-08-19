@@ -5,6 +5,11 @@ import { Package } from '../models/Package.js';
 import { Destination } from '../models/Destination.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
+import {
+  sendBookingConfirmationEmail,
+  sendBookingStatusUpdateEmail,
+  sendPaymentReceiptEmail
+} from '../services/emailService.js';
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
@@ -21,6 +26,7 @@ export const createBooking = async (req: Request, res: Response) => {
       travelDate,
       adults,
       children,
+      travelers,
       pricingTier,
       totalPrice,
       advanceAmount,
@@ -124,8 +130,8 @@ export const createBooking = async (req: Request, res: Response) => {
       mobile: resolvedMobile,
       address: parsedAddress,
       travelDate: travelDate ? new Date(travelDate) : new Date(),
-      adults: Number(adults || 1),
-      children: Number(children || 0),
+      adults: Number(adults || (travelers && typeof travelers === 'object' ? travelers.adults : travelers) || 1),
+      children: Number(children || (travelers && typeof travelers === 'object' ? travelers.children : 0) || 0),
       pricingTier: pricingTier || 'Standard',
       totalPrice: numTotal,
       advanceAmount: numAdvance,
@@ -146,6 +152,11 @@ export const createBooking = async (req: Request, res: Response) => {
 
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
     emitCreate('Booking', populatedBooking, 'general_updates');
+
+    // Trigger instant email notification to customer
+    sendBookingConfirmationEmail(populatedBooking).catch(err =>
+      console.error('[BookingController] Email trigger failed:', err)
+    );
 
     return res.status(201).json({
       success: true,
@@ -295,6 +306,11 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
     emitUpdate('Booking', populatedBooking, 'general_updates');
 
+    // Trigger email notification to customer on status / payment update
+    sendBookingStatusUpdateEmail(populatedBooking).catch(err =>
+      console.error('[BookingController] Email update trigger failed:', err)
+    );
+
     return res.status(200).json({
       success: true,
       message: 'Booking updated successfully',
@@ -389,6 +405,15 @@ export const payRemainingBalance = async (req: Request, res: Response) => {
 
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
     emitUpdate('Booking', populatedBooking, 'general_updates');
+
+    // Trigger payment receipt email & booking status email to customer
+    const paidAmount = isAdvancePayment ? booking.advanceAmount : booking.remainingBalance || booking.totalPrice;
+    sendPaymentReceiptEmail(populatedBooking, Number(paidAmount || 0), !isAdvancePayment).catch(err =>
+      console.error('[BookingController] Payment receipt trigger failed:', err)
+    );
+    sendBookingStatusUpdateEmail(populatedBooking).catch(err =>
+      console.error('[BookingController] Booking status email trigger failed:', err)
+    );
 
     return res.status(200).json({
       success: true,

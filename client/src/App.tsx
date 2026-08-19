@@ -35,6 +35,7 @@ const PackageManagerPage = lazy(() => import('./admin/pages/PackageManagerPage')
 const DestinationManagerPage = lazy(() => import('./admin/pages/DestinationManagerPage').then(m => ({ default: m.DestinationManagerPage })));
 const BannerManagerPage = lazy(() => import('./admin/pages/BannerManagerPage').then(m => ({ default: m.BannerManagerPage })));
 const CMSManagerPage = lazy(() => import('./admin/pages/CMSManagerPage').then(m => ({ default: m.CMSManagerPage })));
+const AdminMessagesPage = lazy(() => import('./admin/pages/AdminMessagesPage').then(m => ({ default: m.AdminMessagesPage })));
 
 const PageFallback: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center p-8">
@@ -72,6 +73,7 @@ export const App: React.FC = () => {
     try { return !!localStorage.getItem('hc_user') && !!localStorage.getItem('hc_token'); } catch { return false; }
   })();
   const isLoginPage = isAuthPath && !isUserLoggedIn;
+  const hideWebChrome = isMobile;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFCFC] text-[#1F2937]">
@@ -103,6 +105,7 @@ export const App: React.FC = () => {
             <Route path="/stories" element={<BlogsPage />} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
+            <Route path="/login" element={<UserDashboardPage />} />
             <Route path="/dashboard" element={<UserDashboardPage />} />
             <Route path="/profile" element={<UserDashboardPage />} />
             <Route path="/my-bookings" element={<UserDashboardPage />} />
@@ -111,6 +114,7 @@ export const App: React.FC = () => {
             {/* ── ADMIN BACK-OFFICE ── */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/messages" element={<AdminMessagesPage />} />
             <Route path="/admin/bookings" element={<BookingsManagerPage />} />
             <Route path="/admin/leads" element={<LeadManagementPage />} />
             <Route path="/admin/packages" element={<PackageManagerPage />} />

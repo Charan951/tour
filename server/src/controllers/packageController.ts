@@ -7,7 +7,7 @@ import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 export const getPackages = async (req: Request, res: Response) => {
   try {
-    const { search, destination, category, theme, minPrice, maxPrice, featured, trending, page = 1, limit = 12 } = req.query;
+    const { search, destination, category, theme, minPrice, maxPrice, featured, trending, page = 1, limit = 1000 } = req.query;
 
     const query: any = { isDeleted: false };
 

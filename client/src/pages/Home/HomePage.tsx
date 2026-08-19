@@ -171,7 +171,7 @@ export const HomePage: React.FC = () => {
     try {
       const [destRes, pkgRes, banRes, themeRes] = await Promise.allSettled([
         apiClient.get('/destinations'),
-        apiClient.get('/packages?limit=12'),
+        apiClient.get('/packages?limit=6'),
         apiClient.get('/banners'),
         apiClient.get('/themes')
       ]);
@@ -286,7 +286,7 @@ export const HomePage: React.FC = () => {
     try {
       const [destRes, pkgRes, banRes, themeRes] = await Promise.all([
         apiClient.get('/destinations'),
-        apiClient.get('/packages?limit=12'),
+        apiClient.get('/packages?limit=6'),
         apiClient.get('/banners'),
         apiClient.get('/themes')
       ]);
@@ -364,13 +364,13 @@ export const HomePage: React.FC = () => {
 
       {/* Floating Vertical "Enquiry Now" Side Tab */}
       <motion.button
-        whileHover={{ scale: 1.15 }}
+        whileHover={{ scale: 1.1, x: 3 }}
         onClick={() => handleOpenEnquire()}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-black text-xs px-2.5 py-4 rounded-r-2xl shadow-2xl transition-all flex items-center gap-2 cursor-pointer border-y border-r border-white/40 group"
+        className="fixed left-0 top-[58%] -translate-y-1/2 z-40 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-black text-xs px-2 py-3.5 rounded-r-2xl shadow-2xl transition-all flex items-center gap-2 cursor-pointer border-0 overflow-hidden group backdrop-blur-sm"
         style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
       >
-        <Sparkles className="w-4 h-4 animate-spin-slow rotate-90" />
-        <span className="tracking-widest uppercase text-[11px]">Enquiry Now</span>
+        <Sparkles className="w-3.5 h-3.5 animate-spin-slow rotate-90" />
+        <span className="tracking-widest uppercase text-[10.5px]">Enquiry Now</span>
       </motion.button>
 
       {/* Dynamic Hero Banner Carousel Section */}
@@ -445,16 +445,16 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Standalone Quick Search Bar Widget */}
-      <section className="relative z-30 max-w-6xl mx-auto px-4 mt-4 sm:-mt-14 mb-10 sm:mb-12">
+      <section className="relative z-30 max-w-6xl mx-auto px-4 mt-3 sm:-mt-8 mb-10 sm:mb-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="glass-card rounded-[28px] p-4 sm:p-5 shadow-2xl border border-white/80 text-slate-800 text-left relative"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             {/* 1. Keyword Search Input */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
+            <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
               <Search className="w-5 h-5 text-[#0A6FB5] shrink-0" />
               <div className="w-full">
                 <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Search Keyword</label>
@@ -469,7 +469,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* 2. Destination Dropdown Filter */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
+            <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
               <MapPin className="w-5 h-5 text-[#0A6FB5] shrink-0" />
               <div className="w-full">
                 <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Destination</label>
@@ -489,7 +489,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* 3. Theme Dropdown Filter */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
+            <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
               <Sparkles className="w-5 h-5 text-[#0A6FB5] shrink-0" />
               <div className="w-full">
                 <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Travel Theme</label>
@@ -512,12 +512,15 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* 4. Search Submit CTA */}
-            <Link
-              to={buildSearchUrl()}
-              className="py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 shimmer-sheen"
-            >
-              <Search className="w-4 h-4" /> Search Packages
-            </Link>
+            <div className="lg:col-span-3">
+              <Link
+                to={buildSearchUrl()}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-xs lg:text-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer border-0 overflow-hidden whitespace-nowrap shimmer-sheen"
+              >
+                <Search className="w-4 h-4 shrink-0" />
+                <span>Search Packages</span>
+              </Link>
+            </div>
           </div>
 
           {/* REALTIME INSTANT SEARCH RESULTS PREVIEW DROPDOWN */}
@@ -944,7 +947,7 @@ export const HomePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => (
+          {packages.slice(0, 6).map((pkg) => (
             <PackageCard
               key={pkg._id || pkg.slug}
               pkg={pkg}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, LayoutDashboard, Users, ShoppingBag, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon } from 'lucide-react';
+import { Compass, LayoutDashboard, Users, ShoppingBag, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon, MessageSquare } from 'lucide-react';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -56,6 +56,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
       label: 'CMS & Settings',
       path: '/admin/cms',
       icon: FileText
+    },
+    {
+      label: 'Support Messages',
+      path: '/admin/messages',
+      icon: MessageSquare
     }
   ];
 

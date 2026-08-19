@@ -8,6 +8,7 @@ import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/enquiry_service.dart';
 import 'enquiry_detail_screen.dart';
+import '../chat/chat_bottom_sheet.dart';
 
 class MyEnquiriesScreen extends StatefulWidget {
   const MyEnquiriesScreen({super.key});
@@ -260,6 +261,19 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
     final statusColor = _getStatusColor(enquiry.status);
     final statusLabel = _formatStatusLabel(enquiry.status);
 
+    final bool isPkgEnquiry = enquiry.packageTitle != null && enquiry.packageTitle!.isNotEmpty;
+    final String title = isPkgEnquiry
+        ? enquiry.packageTitle!
+        : (enquiry.destination.isNotEmpty
+            ? 'Custom Trip Request (${enquiry.destination})'
+            : 'General Custom Trip Enquiry');
+
+    final String badgeText = isPkgEnquiry ? '📦 Package Enquiry' : '🌐 General Trip Enquiry';
+    final Color badgeBg = isPkgEnquiry ? const Color(0xFFEFF6FF) : const Color(0xFFECFDF5);
+    final Color badgeTextCol = isPkgEnquiry ? const Color(0xFF0284C7) : const Color(0xFF059669);
+
+    final String travelersText = '${enquiry.adults} Adults, ${enquiry.children} Kids';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -292,19 +306,38 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Type Badge
+                Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: badgeTextCol.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    badgeText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: badgeTextCol,
+                    ),
+                  ),
+                ),
+
                 // Destination / Subject & Status Header
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        enquiry.destination.isNotEmpty ? enquiry.destination : 'Tour Enquiry',
+                        title,
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textPrimary,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -342,8 +375,8 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                     const Icon(Icons.people_outline_rounded, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
-                      '${enquiry.travelers} Travelers',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      travelersText,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -372,20 +405,74 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                   ),
                 ],
 
+                if (enquiry.adminResponse != null && enquiry.adminResponse!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ADMIN RESPONSE / QUOTE:',
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.black, color: Color(0xFF0284C7)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          enquiry.adminResponse!,
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF1E3A8A)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 12),
 
                 // Action Footer Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Enquiry ID: #${(enquiry.id ?? '').length > 8 ? (enquiry.id ?? '').substring((enquiry.id ?? '').length - 6).toUpperCase() : (enquiry.id ?? 'ENQ')}',
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    GestureDetector(
+                      onTap: () {
+                        final user = Provider.of<AuthProvider>(context, listen: false).user;
+                        ChatBottomSheet.show(
+                          context,
+                          topicId: (enquiry.id ?? '').isNotEmpty ? enquiry.id! : 'HC-ENQUIRY',
+                          topicType: 'Enquiry',
+                          topicTitle: enquiry.destination,
+                          customerName: enquiry.name.isNotEmpty ? enquiry.name : user?.fullName ?? 'Traveler',
+                          customerEmail: enquiry.email.isNotEmpty ? enquiry.email : user?.email ?? 'user@holidaycity.com',
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE0F2FE),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFBAE6FD)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.chat_bubble_outline, size: 12, color: Color(0xFF0284C7)),
+                            SizedBox(width: 4),
+                            Text(
+                              'Chat Admin',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF0284C7), fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const Row(
                       children: [
                         Text(
-                          'View Quote Details',
+                          'View Quote',
                           style: TextStyle(fontSize: 12, color: Color(0xFF0284C7), fontWeight: FontWeight.bold),
                         ),
                         SizedBox(width: 4),

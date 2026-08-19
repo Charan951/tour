@@ -851,6 +851,25 @@ export const FALLBACK_ENQUIRIES = [
     createdAt: '2026-08-14T10:20:00.000Z'
   },
   {
+    _id: 'enq_gen_1',
+    enquiryId: 'ENQ-2026-006',
+    fullName: 'Naveen Kumar',
+    email: 'naveen@gmail.com',
+    mobile: '+91 98765 43210',
+    destination: 'Maldives',
+    preferredDestination: 'Maldives',
+    package: null,
+    packageName: null,
+    travelDate: '2026-11-10',
+    adults: 2,
+    children: 0,
+    budget: null,
+    status: 'New',
+    priority: 'High',
+    message: 'General custom trip enquiry submitted from Home Page for Maldives.',
+    createdAt: '2026-08-19T10:00:00.000Z'
+  },
+  {
     _id: 'enq_6',
     enquiryId: 'ENQ-2026-006',
     fullName: 'Ananya Roy',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
+import '../chat/chat_bottom_sheet.dart';
 
 class EnquiryDetailScreen extends StatelessWidget {
   final EnquiryModel enquiry;
@@ -153,7 +154,50 @@ class EnquiryDetailScreen extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
+
+            // Direct Chat CTA Banner Button
+            GestureDetector(
+              onTap: () {
+                ChatBottomSheet.show(
+                  context,
+                  topicId: (enquiry.id ?? '').isNotEmpty ? enquiry.id! : 'HC-ENQUIRY',
+                  topicType: 'Enquiry',
+                  topicTitle: enquiry.destination,
+                  customerName: enquiry.name.isNotEmpty ? enquiry.name : 'Traveler',
+                  customerEmail: enquiry.email.isNotEmpty ? enquiry.email : 'user@holidaycity.com',
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0A6FB5), Color(0xFF57D0C9)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0A6FB5).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Chat Direct with Admin Support',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Destination Section
             Text(

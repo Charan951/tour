@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { Blog, Testimonial, FAQ, Newsletter, ContactMessage, Setting } from '../models/CMS.js';
+import { Enquiry } from '../models/Enquiry.js';
+import { sendEnquiryConfirmationEmail, sendAdminEnquiryNotificationEmail } from '../services/emailService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 // --- BLOGS ---
@@ -210,8 +212,40 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
 // --- CONTACT MESSAGES ---
 export const createContactMessage = async (req: Request, res: Response) => {
   try {
-    const message = await ContactMessage.create(req.body);
-    return res.status(201).json({ success: true, message: 'Message sent successfully', data: message });
+    const { name, fullName, email, phone, mobile, message: messageBody } = req.body;
+    const contactMsg = await ContactMessage.create(req.body);
+
+    const resolvedName = fullName || name || 'Website Visitor';
+    const resolvedEmail = (email || '').toString().trim().toLowerCase();
+    const resolvedPhone = mobile || phone || '';
+    const resolvedMessage = messageBody || '';
+
+    // Create Enquiry record so it instantly appears in Admin Lead CRM table
+    const count = await Enquiry.countDocuments();
+    const enquiryId = `HC-2026-${(count + 1001).toString()}`;
+    const enquiry = await Enquiry.create({
+      enquiryId,
+      fullName: resolvedName,
+      email: resolvedEmail,
+      mobile: resolvedPhone,
+      message: resolvedMessage,
+      source: 'ContactForm',
+      status: 'New',
+      priority: 'Medium'
+    });
+
+    emitDataUpdate('Enquiry', enquiry, 'general_updates');
+    emitCreate('Enquiry', enquiry, 'general_updates');
+
+    // Trigger instant email notifications to both Customer and Admin
+    sendEnquiryConfirmationEmail(enquiry).catch(err =>
+      console.error('[CMSController] Customer contact confirmation email failed:', err)
+    );
+    sendAdminEnquiryNotificationEmail(enquiry).catch(err =>
+      console.error('[CMSController] Admin contact notification email failed:', err)
+    );
+
+    return res.status(201).json({ success: true, message: 'Message sent successfully', data: contactMsg });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

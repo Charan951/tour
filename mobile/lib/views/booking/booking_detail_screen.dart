@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../config/theme.dart';
 import '../../widgets/custom_button.dart';
 import 'pay_remaining_bottom_sheet.dart';
+import '../chat/chat_bottom_sheet.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -177,6 +178,49 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     ],
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Direct Chat CTA Banner Button
+            GestureDetector(
+              onTap: () {
+                ChatBottomSheet.show(
+                  context,
+                  topicId: bookingId,
+                  topicType: 'Booking',
+                  topicTitle: b['packageName'] ?? '',
+                  customerName: b['customerName'] ?? 'Traveler',
+                  customerEmail: b['email'] ?? 'user@holidaycity.com',
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0A6FB5), Color(0xFF57D0C9)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0A6FB5).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Chat Direct with Admin Support',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 14),

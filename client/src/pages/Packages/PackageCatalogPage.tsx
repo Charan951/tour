@@ -46,12 +46,8 @@ export const PackageCatalogPage: React.FC = () => {
     fetchPackages();
     const handleDataUpdate = () => fetchPackagesSilently();
     window.addEventListener('hc_data_updated', handleDataUpdate);
-    const interval = setInterval(() => {
-      fetchPackagesSilently();
-    }, 800);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
-      clearInterval(interval);
     };
   }, [searchQuery, selectedTheme, selectedRegion, selectedDestination]);
 
@@ -59,7 +55,7 @@ export const PackageCatalogPage: React.FC = () => {
 
   const fetchPackagesSilently = async () => {
     try {
-      let url = `/packages?limit=100`;
+      let url = `/packages?limit=1000`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;
       const res = await apiClient.get(url);
@@ -95,7 +91,7 @@ export const PackageCatalogPage: React.FC = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      let url = `/packages?limit=100`;
+      let url = `/packages?limit=1000`;
 
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;

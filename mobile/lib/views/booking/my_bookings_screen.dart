@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/booking_service.dart';
 import 'booking_detail_screen.dart';
+import '../chat/chat_bottom_sheet.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -326,22 +327,52 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 const SizedBox(height: 8),
 
                 // Footer View Details Link
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Tap for full details & invoice', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                    Row(
-                      children: [
-                        Text(
-                          'View Details',
-                          style: TextStyle(fontSize: 11.5, color: Color(0xFF0284C7), fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(width: 2),
-                        Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFF0284C7)),
-                      ],
-                    ),
-                  ],
-                ),
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    GestureDetector(
+      onTap: () {
+        final user = Provider.of<AuthProvider>(context, listen: false).user;
+        ChatBottomSheet.show(
+          context,
+          topicId: bookingId,
+          topicType: 'Booking',
+          topicTitle: b['packageName'] ?? '',
+          customerName: b['customerName'] ?? user?.fullName ?? 'Traveler',
+          customerEmail: b['email'] ?? user?.email ?? 'user@holidaycity.com',
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE0F2FE),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFBAE6FD)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.chat_bubble_outline, size: 12, color: Color(0xFF0284C7)),
+            SizedBox(width: 4),
+            Text(
+              'Chat Admin',
+              style: TextStyle(fontSize: 11, color: Color(0xFF0284C7), fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    ),
+    const Row(
+      children: [
+        Text(
+          'View Details',
+          style: TextStyle(fontSize: 11.5, color: Color(0xFF0284C7), fontWeight: FontWeight.bold),
+        ),
+        SizedBox(width: 2),
+        Icon(Icons.arrow_forward_ios, size: 10, color: Color(0xFF0284C7)),
+      ],
+    ),
+  ],
+),
               ],
             ),
           ),

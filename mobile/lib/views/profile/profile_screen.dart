@@ -13,6 +13,7 @@ import '../../widgets/custom_button.dart';
 import '../auth/login_screen.dart';
 import '../booking/my_bookings_screen.dart';
 import '../enquiry/my_enquiries_screen.dart';
+import '../chat/chat_bottom_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -408,8 +409,17 @@ class _ProfileScreenState extends State<ProfileScreen>
               _buildListTile(
                 icon: Icons.support_agent,
                 title: 'HolidayCity Customer Support',
-                subtitle: '24/7 Helpline & WhatsApp assistance',
-                onTap: () {},
+                subtitle: '24/7 Direct Admin Chat & Support',
+                onTap: () {
+                  ChatBottomSheet.show(
+                    context,
+                    topicId: 'GENERAL-SUPPORT',
+                    topicType: 'General',
+                    topicTitle: 'Customer Support',
+                    customerName: user?.fullName ?? 'Traveler',
+                    customerEmail: user?.email ?? 'user@holidaycity.com',
+                  );
+                },
               ),
 
               const SizedBox(height: 28),

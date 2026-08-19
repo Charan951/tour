@@ -148,7 +148,7 @@ export const MobilePackagesPage: React.FC = () => {
     const fetchPackages = async () => {
       try {
         setLoading(true);
-        const res = await apiClient.get('/packages?limit=100');
+        const res = await apiClient.get('/packages?limit=1000');
         const apiData = res.data.data || [];
         
         // Merge API packages with FALLBACK_PACKAGES avoiding duplicates (matching Flutter PackageService)

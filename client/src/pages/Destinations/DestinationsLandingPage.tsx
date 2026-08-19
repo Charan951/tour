@@ -19,14 +19,10 @@ export const DestinationsLandingPage: React.FC = () => {
     fetchDestinations();
     const handleDataUpdate = () => fetchDestinationsSilently();
     window.addEventListener('hc_data_updated', handleDataUpdate);
-    const interval = setInterval(() => {
-      fetchDestinationsSilently();
-    }, 800);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
-      clearInterval(interval);
     };
-  }, []);
+  }, [location.search]);
 
   const fetchDestinationsSilently = async () => {
     try {
@@ -57,9 +53,25 @@ export const DestinationsLandingPage: React.FC = () => {
   })();
 
   const filteredDestinations = selectedCategory === 'Domestic'
-    ? effectiveDestinations.filter((d) => d.category === 'Domestic' || (d.isDomestic !== false && (d.country?.isoCode === 'IN' || d.country?.name === 'India' || d.country === 'India')))
+    ? effectiveDestinations.filter((d) => {
+        if (!d) return false;
+        const cat = String(d.category || '');
+        const countryVal = typeof d.country === 'object' && d.country !== null
+          ? (d.country.name || d.country.isoCode || '')
+          : String(d.country || '');
+        const countryStr = String(countryVal || '');
+        return cat === 'Domestic' || d.isDomestic === true || countryStr === 'India' || countryStr === 'IN';
+      })
     : selectedCategory === 'International'
-    ? effectiveDestinations.filter((d) => d.category === 'International' || d.isDomestic === false || (d.country && d.country !== 'India' && d.country?.isoCode !== 'IN' && d.country?.name !== 'India'))
+    ? effectiveDestinations.filter((d) => {
+        if (!d) return false;
+        const cat = String(d.category || '');
+        const countryVal = typeof d.country === 'object' && d.country !== null
+          ? (d.country.name || d.country.isoCode || '')
+          : String(d.country || '');
+        const countryStr = String(countryVal || '');
+        return cat === 'International' || d.isDomestic === false || (Boolean(countryStr) && countryStr !== 'India' && countryStr !== 'IN');
+      })
     : effectiveDestinations;
 
   const pageTitle = selectedCategory === 'Domestic'
@@ -114,7 +126,7 @@ export const DestinationsLandingPage: React.FC = () => {
           )}
         </div>
 
-        {loading ? (
+        {loading && effectiveDestinations.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((n) => (
               <div key={n} className="h-80 rounded-3xl bg-slate-200 animate-pulse" />

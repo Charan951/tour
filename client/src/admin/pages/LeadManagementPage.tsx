@@ -246,10 +246,18 @@ export const LeadManagementPage: React.FC = () => {
                     <tr key={enq._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-4">
                         <div className="font-bold text-slate-900 text-sm">{enq.fullName}</div>
-                        <div className="text-[11px] text-[#0A6FB5] font-semibold mt-0.5">
-                          {typeof enq.package === 'object' && enq.package !== null ? enq.package.title : (packages.find(p => p._id === enq.package)?.title || enq.packageName || 'Scenic Manali & Solang Snow Adventure')}
+                        <div className="text-[11px] font-semibold mt-0.5">
+                          {(() => {
+                            const hasPkgObj = typeof enq.package === 'object' && enq.package !== null && enq.package.title;
+                            const foundPkg = typeof enq.package === 'string' && enq.package ? packages.find(p => p._id === enq.package) : null;
+                            const pkgTitle = hasPkgObj ? enq.package.title : (foundPkg?.title || enq.packageName);
+                            if (pkgTitle) {
+                              return <span className="text-[#0A6FB5]">📦 {pkgTitle}</span>;
+                            }
+                            return <span className="text-slate-600 font-extrabold bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">🌐 General Trip Enquiry</span>;
+                          })()}
                         </div>
-                        <div className="text-[10px] text-slate-400">ID: {enq.enquiryId || enq._id.substring(0, 8)}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">ID: {enq.enquiryId || enq._id.substring(0, 8)}</div>
                       </td>
                       <td className="p-4 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-600 font-medium">
@@ -497,64 +505,88 @@ export const LeadManagementPage: React.FC = () => {
             <div className="space-y-3 text-xs">
               {/* Package & Destination Overview Card */}
               {(() => {
-                const pkgName = typeof selectedLead.package === 'object' && selectedLead.package !== null
-                  ? selectedLead.package.title
-                  : (packages.find(p => p._id === selectedLead.package)?.title || selectedLead.packageName || 'Scenic Manali & Solang Snow Adventure');
+                const hasPkgObj = typeof selectedLead.package === 'object' && selectedLead.package !== null && selectedLead.package.title;
+                const foundPkg = typeof selectedLead.package === 'string' && selectedLead.package ? packages.find(p => p._id === selectedLead.package) : null;
+                const pkgName = hasPkgObj ? selectedLead.package.title : (foundPkg?.title || selectedLead.packageName || null);
+                const pkgCode = hasPkgObj ? selectedLead.package.packageCode : (foundPkg?.packageCode || selectedLead.packageCode || null);
                 
-                const pkgCode = typeof selectedLead.package === 'object' && selectedLead.package !== null
-                  ? selectedLead.package.packageCode
-                  : (packages.find(p => p._id === selectedLead.package)?.packageCode || 'PKG-HIM-001');
-
                 const destName = typeof selectedLead.destination === 'object' && selectedLead.destination !== null
                   ? selectedLead.destination.name
-                  : (destinations.find(d => d._id === selectedLead.destination)?.name || selectedLead.destinationName || 'Himachal & Manali Peaks');
+                  : (destinations.find(d => d._id === selectedLead.destination)?.name || selectedLead.destinationName || selectedLead.preferredDestination || 'Flexible Destination');
 
-                let tier = 'Standard';
-                let estPrice = '₹33,000';
-                if (selectedLead.message && selectedLead.message.includes('[BOOKING REQUEST]')) {
-                  const msg = selectedLead.message;
-                  const tierM = msg.match(/Tier:\s*([^,]+)/);
-                  const estM = msg.match(/Est:\s*([^.]+)/);
-                  if (tierM) tier = tierM[1].trim();
-                  if (estM) estPrice = estM[1].trim();
-                } else if (selectedLead.budget) {
-                  estPrice = `₹${Number(selectedLead.budget).toLocaleString()}`;
+                if (pkgName) {
+                  let tier = 'Standard';
+                  let estPrice = 'Custom Quote';
+                  if (selectedLead.message && selectedLead.message.includes('[BOOKING REQUEST]')) {
+                    const msg = selectedLead.message;
+                    const tierM = msg.match(/Tier:\s*([^,]+)/);
+                    const estM = msg.match(/Est:\s*([^.]+)/);
+                    if (tierM) tier = tierM[1].trim();
+                    if (estM) estPrice = estM[1].trim();
+                  } else if (selectedLead.budget) {
+                    estPrice = `₹${Number(selectedLead.budget).toLocaleString()}`;
+                  }
+
+                  return (
+                    <div className="bg-gradient-to-r from-[#063B6D] to-[#0A6FB5] p-4.5 rounded-2xl text-white space-y-3 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
+                          Requested Tour Package
+                        </span>
+                        {pkgCode && (
+                          <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-md border border-amber-300/30">
+                            {pkgCode}
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className="font-poppins font-black text-lg text-white leading-tight">
+                          {pkgName}
+                        </h4>
+                        <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
+                          <MapPin className="w-3.5 h-3.5 text-[#57D0C9]" />
+                          <span>Destination: <strong className="text-white font-bold">{destName}</strong></span>
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/15 text-center text-xs">
+                        <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                          <span className="text-[10px] text-slate-300 block font-bold">Selected Class</span>
+                          <span className="font-extrabold text-amber-300">{tier}</span>
+                        </div>
+                        <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                          <span className="text-[10px] text-slate-300 block font-bold">Est. Total</span>
+                          <span className="font-extrabold text-[#57D0C9] text-sm">{estPrice}</span>
+                        </div>
+                        <div className="bg-white/10 p-2 rounded-xl border border-white/15">
+                          <span className="text-[10px] text-slate-300 block font-bold">Status</span>
+                          <span className="font-extrabold text-emerald-300">{selectedLead.status || 'New'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
                 }
 
                 return (
-                  <div className="bg-gradient-to-r from-[#063B6D] to-[#0A6FB5] p-4.5 rounded-2xl text-white space-y-3 shadow-md">
+                  <div className="bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#063B6D] p-4.5 rounded-2xl text-white space-y-2 shadow-md">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
-                        Requested Tour Package
+                        🌐 General Custom Trip Enquiry
                       </span>
-                      <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-md border border-amber-300/30">
-                        {pkgCode}
+                      <span className="text-xs font-bold text-[#57D0C9] bg-white/10 px-2 py-0.5 rounded-md border border-white/20">
+                        Home Screen Lead
                       </span>
                     </div>
 
                     <div>
                       <h4 className="font-poppins font-black text-lg text-white leading-tight">
-                        {pkgName}
+                        {destName && destName !== 'Flexible Destination' ? `Custom Trip Request (${destName})` : 'General Custom Trip Enquiry'}
                       </h4>
                       <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
                         <MapPin className="w-3.5 h-3.5 text-[#57D0C9]" />
-                        <span>Destination: <strong className="text-white font-bold">{destName}</strong></span>
+                        <span>Preferred Destination: <strong className="text-white font-bold">{destName}</strong></span>
                       </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/15 text-center text-xs">
-                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
-                        <span className="text-[10px] text-slate-300 block font-bold">Selected Class</span>
-                        <span className="font-extrabold text-amber-300">{tier}</span>
-                      </div>
-                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
-                        <span className="text-[10px] text-slate-300 block font-bold">Est. Total</span>
-                        <span className="font-extrabold text-[#57D0C9] text-sm">{estPrice}</span>
-                      </div>
-                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
-                        <span className="text-[10px] text-slate-300 block font-bold">Status</span>
-                        <span className="font-extrabold text-emerald-300">{selectedLead.status || 'New'}</span>
-                      </div>
                     </div>
                   </div>
                 );
@@ -570,13 +602,19 @@ export const LeadManagementPage: React.FC = () => {
                   <span className="font-bold text-slate-900">{selectedLead.email}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-semibold">Travel Date</span>
+                  <span className="text-slate-400 block font-semibold">Travel Date / Month</span>
                   <span className="font-bold text-slate-900">{selectedLead.travelDate ? new Date(selectedLead.travelDate).toLocaleDateString() : 'Flexible'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-semibold">Travelers</span>
+                  <span className="text-slate-400 block font-semibold">Travelers Breakdown</span>
                   <span className="font-bold text-slate-900">{selectedLead.adults || 1} Adults, {selectedLead.children || 0} Kids</span>
                 </div>
+                {selectedLead.preferredDestination && (
+                  <div className="col-span-2 border-t border-slate-200/60 pt-2">
+                    <span className="text-slate-400 block font-semibold">Preferred Destination</span>
+                    <span className="font-bold text-[#0A6FB5]">{selectedLead.preferredDestination}</span>
+                  </div>
+                )}
               </div>
 
               <div>

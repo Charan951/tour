@@ -15,6 +15,7 @@ import { getBanners, createBanner, updateBanner, deleteBanner } from '../control
 import { getThemeBanners, upsertThemeBanner, deleteThemeBanner } from '../controllers/themeBannerController.js';
 import { getSitemapXML } from '../controllers/sitemapController.js';
 import { createBooking, getAdminBookings, getUserBookings, updateBookingStatus, deleteBooking, payRemainingBalance } from '../controllers/bookingController.js';
+import { sendChatMessage, getTopicMessages, getAdminConversations, markTopicAsRead } from '../controllers/chatController.js';
 import uploadRoutes from './uploadRoutes.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { authRateLimiter, enquiryRateLimiter, contactRateLimiter } from '../middleware/security.js';
@@ -95,10 +96,17 @@ router.post('/bookings/:id/pay-remaining', payRemainingBalance);
 router.post('/contact', enquiryRateLimiter, createContactMessage);
 router.post('/newsletter', subscribeNewsletter);
 
+// Chat / Support Messaging Endpoints
+router.post('/chat/messages', sendChatMessage);
+router.get('/chat/messages/:topicId', getTopicMessages);
+router.get('/chat/conversations', getAdminConversations);
+router.patch('/chat/read/:topicId', markTopicAsRead);
+
 // --- PROTECTED ADMIN ROUTES ---
 router.use('/admin', authenticateToken);
 
 router.get('/admin/auth/me', getMe);
+router.get('/admin/chat/conversations', getAdminConversations);
 
 // Bookings CRUD
 router.get('/admin/bookings', getAdminBookings);

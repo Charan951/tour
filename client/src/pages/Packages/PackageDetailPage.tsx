@@ -20,7 +20,10 @@ export const PackageDetailPage: React.FC = () => {
   const [activeInfoTab, setActiveInfoTab] = useState<'inclusions' | 'exclusions'>('inclusions');
   const [sidebarTab, setSidebarTab] = useState<'enquiry' | 'booking'>('enquiry');
   const [selectedPricingCategory, setSelectedPricingCategory] = useState<string>('Deluxe');
-  const [travelersCount, setTravelersCount] = useState<number>(1);
+  const [adultsCount, setAdultsCount] = useState<number>(2);
+  const [childrenCount, setChildrenCount] = useState<number>(0);
+  const [travelDate, setTravelDate] = useState<string>('');
+  const [destinationInput, setDestinationInput] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -120,14 +123,25 @@ export const PackageDetailPage: React.FC = () => {
       const isBooking = sidebarTab === 'booking';
       const endpoint = isBooking ? '/bookings' : '/enquiries';
 
+      const totalTravelers = adultsCount + childrenCount;
+
       const payload = {
         ...data,
+        fullName: data.fullName,
+        customerName: data.fullName,
+        mobile: data.mobile,
+        email: data.email,
         package: pkg?._id,
         packageCode: pkg?.packageCode,
         destination: pkg?.destination?._id,
+        preferredDestination: destinationInput || destName,
+        travelDate: travelDate || data.travelDate || undefined,
         pricingCategory: selectedPricingCategory,
-        travelersCount: travelersCount,
-        totalPrice: isBooking ? pkg.startingPrice * travelersCount : undefined,
+        travelersCount: totalTravelers,
+        adults: adultsCount,
+        children: childrenCount,
+        travelers: totalTravelers,
+        totalPrice: isBooking ? pkg.startingPrice * totalTravelers : undefined,
         userId: currentUser?._id || currentUser?.id,
         type: isBooking ? 'Booking' : 'Enquiry',
         source: 'PackageDetailPage'
@@ -588,7 +602,7 @@ export const PackageDetailPage: React.FC = () => {
                           <input
                             {...register('fullName')}
                             type="text"
-                            placeholder="Enter Full Name *"
+                            placeholder="e.g. Rahul Sharma"
                             className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold"
                           />
                           {errors.fullName && <p className="text-rose-500 text-[10px] mt-0.5 font-bold">{errors.fullName.message as string}</p>}
@@ -600,7 +614,7 @@ export const PackageDetailPage: React.FC = () => {
                             <input
                               {...register('mobile')}
                               type="text"
-                              placeholder="Phone No *"
+                              placeholder="+91 98765 43210"
                               className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold"
                             />
                             {errors.mobile && <p className="text-rose-500 text-[10px] mt-0.5 font-bold">{errors.mobile.message as string}</p>}
@@ -611,10 +625,89 @@ export const PackageDetailPage: React.FC = () => {
                             <input
                               {...register('email')}
                               type="email"
-                              placeholder="Email *"
+                              placeholder="name@example.com"
                               className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold"
                             />
                             {errors.email && <p className="text-rose-500 text-[10px] mt-0.5 font-bold">{errors.email.message as string}</p>}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">Destination</label>
+                            <input
+                              type="text"
+                              value={destinationInput || destName}
+                              onChange={(e) => setDestinationInput(e.target.value)}
+                              placeholder="e.g. Maldives, Bali"
+                              className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">Travel Date / Month</label>
+                            <input
+                              type="text"
+                              value={travelDate}
+                              onChange={(e) => setTravelDate(e.target.value)}
+                              placeholder="e.g. Nov 2026 / Diwali"
+                              className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Adults & Kids Steppers */}
+                        <div className="grid grid-cols-2 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-[11px] font-extrabold text-slate-800 block">Adults (12+)</span>
+                              <span className="text-[9px] text-slate-400 font-semibold">Full Fare</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
+                                className="w-6 h-6 rounded-md bg-white border border-slate-300 text-slate-700 flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs font-bold text-xs"
+                              >
+                                -
+                              </button>
+                              <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
+                                {adultsCount}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setAdultsCount(adultsCount + 1)}
+                                className="w-6 h-6 rounded-md bg-white border border-slate-300 text-slate-700 flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs font-bold text-xs"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pl-2 border-l border-slate-200/80">
+                            <div>
+                              <span className="text-[11px] font-extrabold text-slate-800 block">Kids (5-11)</span>
+                              <span className="text-[9px] text-slate-400 font-semibold">Child Fare</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                                className="w-6 h-6 rounded-md bg-white border border-slate-300 text-slate-700 flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs font-bold text-xs"
+                              >
+                                -
+                              </button>
+                              <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
+                                {childrenCount}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setChildrenCount(childrenCount + 1)}
+                                className="w-6 h-6 rounded-md bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 shadow-2xs font-bold text-xs"
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
                         </div>
 
@@ -622,7 +715,7 @@ export const PackageDetailPage: React.FC = () => {
                           <label className="block text-[11px] font-bold text-slate-700 mb-1">Preferences / Special Notes</label>
                           <textarea
                             {...register('message')}
-                            rows={3}
+                            rows={2}
                             placeholder="Leave a comment here..."
                             className="w-full p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5] bg-slate-50/60 font-semibold resize-none"
                           />

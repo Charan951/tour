@@ -135,9 +135,9 @@ export const PackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire, onBook
                   onEnquire(pkg, 'booking');
                 }
               }}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#0891B2] hover:from-[#04284b] hover:to-[#0284c7] text-white text-xs font-black shadow-lg hover:shadow-xl hover:shadow-[#0A6FB5]/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/20 whitespace-nowrap shimmer-sheen flex-1 sm:flex-none"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#0891B2] hover:from-[#04284b] hover:to-[#0284c7] text-white text-xs font-black shadow-lg hover:shadow-xl hover:shadow-[#0A6FB5]/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer border-0 overflow-hidden whitespace-nowrap shimmer-sheen flex-1 sm:flex-none"
             >
-              <Sparkles className="w-4 h-4 text-[#F6C65B] fill-current animate-pulse" />
+              <Sparkles className="w-4 h-4 text-[#F6C65B] fill-current animate-pulse shrink-0" />
               <span className="tracking-wide">Book Now</span>
             </motion.button>
           </div>

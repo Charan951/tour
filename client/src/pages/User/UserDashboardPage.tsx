@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { SEO } from '../../components/common/SEO';
+import { ChatModal } from '../../components/chat/ChatModal';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────────────────────────
@@ -38,6 +40,32 @@ const safeStr = (val: any): string => {
   if (typeof val === 'number') return String(val);
   if (typeof val === 'object') return val.name || val.title || val.destinationName || val.packageName || '';
   return String(val);
+};
+
+const getEnquiryCardDetails = (e: any) => {
+  const hasPkgObj = typeof e.package === 'object' && e.package !== null && e.package.title;
+  const pkgTitle = hasPkgObj
+    ? e.package.title
+    : (typeof e.package === 'string' && e.package.length > 5 && !e.package.startsWith('6') ? e.package : e.packageName);
+
+  const destName = typeof e.destination === 'object' && e.destination !== null
+    ? e.destination.name
+    : (e.destinationName || e.preferredDestination || (typeof e.destination === 'string' && e.destination !== 'null' ? e.destination : ''));
+
+  const isPkgEnquiry = Boolean(pkgTitle && pkgTitle !== 'null');
+
+  const title = isPkgEnquiry
+    ? pkgTitle
+    : (destName ? `Custom Trip Request (${destName})` : 'General Custom Trip Enquiry');
+
+  const badgeText = isPkgEnquiry ? '📦 Package Enquiry' : '🌐 General Trip Enquiry';
+  const badgeCls = isPkgEnquiry ? 'bg-[#0A6FB5]/10 text-[#0A6FB5] border border-[#0A6FB5]/20' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+
+  const adults = e.adults || (typeof e.travelers === 'object' ? e.travelers.adults : e.travelers) || 1;
+  const children = e.children || (typeof e.travelers === 'object' ? e.travelers.children : 0) || 0;
+  const travelersText = `${adults} Adults, ${children} Kids`;
+
+  return { isPkgEnquiry, title, destName, badgeText, badgeCls, travelersText };
 };
 
 export const UserDashboardPage: React.FC = () => {
@@ -82,6 +110,13 @@ export const UserDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [copiedId, setCopiedId] = useState(false);
+
+  // Chat Topic Modal State
+  const [activeChatTopic, setActiveChatTopic] = useState<{
+    topicId: string;
+    topicType: 'Booking' | 'Enquiry' | 'General';
+    topicTitle?: string;
+  } | null>(null);
 
   // Sync user from storage when auth event fires
   useEffect(() => {
@@ -285,10 +320,21 @@ export const UserDashboardPage: React.FC = () => {
 
   useEffect(() => { fetchUserData(); }, [fetchUserData]);
 
-  // Auto-refresh every 10 seconds like Flutter (Timer.periodic Duration(seconds: 10))
+  // Real-time socket updates listener for instant live sync when Admin updates booking / enquiry
+  useRealtimeUpdates({
+    onEnquiryUpdate: () => fetchUserData(),
+    onDataUpdate: () => fetchUserData()
+  });
+
+  // Auto-refresh & live sync listener
   useEffect(() => {
-    const interval = setInterval(() => fetchUserData(), 10000);
-    return () => clearInterval(interval);
+    const handleDataUpdate = () => fetchUserData();
+    window.addEventListener('hc_data_updated', handleDataUpdate);
+    const interval = setInterval(() => fetchUserData(), 20000);
+    return () => {
+      window.removeEventListener('hc_data_updated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, [fetchUserData]);
 
   const handleSaveEmail = (e: React.FormEvent) => {
@@ -464,15 +510,6 @@ export const UserDashboardPage: React.FC = () => {
                     Create New Account
                   </button>
                 </p>
-
-                <button
-                  type="button"
-                  onClick={() => navigate('/')}
-                  className="text-xs font-bold text-slate-400 hover:text-[#0A6FB5] flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer pt-1"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5 text-[#0A6FB5]" />
-                  <span>Back to Homepage</span>
-                </button>
               </div>
             </form>
           ) : (
@@ -827,7 +864,22 @@ export const UserDashboardPage: React.FC = () => {
                             <span className="font-bold text-slate-900">₹{Number(b.totalPrice || 0).toLocaleString()}</span>
                           </div>
                           <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                            <span className="text-slate-400">Tap for full invoice & details</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveChatTopic({
+                                  topicId: b.bookingId || 'BK-CONFIRMED',
+                                  topicType: 'Booking',
+                                  topicTitle: b.packageName || ''
+                                });
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-[#0A6FB5] font-extrabold flex items-center gap-1 transition-colors cursor-pointer border border-sky-100"
+                            >
+                              <MessageSquare className="w-3 h-3 text-[#0A6FB5]" />
+                              <span>Chat Admin</span>
+                            </button>
+
                             <span className="text-[#0A6FB5] font-bold flex items-center gap-0.5">Details <ChevronRight className="w-3 h-3" /></span>
                           </div>
                         </button>
@@ -879,24 +931,59 @@ export const UserDashboardPage: React.FC = () => {
                 ) : (
                   <div className="space-y-3">
                     {filteredEnquiries.map(e => {
+                      const { isPkgEnquiry, title, badgeText, badgeCls, travelersText } = getEnquiryCardDetails(e);
                       const isResponded = ['responded', 'quoted', 'replied', 'confirmed'].includes((e.status || '').toLowerCase());
                       return (
-                        <div key={e._id || e.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-poppins font-bold text-slate-900 text-sm">
-                              {safeStr(e.destination) || safeStr(e.package) || e.fullName || e.fullName || 'Tour Enquiry'}
-                            </h4>
-                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${isResponded ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-800'}`}>
+                        <div key={e._id || e.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold mb-1 ${badgeCls}`}>
+                                {badgeText}
+                              </span>
+                              <h4 className="font-poppins font-bold text-slate-900 text-sm leading-snug">
+                                {title}
+                              </h4>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold shrink-0 ${isResponded ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-800'}`}>
                               {isResponded ? '🟢 Responded' : '🟡 Pending'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mb-2">
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400" />{e.travelDate || 'Flexible'}</span>
-                            <span>• {e.travelers || 1} Traveler{e.travelers > 1 ? 's' : ''}</span>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium pt-1">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              {e.travelDate ? (new Date(e.travelDate).toString() !== 'Invalid Date' ? new Date(e.travelDate).toLocaleDateString() : e.travelDate) : 'Flexible'}
+                            </span>
+                            <span>• {travelersText}</span>
                           </div>
+
                           {e.message && (
-                            <p className="text-xs italic text-slate-600 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 line-clamp-2">"{e.message}"</p>
+                            <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">"{e.message}"</p>
                           )}
+
+                          {(e.adminResponse || e.adminNotes) && (
+                            <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-100 text-xs text-blue-900">
+                              <strong className="block text-[10px] text-[#0A6FB5] uppercase font-black">Admin Response / Quote:</strong>
+                              <span>{e.adminResponse || e.adminNotes}</span>
+                            </div>
+                          )}
+
+                          <div className="pt-2 border-t border-slate-100 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveChatTopic({
+                                  topicId: e.enquiryId || e.id || 'HC-ENQUIRY',
+                                  topicType: 'Enquiry',
+                                  topicTitle: title
+                                });
+                              }}
+                              className="px-3 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-[#0A6FB5] font-extrabold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer border border-cyan-100"
+                            >
+                              <MessageSquare className="w-3 h-3 text-[#0A6FB5]" />
+                              <span>Chat with Admin</span>
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -1071,7 +1158,21 @@ export const UserDashboardPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-slate-400 text-[11px]">Click for full invoice & details</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveChatTopic({
+                              topicId: b.bookingId || 'BK-CONFIRMED',
+                              topicType: 'Booking',
+                              topicTitle: b.packageName || ''
+                            });
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-[#0A6FB5] font-extrabold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-sky-100"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-[#0A6FB5]" />
+                          <span>Chat with Admin</span>
+                        </button>
                         <span className="text-[#0A6FB5] font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">Details <ChevronRight className="w-3.5 h-3.5" /></span>
                       </div>
                     </div>
@@ -1100,20 +1201,59 @@ export const UserDashboardPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEnquiries.map(e => {
+                  const { isPkgEnquiry, title, badgeText, badgeCls, travelersText } = getEnquiryCardDetails(e);
                   const isResponded = ['responded', 'quoted', 'replied', 'confirmed'].includes((e.status || '').toLowerCase());
                   return (
-                    <div key={e._id || e.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-poppins font-bold text-slate-900 text-base">
-                          {safeStr(e.destination) || safeStr(e.package) || e.fullName || 'Tour Enquiry'}
-                        </h4>
-                        <span className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold ${isResponded ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-800'}`}>{isResponded ? '🟢 Responded' : '🟡 Pending Response'}</span>
+                    <div key={e._id || e.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10.5px] font-extrabold mb-1.5 ${badgeCls}`}>
+                            {badgeText}
+                          </span>
+                          <h4 className="font-poppins font-bold text-slate-900 text-base leading-snug">
+                            {title}
+                          </h4>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold shrink-0 ${isResponded ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-800'}`}>
+                          {isResponded ? '🟢 Responded' : '🟡 Pending Response'}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
-                        <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-slate-400" />{e.travelDate || 'Flexible'}</span>
-                        <span>• {e.travelers || 1} Travelers</span>
+
+                      <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          {e.travelDate ? (new Date(e.travelDate).toString() !== 'Invalid Date' ? new Date(e.travelDate).toLocaleDateString() : e.travelDate) : 'Flexible'}
+                        </span>
+                        <span>• {travelersText}</span>
                       </div>
-                      {e.message && <p className="text-xs italic text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">"{e.message}"</p>}
+
+                      {e.message && (
+                        <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 line-clamp-2">"{e.message}"</p>
+                      )}
+
+                      {(e.adminResponse || e.adminNotes) && (
+                        <div className="p-3 rounded-xl bg-blue-50/80 border border-blue-100 text-xs text-blue-900">
+                          <strong className="block text-[10.5px] text-[#0A6FB5] uppercase font-black mb-0.5">Admin Response / Quote:</strong>
+                          <span>{e.adminResponse || e.adminNotes}</span>
+                        </div>
+                      )}
+
+                      <div className="pt-2 border-t border-slate-100 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveChatTopic({
+                              topicId: e.enquiryId || e.id || 'HC-ENQUIRY',
+                              topicType: 'Enquiry',
+                              topicTitle: title
+                            });
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-[#0A6FB5] font-extrabold text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-cyan-100"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-[#0A6FB5]" />
+                          <span>Chat with Admin</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1162,6 +1302,16 @@ export const UserDashboardPage: React.FC = () => {
             </div>
           </div>
         )}
+        {/* Chat Modal Renderer */}
+        <ChatModal
+          isOpen={!!activeChatTopic}
+          onClose={() => setActiveChatTopic(null)}
+          topicId={activeChatTopic?.topicId || ''}
+          topicType={activeChatTopic?.topicType || 'Booking'}
+          topicTitle={activeChatTopic?.topicTitle || ''}
+          customerName={displayName || currentUser?.firstName || currentUser?.name || 'Naveen Kumar'}
+          customerEmail={email || currentUser?.email || 'naveenkumar@gmail.com'}
+        />
       </div>
     </>
   );

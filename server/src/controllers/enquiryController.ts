@@ -5,6 +5,11 @@ import { Destination } from '../models/Destination.js';
 import { Package } from '../models/Package.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
+import {
+  sendEnquiryConfirmationEmail,
+  sendEnquiryStatusUpdateEmail,
+  sendAdminEnquiryNotificationEmail
+} from '../services/emailService.js';
 
 export const createEnquiry = async (req: Request, res: Response) => {
   try {
@@ -101,6 +106,14 @@ export const createEnquiry = async (req: Request, res: Response) => {
 
     emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
     emitCreate('Enquiry', populatedEnquiry, 'general_updates');
+
+    // Trigger instant email notification to user & admin
+    sendEnquiryConfirmationEmail(populatedEnquiry).catch(err =>
+      console.error('[EnquiryController] Customer email confirmation trigger failed:', err)
+    );
+    sendAdminEnquiryNotificationEmail(populatedEnquiry).catch(err =>
+      console.error('[EnquiryController] Admin email notification trigger failed:', err)
+    );
 
     return res.status(201).json({
       success: true,
@@ -199,6 +212,11 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
 
     emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
     emitUpdate('Enquiry', populatedEnquiry, 'general_updates');
+
+    // Trigger email update notification to user
+    sendEnquiryStatusUpdateEmail(populatedEnquiry).catch(err =>
+      console.error('[EnquiryController] Email update trigger failed:', err)
+    );
 
     return res.status(200).json({
       success: true,

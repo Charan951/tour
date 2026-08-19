@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Compass, Palette, ShoppingBag, User } from 'lucide-react';
 
 // All user-dashboard routes count as "Profile" being active
-const USER_ROUTES = ['/dashboard', '/profile', '/my-bookings', '/my-enquiries'];
+const USER_ROUTES = ['/dashboard', '/profile', '/my-bookings', '/my-enquiries', '/login'];
 
 export const MobileStickyBar: React.FC = () => {
   const location = useLocation();

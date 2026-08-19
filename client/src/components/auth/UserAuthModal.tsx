@@ -244,7 +244,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-50"
+              className="w-full py-3 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-extrabold text-xs rounded-full shadow-md shadow-[#0A6FB5]/20 hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-50 border-0 overflow-hidden"
             >
               {loading ? 'Signing In...' : 'Sign In to My Account'}
             </button>
@@ -328,7 +328,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-50 mt-2"
+              className="w-full py-3 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-extrabold text-xs rounded-full shadow-md shadow-[#0A6FB5]/20 hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer disabled:opacity-50 mt-2 border-0 overflow-hidden"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>

@@ -121,6 +121,20 @@ connectDB().then(() => {
       socket.join(room);
       console.log(`📡 Socket ${socket.id} joined room: ${room}`);
     });
+
+    socket.on('join_chat_topic', (topicId) => {
+      if (topicId) {
+        const roomName = `chat_${topicId}`;
+        socket.join(roomName);
+        console.log(`💬 Socket ${socket.id} joined chat room: ${roomName}`);
+      }
+    });
+
+    socket.on('leave_chat_topic', (topicId) => {
+      if (topicId) {
+        socket.leave(`chat_${topicId}`);
+      }
+    });
     
     socket.on('disconnect', () => {
       console.log(`❌ Client disconnected: ${socket.id}`);

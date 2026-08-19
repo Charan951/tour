@@ -44,7 +44,7 @@ export const getBlogBySlug = async (req: Request, res: Response) => {
   }
 };
 
-import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
+import { emitCreate, emitUpdate, emitDelete, emitDataUpdate } from '../config/socketEvents.js';
 
 export const createBlog = async (req: AuthRequest, res: Response) => {
   try {

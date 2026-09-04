@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { MapPin, Sun, Calendar, Sparkles, Compass, ShieldCheck, ArrowLeft, Layers, ArrowRight } from 'lucide-react';
+import { MapPin, Sun, Calendar, Sparkles, Compass, ShieldCheck, ArrowLeft, Layers, ArrowRight, Zap, Star, Clock } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { PackageCard } from '../../components/cards/PackageCard';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { SEO } from '../../components/common/SEO';
-import { FALLBACK_DESTINATIONS, FALLBACK_PACKAGES, FALLBACK_THEMES } from '../../utils/mobileDataFallback';
+import { FALLBACK_DESTINATIONS, FALLBACK_PACKAGES, FALLBACK_THEMES, FALLBACK_ACTIVITIES } from '../../utils/mobileDataFallback';
 
 export const DestinationDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [dest, setDest] = useState<any>(null);
   const [packages, setPackages] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [selectedThemeFilter, setSelectedThemeFilter] = useState('All Themes');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -43,8 +44,6 @@ export const DestinationDetailPage: React.FC = () => {
         } catch (_) {}
 
         if (!currentDest) {
-          // Only use a fallback that genuinely matches this slug — never a random one,
-          // or the page would show the wrong destination (and wrong <title>/OG).
           currentDest = FALLBACK_DESTINATIONS.find(
             (d) =>
               d.slug === slug ||
@@ -61,16 +60,18 @@ export const DestinationDetailPage: React.FC = () => {
         }
         setDest(currentDest);
 
-        // 2. Fetch Packages from API or Fallback
+        // 2. Fetch Packages & Activities for Destination in parallel
         let pkgList: any[] = [];
+        let actList: any[] = [];
+
         try {
-          if (currentDest?._id) {
-            const pkgRes = await apiClient.get(`/packages?destination=${currentDest._id}`);
-            pkgList = pkgRes.data?.data || [];
-          } else {
-            const pkgRes = await apiClient.get(`/packages?destination=${slug}`);
-            pkgList = pkgRes.data?.data || [];
-          }
+          const destParam = currentDest._id || slug;
+          const [pkgRes, actRes] = await Promise.all([
+            apiClient.get(`/packages?destination=${destParam}`),
+            apiClient.get(`/activities?destination=${destParam}`)
+          ]);
+          pkgList = pkgRes.data?.data || [];
+          actList = actRes.data?.data || [];
         } catch (_) {}
 
         // Fallback Package Matcher
@@ -89,9 +90,24 @@ export const DestinationDetailPage: React.FC = () => {
           });
         }
 
-        // If nothing matches, leave the list empty and show the "request a custom quote"
-        // state — don't pad it with unrelated fallback packages.
+        // Fallback Activity Matcher
+        if (actList.length === 0 && currentDest?.name) {
+          const cleanName = currentDest.name.split(',')[0].toLowerCase().trim().replace(/beaches/gi, '').trim();
+          const tokens = cleanName.split(/[\s&]+/).filter((t: string) => t.length >= 3);
+          actList = FALLBACK_ACTIVITIES.filter((a: any) => {
+            const destStr = (a.destinationName || a.location || '').toLowerCase();
+            const titleStr = (a.title || '').toLowerCase();
+            return (
+              destStr.includes(cleanName) ||
+              cleanName.includes(destStr) ||
+              titleStr.includes(cleanName) ||
+              tokens.some((tok: string) => destStr.includes(tok) || titleStr.includes(tok))
+            );
+          });
+        }
+
         setPackages(pkgList);
+        setActivities(actList);
       } catch (err) {
         console.error('Failed to fetch destination details', err);
       } finally {
@@ -266,6 +282,77 @@ export const DestinationDetailPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* SECTION: RELATED ACTIVITIES FOR THIS DESTINATION */}
+        {activities.length > 0 && (
+          <div id="activities-section" className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/80 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-slate-100 pb-4">
+              <div>
+                <span className="text-xs font-black uppercase tracking-widest text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 inline-block mb-1.5">
+                  Thrill & Outdoor Adventures
+                </span>
+                <h2 className="font-poppins font-extrabold text-2xl text-slate-900">
+                  Activities & Things to Do in {dest.name}
+                </h2>
+              </div>
+              <span className="text-xs text-amber-700 font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                {activities.length} {activities.length === 1 ? 'Activity' : 'Activities'} Available
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activities.map((act) => {
+                const priceVal = act.startingPrice || act.price || 1500;
+                const actSlug = act.slug || act._id;
+                return (
+                  <Link
+                    key={act._id || act.activityCode || act.slug}
+                    to={`/activities/${actSlug}`}
+                    className="group bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={act.coverImage || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop'}
+                        alt={act.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                        <span className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+                          <Zap className="w-3 h-3" /> {act.category || 'Adventure'}
+                        </span>
+                      </div>
+                      <div className="absolute top-3 right-3 bg-slate-950/75 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <span>{act.rating || 4.8}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-poppins font-bold text-slate-900 text-base group-hover:text-ocean-600 transition-colors line-clamp-1">
+                          {act.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" /> {act.duration || '2 Hours'}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-semibold">Starting from</span>
+                          <span className="font-extrabold text-emerald-600 text-base">₹{priceVal.toLocaleString()}</span>
+                        </div>
+                        <span className="px-3 py-1.5 rounded-xl bg-ocean-50 text-ocean-600 font-bold text-xs group-hover:bg-ocean-600 group-hover:text-white transition-all flex items-center gap-1">
+                          View Details <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* SECTION: ALL PACKAGES FOR THIS DESTINATION */}
         <div id="packages-section" className="scroll-mt-28">

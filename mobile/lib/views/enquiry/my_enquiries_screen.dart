@@ -237,16 +237,25 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
     final statusColor = _getStatusColor(enquiry.status);
     final statusLabel = _formatStatusLabel(enquiry.status);
 
+    final bool isActivityEnquiry = enquiry.enquiryType == 'activity' || (enquiry.activityTitle != null && enquiry.activityTitle!.isNotEmpty);
     final bool isPkgEnquiry = enquiry.packageTitle != null && enquiry.packageTitle!.isNotEmpty;
-    final String title = isPkgEnquiry
-        ? enquiry.packageTitle!
-        : (enquiry.destination.isNotEmpty
-            ? 'Custom Trip Request (${enquiry.destination})'
-            : 'General Custom Trip Enquiry');
+    final String title = isActivityEnquiry
+        ? enquiry.activityTitle!
+        : (isPkgEnquiry
+            ? enquiry.packageTitle!
+            : (enquiry.destination.isNotEmpty
+                ? 'Custom Trip Request (${enquiry.destination})'
+                : 'General Custom Trip Enquiry'));
 
-    final String badgeText = isPkgEnquiry ? '📦 Package Enquiry' : '🌐 General Trip Enquiry';
-    final Color badgeBg = isPkgEnquiry ? const Color(0xFFEFF6FF) : const Color(0xFFECFDF5);
-    final Color badgeTextCol = isPkgEnquiry ? const Color(0xFF0284C7) : const Color(0xFF059669);
+    final String badgeText = isActivityEnquiry
+        ? '⚡ Activity Enquiry'
+        : (isPkgEnquiry ? '📦 Package Enquiry' : '🌐 General Trip Enquiry');
+    final Color badgeBg = isActivityEnquiry
+        ? const Color(0xFFFEF3C7)
+        : (isPkgEnquiry ? const Color(0xFFEFF6FF) : const Color(0xFFECFDF5));
+    final Color badgeTextCol = isActivityEnquiry
+        ? const Color(0xFFD97706)
+        : (isPkgEnquiry ? const Color(0xFF0284C7) : const Color(0xFF059669));
 
     final String travelersText = '${enquiry.adults} Adults, ${enquiry.children} Kids';
 

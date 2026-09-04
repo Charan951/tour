@@ -46,7 +46,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
         title: const Text('Reset Password'),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: _isSubmitted ? _buildSuccessView() : _buildFormView(authProvider),
         ),

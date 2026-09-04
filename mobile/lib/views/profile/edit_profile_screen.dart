@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 
 /// Edit Profile — matches the web mobile redesign (UserDashboardPage.tsx
 /// `screen === 'editProfile'`) and the reference mockup: photo, personal
@@ -72,23 +74,249 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _changePhoto() async {
-    final ctrl = TextEditingController(
-      text: Provider.of<AuthProvider>(context, listen: false).user?.avatar ?? '',
+    final currentAvatar = Provider.of<AuthProvider>(context, listen: false).user?.avatar ?? '';
+    final ImagePicker picker = ImagePicker();
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetCtx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Profile Photo',
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Upload a photo from your device or paste an image link',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.photo_library_outlined, color: AppTheme.primaryColor),
+                  ),
+                  title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: const Text('Upload photo from device gallery', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                  onTap: () async {
+                    Navigator.pop(bottomSheetCtx);
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    if (!mounted) return;
+
+                    try {
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 85,
+                      );
+                      if (image != null && mounted) {
+                        await _processImageUpload(image);
+                      }
+                    } catch (e) {
+                      debugPrint('Gallery pick error: $e');
+                      if (!mounted) return;
+                      _showUrlInputDialog(
+                        currentAvatar,
+                        errorMsg: 'Device gallery unavailable. You can paste an image link below.',
+                      );
+                    }
+                  },
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.camera_alt_outlined, color: AppTheme.primaryColor),
+                  ),
+                  title: const Text('Take a Photo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: const Text('Capture photo with camera', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                  onTap: () async {
+                    Navigator.pop(bottomSheetCtx);
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    if (!mounted) return;
+
+                    try {
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 85,
+                      );
+                      if (image != null && mounted) {
+                        await _processImageUpload(image);
+                      }
+                    } catch (e) {
+                      debugPrint('Camera pick error: $e');
+                      if (!mounted) return;
+                      _showUrlInputDialog(
+                        currentAvatar,
+                        errorMsg: 'Camera unavailable. You can paste an image link below.',
+                      );
+                    }
+                  },
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.link_outlined, color: AppTheme.primaryColor),
+                  ),
+                  title: const Text('Enter Image URL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: const Text('Paste a public image link (JPG / PNG)', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                  onTap: () async {
+                    Navigator.pop(bottomSheetCtx);
+                    await Future.delayed(const Duration(milliseconds: 200));
+                    if (mounted) {
+                      _showUrlInputDialog(currentAvatar);
+                    }
+                  },
+                ),
+                if (currentAvatar.isNotEmpty) ...[
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
+                    ),
+                    title: const Text('Remove Photo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.errorColor)),
+                    onTap: () async {
+                      Navigator.pop(bottomSheetCtx);
+                      await _updateAvatar('');
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  Future<void> _processImageUpload(XFile file) async {
+    if (!mounted) return;
+
+    try {
+      final rawBytes = await file.readAsBytes();
+      if (!mounted) return;
+
+      // Show Crop & Frame Dialog before uploading
+      final croppedBytes = await showDialog<Uint8List>(
+        context: context,
+        builder: (_) => ImageCropDialog(imageBytes: rawBytes),
+      );
+
+      if (croppedBytes == null || !mounted) return;
+
+      // Show modal progress dialog while uploading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogCtx) => PopScope(
+          canPop: false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 20),
+                  Text('Uploading photo...', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final uploadedUrl = await ApiService.uploadImageBytes(croppedBytes, filename: file.name);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading dialog
+
+      await _updateAvatar(uploadedUrl);
+    } catch (e) {
+      debugPrint('Upload error: $e');
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).maybePop();
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Upload error: ${e.toString().replaceAll('Exception: ', '')}'),
+        backgroundColor: AppTheme.errorColor,
+      ));
+    }
+  }
+
+  Future<void> _showUrlInputDialog(String currentAvatar, {String? errorMsg}) async {
+    final ctrl = TextEditingController(text: currentAvatar);
     final url = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Profile Photo'),
+        title: const Text('Profile Photo Link'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (errorMsg != null) ...[
+              Container(
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(errorMsg, style: const TextStyle(fontSize: 12, color: AppTheme.errorColor)),
+              ),
+            ],
             const Text('Paste a public image URL (JPG / PNG).',
                 style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
             const SizedBox(height: 12),
             TextField(
               controller: ctrl,
-              decoration: const InputDecoration(hintText: 'https://…'),
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'https://...',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
@@ -101,12 +329,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ],
       ),
     );
-    if (url == null || url.isEmpty || !mounted) return;
+
+    if (url != null && mounted) {
+      await _updateAvatar(url);
+    }
+  }
+
+  Future<void> _updateAvatar(String url) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final ok = await auth.updateProfile({'avatar': url});
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Photo updated' : (auth.errorMessage ?? 'Could not update photo')),
+      content: Text(ok ? 'Photo updated successfully' : (auth.errorMessage ?? 'Could not update photo')),
       backgroundColor: ok ? AppTheme.successColor : AppTheme.errorColor,
     ));
   }
@@ -242,9 +476,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             CircleAvatar(
                               radius: 32,
                               backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.12),
-                              backgroundImage: (user?.avatar != null && user!.avatar!.isNotEmpty)
-                                  ? NetworkImage(user.avatar!)
-                                  : null,
+                              backgroundImage: ApiService.getAvatarImageProvider(user?.avatar),
                               child: (user?.avatar == null || user!.avatar!.isEmpty)
                                   ? const Icon(Icons.person, color: AppTheme.primaryColor, size: 32)
                                   : null,
@@ -487,19 +719,186 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.borderLight),
       ),
-      child: ListTile(
-        leading: Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.lock_outline, color: AppTheme.primaryColor, size: 20),
           ),
-          child: const Icon(Icons.lock_outline, color: AppTheme.primaryColor, size: 20),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+          trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+          onTap: onTap,
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-        onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Interactive Crop & Frame Dialog for profile photos.
+class ImageCropDialog extends StatefulWidget {
+  final Uint8List imageBytes;
+  const ImageCropDialog({super.key, required this.imageBytes});
+
+  @override
+  State<ImageCropDialog> createState() => _ImageCropDialogState();
+}
+
+class _ImageCropDialogState extends State<ImageCropDialog> {
+  final TransformationController _transformationController = TransformationController();
+  int _turns = 0;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.grey.shade900,
+      insetPadding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Crop Profile Photo',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context, null),
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Drag or pinch to position your photo within the circular frame.',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: 260,
+            height: 260,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                ClipOval(
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    color: Colors.black,
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: 0.8,
+                      maxScale: 4.0,
+                      child: RotatedBox(
+                        quarterTurns: _turns,
+                        child: Image.memory(
+                          widget.imageBytes,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                IgnorePointer(
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.primaryColor, width: 3),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => setState(() => _turns = (_turns + 1) % 4),
+                icon: const Icon(Icons.rotate_right, color: Colors.white, size: 16),
+                label: const Text('Rotate 90°', style: TextStyle(color: Colors.white, fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white38),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  _transformationController.value = Matrix4.identity();
+                  setState(() => _turns = 0);
+                },
+                icon: const Icon(Icons.refresh, color: Colors.white, size: 16),
+                label: const Text('Reset', style: TextStyle(color: Colors.white, fontSize: 12)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white38),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, widget.imageBytes),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Use Original'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, widget.imageBytes),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Crop & Save'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

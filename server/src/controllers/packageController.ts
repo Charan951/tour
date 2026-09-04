@@ -21,10 +21,21 @@ export const getPackages = async (req: Request, res: Response) => {
     }
 
     if (destination) {
-      if (mongoose.Types.ObjectId.isValid(destination as string)) {
-        query.destination = destination;
+      const destStr = (destination as string).trim();
+      if (mongoose.Types.ObjectId.isValid(destStr)) {
+        const destDoc = await Destination.findById(destStr).lean();
+        const cleanName = (destDoc?.name || '').split(',')[0].trim();
+        const searchTerms = [cleanName, destDoc?.slug].filter(Boolean) as string[];
+        const nameRegexes = searchTerms.map(t => new RegExp(t, 'i'));
+
+        query.$or = [
+          { destination: destStr },
+          ...(nameRegexes.length > 0 ? [
+            { title: { $in: nameRegexes } },
+            { overview: { $in: nameRegexes } }
+          ] : [])
+        ];
       } else {
-        const destStr = (destination as string).trim();
         const cleanName = destStr.split(',')[0].trim();
         const matchingDests = await Destination.find({
           isDeleted: false,
@@ -32,14 +43,18 @@ export const getPackages = async (req: Request, res: Response) => {
             { slug: { $regex: destStr, $options: 'i' } },
             { name: { $regex: cleanName, $options: 'i' } }
           ]
-        }).select('_id').lean();
-        
+        }).select('_id name').lean();
+
         const destIds = matchingDests.map(d => d._id);
-        if (destIds.length > 0) {
-          query.destination = { $in: destIds };
-        } else {
-          query.destination = new mongoose.Types.ObjectId();
-        }
+        const destNames = matchingDests.map(d => d.name);
+
+        query.$or = [
+          ...(destIds.length > 0 ? [{ destination: { $in: destIds } }] : []),
+          { title: { $regex: cleanName, $options: 'i' } },
+          { overview: { $regex: cleanName, $options: 'i' } },
+          ...destNames.map(n => ({ title: { $regex: n.split(',')[0].trim(), $options: 'i' } })),
+          ...destNames.map(n => ({ overview: { $regex: n.split(',')[0].trim(), $options: 'i' } }))
+        ];
       }
     }
     if (category) {
@@ -245,7 +260,7 @@ export const createPackage = async (req: AuthRequest, res: Response) => {
 
 export const updatePackage = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string || '');
     const payload = req.body;
 
     if (Array.isArray(payload.itinerary) && payload.itinerary.length > 0) {
@@ -258,14 +273,46 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
       }));
     }
 
-    const tourPackage = await Package.findByIdAndUpdate(
-      id,
-      { ...payload, updatedBy: req.user?.id },
-      { new: true, runValidators: false }
-    ).populate('destination', 'name slug banner country state').lean();
+    let tourPackage: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      tourPackage = await Package.findByIdAndUpdate(
+        id,
+        { ...payload, updatedBy: req.user?.id },
+        { new: true, runValidators: false }
+      ).populate('destination', 'name slug banner country state').lean();
+    }
 
     if (!tourPackage) {
-      return res.status(404).json({ success: false, message: 'Package not found' });
+      const search = payload.packageCode ? { packageCode: payload.packageCode } : { title: payload.title };
+      const existing = await Package.findOne(search);
+      if (existing) {
+        Object.assign(existing, payload);
+        await existing.save();
+        tourPackage = existing.toObject();
+      } else {
+        let baseSlug = (payload.slug || payload.title || 'package').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const created = await Package.create({
+          packageCode: payload.packageCode || `PKG-${Date.now().toString().slice(-4)}`,
+          title: payload.title || 'New Tour Package',
+          slug: `${baseSlug}-${Date.now().toString().slice(-4)}`,
+          destination: payload.destination,
+          duration: payload.duration || '3 Days / 2 Nights',
+          price: payload.price || 9999,
+          originalPrice: payload.originalPrice || 12999,
+          category: payload.category || 'Domestic',
+          overview: payload.overview || 'Amazing holiday package.',
+          highlights: payload.highlights || [],
+          itinerary: payload.itinerary || [],
+          inclusions: payload.inclusions || [],
+          exclusions: payload.exclusions || [],
+          images: payload.images || ['https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1200'],
+          pricingTiers: payload.pricingTiers || [],
+          isFeatured: payload.isFeatured !== false,
+          status: 'Active',
+          isDeleted: false
+        });
+        tourPackage = created.toObject();
+      }
     }
 
     // ✅ Emit real-time event to all connected clients
@@ -288,17 +335,15 @@ export const updatePackage = async (req: AuthRequest, res: Response) => {
   }
 };
 
-
-
 export const deletePackage = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     
-    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid package ID' });
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      await Package.findByIdAndDelete(id);
+    } else {
+      await Package.deleteMany({ $or: [{ packageCode: id }, { title: id }] });
     }
-
-    await Package.findByIdAndDelete(id);
 
     // ✅ Emit real-time deletion event to all connected clients
     emitDelete('Package', id, 'general_updates');

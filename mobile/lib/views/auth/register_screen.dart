@@ -99,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final parts = _fullNameController.text.trim().split(RegExp(r'\s+'))
         ..removeWhere((p) => p.isEmpty);
       final firstName = parts.isNotEmpty ? parts.first : '';
-      final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : firstName;
       final success = await authProvider.register(
         firstName: firstName,
         lastName: lastName,

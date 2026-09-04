@@ -9,12 +9,16 @@ const bookingNoteSchema = new Schema({
 const bookingSchema = new Schema(
   {
     bookingId: { type: String, required: true, unique: true, index: true },
+    bookingType: { type: String, enum: ['package', 'activity'], default: 'package', index: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     package: { type: Schema.Types.ObjectId, ref: 'Package', default: null, index: true },
+    activity: { type: Schema.Types.ObjectId, ref: 'Activity', default: null, index: true },
     destination: { type: Schema.Types.ObjectId, ref: 'Destination', default: null },
 
-    packageName: { type: String, required: true, trim: true },
+    packageName: { type: String, default: '', trim: true },
     packageCode: { type: String, default: '' },
+    activityName: { type: String, default: '', trim: true },
+    activityCode: { type: String, default: '' },
     destinationName: { type: String, default: '' },
 
     customerName: { type: String, required: true, trim: true },

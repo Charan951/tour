@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Enquiry } from '../models/Enquiry.js';
 import { Destination } from '../models/Destination.js';
 import { Package } from '../models/Package.js';
+import { Activity } from '../models/Activity.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
 import {
@@ -21,6 +22,9 @@ export const createEnquiry = async (req: Request, res: Response) => {
       phone, 
       destination, 
       package: packageId, 
+      activity: activityId,
+      activityTitle,
+      enquiryType,
       travelDate, 
       adults, 
       travelers, 
@@ -38,6 +42,9 @@ export const createEnquiry = async (req: Request, res: Response) => {
 
     let resolvedDestination = null;
     let resolvedPackage = packageId || null;
+    let resolvedActivity = activityId || null;
+    let resolvedActivityTitle = activityTitle || '';
+    let resolvedEnquiryType = enquiryType || (resolvedActivity ? 'activity' : 'package');
     let appendedMessage = message || '';
 
     const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -78,6 +85,13 @@ export const createEnquiry = async (req: Request, res: Response) => {
       }
     }
 
+    if (resolvedActivity && mongoose.Types.ObjectId.isValid(resolvedActivity)) {
+      const foundAct = await Activity.findById(resolvedActivity).lean();
+      if (foundAct) {
+        resolvedActivityTitle = foundAct.title;
+      }
+    }
+
     const count = await Enquiry.countDocuments();
     const enquiryId = `HC-2026-${(count + 1001).toString()}`;
 
@@ -88,13 +102,16 @@ export const createEnquiry = async (req: Request, res: Response) => {
       mobile: resolvedMobile,
       destination: resolvedDestination,
       package: resolvedPackage,
+      activity: resolvedActivity,
+      activityTitle: resolvedActivityTitle,
+      enquiryType: resolvedEnquiryType,
       travelDate: travelDate ? new Date(travelDate) : null,
       adults: resolvedAdults,
       children: children || 0,
       budget: budget || null,
       travelType: travelType || 'Family',
       message: appendedMessage,
-      source: source || 'PackagePage',
+      source: source || (resolvedActivity ? 'ActivityPage' : 'PackagePage'),
       status: 'New',
       priority: 'Medium'
     });
@@ -102,6 +119,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
     const populatedEnquiry = await Enquiry.findById(enquiry._id)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .lean();
 
     emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
@@ -149,6 +167,7 @@ export const getEnquiries = async (req: AuthRequest, res: Response) => {
     const enquiries = await Enquiry.find(query)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .populate('assignedTo', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -208,6 +227,7 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
     const populatedEnquiry = await Enquiry.findById(enquiry._id)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .populate('assignedTo', 'firstName lastName email');
 
     emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
@@ -254,6 +274,7 @@ export const addEnquiryNote = async (req: AuthRequest, res: Response) => {
     const populatedEnquiry = await Enquiry.findById(enquiry._id)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .populate('assignedTo', 'firstName lastName email');
 
     return res.status(200).json({
@@ -286,6 +307,7 @@ export const getMyEnquiries = async (req: AuthRequest, res: Response) => {
     })
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration')
+      .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({

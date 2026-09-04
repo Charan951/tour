@@ -33,6 +33,9 @@ export const PackageManagerPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [destinationFilter, setDestinationFilter] = useState('All');
+  const [themeFilter, setThemeFilter] = useState('All');
 
   // Real-time updates hook
   const { isConnected } = useRealtimeUpdates({
@@ -297,6 +300,28 @@ export const PackageManagerPage: React.FC = () => {
     ? intlDests
     : destinations;
 
+  const filteredPackages = packages.filter((pkg) => {
+    const destObj = typeof pkg.destination === 'object' && pkg.destination !== null ? pkg.destination : null;
+    const destId = destObj?._id || pkg.destination;
+    const destName = destObj?.name || '';
+
+    const matchesDest =
+      destinationFilter === 'All' ||
+      String(destId) === String(destinationFilter) ||
+      destName.toLowerCase().includes(destinationFilter.toLowerCase());
+
+    const matchesTheme = themeFilter === 'All' || (pkg.themeName || '').toLowerCase() === themeFilter.toLowerCase();
+
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      !q ||
+      (pkg.title || '').toLowerCase().includes(q) ||
+      (pkg.packageCode || '').toLowerCase().includes(q) ||
+      destName.toLowerCase().includes(q);
+
+    return matchesDest && matchesTheme && matchesSearch;
+  });
+
   return (
     <AdminLayout
       title="Tour Package CRUD Manager"
@@ -311,7 +336,8 @@ export const PackageManagerPage: React.FC = () => {
       }
     >
       <div className="space-y-6">
-        <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600">
+        {/* Control & Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600 gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {isConnected ? (
@@ -332,19 +358,61 @@ export const PackageManagerPage: React.FC = () => {
               <span className="text-slate-400 font-normal"> ({packages.length} total packages)</span>
             </span>
           </div>
-          <button
-            onClick={() => fetchData()}
-            className="text-ocean-600 hover:underline font-bold text-xs"
-          >
-            ↻ Refresh Packages
-          </button>
+
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            {/* Filter by Destination */}
+            <select
+              value={destinationFilter}
+              onChange={(e) => setDestinationFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:border-ocean-600 text-slate-800"
+            >
+              <option value="All">All Destinations ({destinations.length})</option>
+              {destinations.map((d) => {
+                const destDisplayName = typeof d.name === 'object' && d.name !== null ? (d.name.name || 'Destination') : (d.name || 'Destination');
+                return (
+                  <option key={d._id} value={d._id}>{destDisplayName}</option>
+                );
+              })}
+            </select>
+
+            {/* Filter by Theme */}
+            <select
+              value={themeFilter}
+              onChange={(e) => setThemeFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold outline-none focus:border-ocean-600 text-slate-800"
+            >
+              <option value="All">All Themes ({TRAVEL_THEMES.length})</option>
+              {TRAVEL_THEMES.map((t) => (
+                <option key={t.name} value={t.name}>{t.icon} {t.name}</option>
+              ))}
+            </select>
+
+            {/* Search Input */}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search package code, title, destination..."
+              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs outline-none focus:border-ocean-600 w-full sm:w-48"
+            />
+
+            <button
+              onClick={() => fetchData()}
+              className="text-ocean-600 hover:underline font-bold text-xs shrink-0 cursor-pointer"
+            >
+              ↻ Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (
           <div className="text-center py-12 text-slate-400 text-sm">Loading packages...</div>
+        ) : filteredPackages.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 border border-slate-200">
+            No packages found matching your filter or search query.
+          </div>
         ) : (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -359,7 +427,7 @@ export const PackageManagerPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {packages.map((pkg) => {
+                  {filteredPackages.map((pkg) => {
                     const destObj = typeof pkg.destination === 'object' && pkg.destination !== null ? pkg.destination : null;
                     const destName = destObj ? destObj.name : 'Destination';
                     const themeItem = TRAVEL_THEMES.find((t) => t.name === pkg.themeName) || TRAVEL_THEMES[1];

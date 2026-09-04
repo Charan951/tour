@@ -6,6 +6,7 @@ import { PackageCard } from '../../components/cards/PackageCard';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { SEO } from '../../components/common/SEO';
 import { isPackageMatchingTheme } from '../../utils/themeMatcher';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 
 const THEME_FILTERS = [
   { name: 'All Themes', icon: '✨' },
@@ -20,6 +21,7 @@ const THEME_FILTERS = [
 ];
 
 export const PackageCatalogPage: React.FC = () => {
+  useRealtimeUpdates();
   const [searchParams, setSearchParams] = useSearchParams();
   const [packages, setPackages] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);

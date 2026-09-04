@@ -255,8 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -314,7 +315,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 8),
                         GestureDetector(
                           onLongPress: _showServerIpDialog,
                           child: Container(

@@ -2,6 +2,7 @@ import 'dart:async';
 import '../config/api_config.dart';
 import '../models/enquiry_model.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 
 class EnquiryService {
   // In-memory cache for instant retrieval
@@ -52,29 +53,49 @@ class EnquiryService {
   }
 
   Future<List<EnquiryModel>> getUserEnquiries({String? email}) async {
-    final candidateUrls = <String>[];
-    if (email != null && email.trim().isNotEmpty) {
-      candidateUrls.add(ApiConfig.myEnquiriesForEmail(email.trim()));
+    String? resolvedEmail = email?.trim();
+    if (resolvedEmail == null || resolvedEmail.isEmpty) {
+      final user = await AuthService().getSavedUser();
+      resolvedEmail = user?.email.trim();
     }
-    candidateUrls.add(ApiConfig.myEnquiries);
+    if (resolvedEmail == null || resolvedEmail.isEmpty) {
+      resolvedEmail = 'user@example.com';
+    }
 
-    for (final url in candidateUrls) {
-      try {
-        final response = await ApiService.get(url);
-        if (response['success'] == true && response['data'] != null) {
-          final List list = response['data'] as List;
-          final enquiries =
-              list.map((json) => EnquiryModel.fromJson(json)).toList();
-          // Cache the results
-          _setCachedEnquiries(email, enquiries);
-          return enquiries;
+    final Map<String, EnquiryModel> combined = {};
+
+    // 1. Query by email parameter
+    try {
+      final url = ApiConfig.myEnquiriesForEmail(resolvedEmail);
+      final response = await ApiService.get(url);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data'] as List;
+        final enquiries =
+            list.map((json) => EnquiryModel.fromJson(json)).toList();
+        for (final eq in enquiries) {
+          final id = eq.id ?? '';
+          if (id.isNotEmpty) combined[id] = eq;
         }
-      } catch (_) {
-        continue;
       }
-    }
+    } catch (_) {}
 
-    return [];
+    // 2. Query by authenticated token endpoint
+    try {
+      final response = await ApiService.get(ApiConfig.myEnquiries);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data'] as List;
+        final enquiries =
+            list.map((json) => EnquiryModel.fromJson(json)).toList();
+        for (final eq in enquiries) {
+          final id = eq.id ?? '';
+          if (id.isNotEmpty) combined[id] = eq;
+        }
+      }
+    } catch (_) {}
+
+    final result = combined.values.toList();
+    _setCachedEnquiries(resolvedEmail, result);
+    return result;
   }
 
   Future<List<EnquiryModel>> getProfileEnquiries(

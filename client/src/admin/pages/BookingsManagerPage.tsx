@@ -128,6 +128,10 @@ export const BookingsManagerPage: React.FC = () => {
     const matchesTab =
       activeTab === 'All'
         ? true
+        : activeTab === 'Packages'
+        ? b.bookingType === 'package' || !b.bookingType
+        : activeTab === 'Activities'
+        ? b.bookingType === 'activity'
         : activeTab === 'Pending Advance'
         ? b.paymentStatus === 'Pending Advance' || !b.advancePaid
         : activeTab === 'Advance Paid'
@@ -145,7 +149,9 @@ export const BookingsManagerPage: React.FC = () => {
       (b.email || '').toLowerCase().includes(q) ||
       (b.mobile || '').toLowerCase().includes(q) ||
       (b.bookingId || '').toLowerCase().includes(q) ||
-      (b.packageName || '').toLowerCase().includes(q);
+      (b.packageName || '').toLowerCase().includes(q) ||
+      (b.activityName || '').toLowerCase().includes(q) ||
+      (b.activityCode || '').toLowerCase().includes(q);
 
     return matchesTab && matchesSearch;
   });
@@ -223,7 +229,7 @@ export const BookingsManagerPage: React.FC = () => {
         <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 flex-wrap">
-              {['All', 'Pending Advance', 'Advance Paid', 'Confirmed', 'Completed'].map((tab) => (
+              {['All', 'Packages', 'Activities', 'Pending Advance', 'Advance Paid', 'Confirmed', 'Completed'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -299,13 +305,28 @@ export const BookingsManagerPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="p-4 space-y-1">
-                          <div className="font-bold text-slate-800 line-clamp-1">{b.packageName}</div>
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            {b.bookingType === 'activity' ? (
+                              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-extrabold text-[10px] flex items-center gap-1">
+                                ⚡ Activity
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md bg-blue-100 text-ocean-800 font-extrabold text-[10px] flex items-center gap-1">
+                                📦 Package
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-bold text-slate-800 line-clamp-1">
+                            {b.activityName || b.packageName}
+                          </div>
                           <div className="text-slate-500">
                             📅 {b.travelDate ? new Date(b.travelDate).toLocaleDateString() : 'TBD'} ({b.adults || 1} Adults, {b.children || 0} Kids)
                           </div>
-                          <span className="inline-block px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 font-semibold text-[10px]">
-                            {b.pricingTier || 'Standard'} Tier
-                          </span>
+                          {b.pricingTier && b.bookingType !== 'activity' && (
+                            <span className="inline-block px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 font-semibold text-[10px]">
+                              {b.pricingTier} Tier
+                            </span>
+                          )}
                         </td>
                         <td className="p-4 space-y-1">
                           <div className="font-bold text-slate-900">Total: ₹{Number(b.totalPrice || 0).toLocaleString()}</div>
@@ -575,7 +596,12 @@ export const BookingsManagerPage: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                <div className="font-bold text-slate-900 text-sm">{selectedBooking.packageName}</div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${selectedBooking.bookingType === 'activity' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-ocean-800'}`}>
+                    {selectedBooking.bookingType === 'activity' ? '⚡ Activity' : '📦 Package'}
+                  </span>
+                  <div className="font-bold text-slate-900 text-sm">{selectedBooking.activityName || selectedBooking.packageName}</div>
+                </div>
                 <div className="grid grid-cols-2 gap-2 text-slate-600">
                   <div>Customer: <strong>{selectedBooking.customerName}</strong></div>
                   <div>Phone: <strong>{selectedBooking.mobile}</strong></div>

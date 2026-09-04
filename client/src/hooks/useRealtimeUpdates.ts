@@ -67,6 +67,7 @@ const getSocket = (): Socket => {
 
 interface UseRealtimeUpdatesOptions {
   onPackageUpdate?: (data: any) => void;
+  onActivityUpdate?: (data: any) => void;
   onDestinationUpdate?: (data: any) => void;
   onBannerUpdate?: (data: any) => void;
   onBlogUpdate?: (data: any) => void;
@@ -87,6 +88,7 @@ interface UseRealtimeUpdatesOptions {
 export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
   const { 
     onPackageUpdate, 
+    onActivityUpdate,
     onDestinationUpdate,
     onBannerUpdate,
     onBlogUpdate, 
@@ -102,6 +104,7 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
   // Keep callbacks fresh in refs to avoid re-subscribing socket listeners on every render
   const callbacksRef = useRef({
     onPackageUpdate,
+    onActivityUpdate,
     onDestinationUpdate,
     onBannerUpdate,
     onBlogUpdate,
@@ -113,6 +116,7 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
   useEffect(() => {
     callbacksRef.current = {
       onPackageUpdate,
+      onActivityUpdate,
       onDestinationUpdate,
       onBannerUpdate,
       onBlogUpdate,
@@ -120,7 +124,7 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       onEnquiryUpdate,
       onDataUpdate
     };
-  }, [onPackageUpdate, onDestinationUpdate, onBannerUpdate, onBlogUpdate, onThemeUpdate, onEnquiryUpdate, onDataUpdate]);
+  }, [onPackageUpdate, onActivityUpdate, onDestinationUpdate, onBannerUpdate, onBlogUpdate, onThemeUpdate, onEnquiryUpdate, onDataUpdate]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -161,6 +165,19 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     const handlePackageDeleted = (payload: any) => {
       notifyDataChanged();
       callbacksRef.current.onPackageUpdate?.({ id: payload.id, deleted: true });
+    };
+
+    const handleActivityCreated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onActivityUpdate?.(payload.data);
+    };
+    const handleActivityUpdated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onActivityUpdate?.(payload.data);
+    };
+    const handleActivityDeleted = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onActivityUpdate?.({ id: payload.id, deleted: true });
     };
 
     const handleDestinationCreated = (payload: any) => {
@@ -216,6 +233,10 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     socket.on('package:updated', handlePackageUpdated);
     socket.on('package:deleted', handlePackageDeleted);
 
+    socket.on('activity:created', handleActivityCreated);
+    socket.on('activity:updated', handleActivityUpdated);
+    socket.on('activity:deleted', handleActivityDeleted);
+
     socket.on('destination:created', handleDestinationCreated);
     socket.on('destination:updated', handleDestinationUpdated);
     socket.on('destination:deleted', handleDestinationDeleted);
@@ -246,6 +267,10 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       socket.off('package:created', handlePackageCreated);
       socket.off('package:updated', handlePackageUpdated);
       socket.off('package:deleted', handlePackageDeleted);
+
+      socket.off('activity:created', handleActivityCreated);
+      socket.off('activity:updated', handleActivityUpdated);
+      socket.off('activity:deleted', handleActivityDeleted);
 
       socket.off('destination:created', handleDestinationCreated);
       socket.off('destination:updated', handleDestinationUpdated);

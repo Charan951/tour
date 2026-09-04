@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'connectivity.dart';
@@ -21,6 +23,74 @@ class ApiService {
   static final http.Client _client = http.Client();
   static String? _workingHost;
   static String? _cachedToken;
+
+  static ImageProvider? getAvatarImageProvider(String? url) {
+    if (url == null || url.trim().isEmpty) return null;
+    final clean = url.trim();
+    if (clean.startsWith('data:')) {
+      try {
+        final base64String = clean.split(',').last;
+        return MemoryImage(base64Decode(base64String));
+      } catch (_) {
+        return null;
+      }
+    }
+    return NetworkImage(ApiConfig.formatImageUrl(clean));
+  }
+
+  static Future<String> uploadImageFile(XFile file) async {
+    final bytes = await file.readAsBytes();
+    return uploadImageBytes(bytes, filename: file.name);
+  }
+
+  static Future<String> uploadImageBytes(Uint8List bytes, {String? filename}) async {
+    final candidateUrls = _generateCandidateUrls(ApiConfig.uploadImage);
+    Object? lastError;
+    final fname = (filename != null && filename.isNotEmpty)
+        ? filename
+        : 'profile_photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    for (final targetUrl in candidateUrls) {
+      try {
+        final request = http.MultipartRequest('POST', Uri.parse(targetUrl));
+        final headers = await _getHeaders();
+        if (headers.containsKey('Authorization')) {
+          request.headers['Authorization'] = headers['Authorization']!;
+        }
+
+        final multipartFile = http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: fname,
+        );
+        request.files.add(multipartFile);
+
+        final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+        final response = await http.Response.fromStream(streamedResponse);
+        final body = _processResponse(response);
+
+        if (body is Map) {
+          final url = body['url'] ?? body['data']?['url'] ?? body['secure_url'];
+          if (url != null && url.toString().isNotEmpty) {
+            _onHostSuccess(targetUrl);
+            return url.toString();
+          }
+        }
+      } catch (e) {
+        lastError = e;
+        debugPrint('Upload image error ($targetUrl): $e');
+      }
+    }
+
+    // Fallback: Return data URI base64 string if network endpoint is unreachable
+    try {
+      final base64Str = base64Encode(bytes);
+      return 'data:image/jpeg;base64,$base64Str';
+    } catch (_) {}
+
+    throw Exception(
+        'Could not upload image: ${lastError != null ? lastError.toString() : "Network error"}');
+  }
 
   static Future<void> initToken() async {
     try {
@@ -220,14 +290,18 @@ class ApiService {
   }
 
   static dynamic _processResponse(http.Response response) {
-    final body = jsonDecode(response.body);
+    dynamic body;
+    try {
+      body = jsonDecode(response.body);
+    } catch (_) {
+      throw _ApiException('Invalid response from server (${response.statusCode})');
+    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else {
-      final message =
-          body['message'] ?? 'An error occurred (${response.statusCode})';
-      // Use _ApiException so callers know this was an HTTP-level error
-      // (not a network failure) and should NOT trigger IP fallback.
+      final message = (body is Map && body['message'] != null)
+          ? body['message']
+          : 'An error occurred (${response.statusCode})';
       throw _ApiException(message);
     }
   }

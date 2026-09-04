@@ -181,7 +181,7 @@ export const createDestination = async (req: AuthRequest, res: Response) => {
 
 export const updateDestination = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string || '');
     const payload = req.body;
 
     const { countryId, stateId } = await resolveCountryAndState(payload);
@@ -193,18 +193,45 @@ export const updateDestination = async (req: AuthRequest, res: Response) => {
     if (countryId) updateData.country = countryId;
     if (stateId) updateData.state = stateId;
 
-    const destination = await Destination.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: false }
-    );
-
-    if (!destination) {
-      return res.status(404).json({ success: false, message: 'Destination not found' });
+    let destination: any = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      destination = await Destination.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: false }
+      );
     }
 
+    if (!destination) {
+      const search = payload.slug ? { slug: payload.slug } : { name: payload.name };
+      const existing = await Destination.findOne(search);
+      if (existing) {
+        Object.assign(existing, updateData);
+        await existing.save();
+        destination = existing;
+      } else {
+        let baseSlug = (payload.slug || payload.name || 'dest').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        destination = await Destination.create({
+          name: payload.name || 'New Destination',
+          slug: `${baseSlug}-${Date.now().toString().slice(-4)}`,
+          category: payload.category || 'Domestic',
+          isDomestic: payload.category === 'Domestic' || payload.isDomestic !== false,
+          countryName: payload.countryName || 'India',
+          country: countryId,
+          state: stateId,
+          banner: payload.banner || 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1200',
+          shortDescription: payload.shortDescription || '',
+          bestTime: payload.bestTime || 'Nov - Feb',
+          weather: payload.weather || 'Pleasant',
+          featured: payload.featured !== false
+        });
+      }
+    }
+
+    const resultObj = typeof destination.toObject === 'function' ? destination.toObject() : destination;
+
     // ✅ Emit real-time event to all connected clients
-    emitUpdate('Destination', destination.toObject(), 'general_updates');
+    emitUpdate('Destination', resultObj, 'general_updates');
 
     return res.status(200).json({
       success: true,
@@ -225,13 +252,13 @@ export const updateDestination = async (req: AuthRequest, res: Response) => {
 
 export const deleteDestination = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string || '');
     
-    if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid destination ID' });
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      await Destination.findByIdAndDelete(id);
+    } else {
+      await Destination.deleteMany({ $or: [{ slug: id }, { name: id }] });
     }
-
-    await Destination.findByIdAndDelete(id);
 
     // ✅ Emit real-time deletion event to all connected clients
     emitDelete('Destination', id, 'general_updates');

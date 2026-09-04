@@ -1335,7 +1335,7 @@ export const UserDashboardPage: React.FC = () => {
 
                 {/* Section title */}
                 <div>
-                  <h2 className="font-poppins font-bold text-base text-slate-900">My Package Orders</h2>
+                  <h2 className="font-poppins font-bold text-base text-slate-900">My Tour & Activity Bookings</h2>
                   <p className="text-[0.6875rem] text-slate-500">Live status updates from admin & pay remaining balance due</p>
                 </div>
 
@@ -1367,6 +1367,7 @@ export const UserDashboardPage: React.FC = () => {
                   <div className="space-y-3">
                     {filteredBookings.map(b => {
                       const st = getBookingStatus(b);
+                      const isAct = b.bookingType === 'activity' || !!b.activityName;
                       return (
                         <button
                           key={b._id}
@@ -1374,10 +1375,15 @@ export const UserDashboardPage: React.FC = () => {
                           className="w-full bg-white rounded-2xl p-4 border border-slate-200 shadow-sm active:shadow-md text-left"
                         >
                           <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <span className="font-poppins font-bold text-sm text-ocean-600">{b.bookingId || 'BK-CONFIRMED'}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-poppins font-bold text-sm text-ocean-600">{b.bookingId || 'BK-CONFIRMED'}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${isAct ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-ocean-800'}`}>
+                                {isAct ? '⚡ Activity' : '📦 Package'}
+                              </span>
+                            </div>
                             <span className={`px-2 py-0.5 rounded-lg text-[0.6875rem] font-bold ${st.cls}`}>{st.label}</span>
                           </div>
-                          <h4 className="font-poppins font-bold text-slate-900 text-sm line-clamp-1">{b.packageName || 'Tour Package'}</h4>
+                          <h4 className="font-poppins font-bold text-slate-900 text-sm line-clamp-1">{b.activityName || b.packageName || 'Tour Package'}</h4>
                           <div className="flex items-center justify-between text-xs text-slate-500 mt-1.5">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3 text-slate-400" />

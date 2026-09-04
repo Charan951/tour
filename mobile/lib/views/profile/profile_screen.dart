@@ -14,6 +14,9 @@ import '../auth/login_screen.dart';
 import '../booking/my_bookings_screen.dart';
 import '../enquiry/my_enquiries_screen.dart';
 import '../chat/chat_bottom_sheet.dart';
+import '../notifications/notifications_screen.dart';
+import '../activities/activity_list_screen.dart';
+import '../../services/api_service.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -315,13 +318,18 @@ class _ProfileScreenState extends State<ProfileScreen>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: AppTheme.primaryColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Icon(icon, color: AppTheme.primaryColor),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          onTap: onTap,
+        ),
       ),
     );
   }
@@ -436,24 +444,44 @@ class _ProfileScreenState extends State<ProfileScreen>
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 3),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
-                                          blurRadius: 10,
+                                  GestureDetector(
+                                    onTap: openEdit,
+                                    child: Stack(
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.white, width: 3),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(alpha: 0.08),
+                                                blurRadius: 10,
+                                              ),
+                                            ],
+                                          ),
+                                          child: CircleAvatar(
+                                            radius: 34,
+                                            backgroundColor: const Color(0xFFD0E8FF),
+                                            backgroundImage: ApiService.getAvatarImageProvider(user.avatar),
+                                            child: hasAvatar
+                                                ? null
+                                                : const Icon(Icons.person_outline, color: Color(0xFF0A6FB5), size: 36),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 0,
+                                          right: 0,
+                                          child: Container(
+                                            width: 22,
+                                            height: 22,
+                                            decoration: const BoxDecoration(
+                                              color: AppTheme.primaryColor,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
+                                          ),
                                         ),
                                       ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 34,
-                                      backgroundColor: const Color(0xFFD0E8FF),
-                                      backgroundImage: hasAvatar ? NetworkImage(user.avatar) : null,
-                                      child: hasAvatar
-                                          ? null
-                                          : const Icon(Icons.person_outline, color: Color(0xFF0A6FB5), size: 36),
                                     ),
                                   ),
                                   const SizedBox(width: 14),
@@ -614,6 +642,25 @@ class _ProfileScreenState extends State<ProfileScreen>
                             MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
                           ),
                         ),
+                        _buildRow(
+                          icon: Icons.bolt,
+                          title: 'Thrill Activities & Sports',
+                          subtitle: 'Bungee jumping, rafting, diving & booking',
+                          iconColor: const Color(0xFFFF6B00),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ActivityListScreen()),
+                          ),
+                        ),
+                        _buildRow(
+                          icon: Icons.notifications_outlined,
+                          title: 'Notifications & Updates',
+                          subtitle: 'Real-time booking and enquiry status alerts',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          ),
+                        ),
                       ]),
                       const SizedBox(height: 24),
 
@@ -707,14 +754,19 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ],
       ),
-      child: Column(
-        children: [
-          for (var i = 0; i < rows.length; i++) ...[
-            rows[i],
-            if (i != rows.length - 1)
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              rows[i],
+              if (i != rows.length - 1)
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

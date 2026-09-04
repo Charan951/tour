@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../config/api_config.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 
 class BookingService {
   Future<Map<String, dynamic>> createBooking(Map<String, dynamic> bookingData) async {
@@ -26,23 +27,52 @@ class BookingService {
   }
 
   Future<List<Map<String, dynamic>>> getUserBookings({String? email}) async {
-    final candidateUrls = <String>[];
-    if (email != null && email.trim().isNotEmpty) {
-      candidateUrls.add(ApiConfig.myBookingsForEmail(email.trim()));
+    String? resolvedEmail = email?.trim();
+    if (resolvedEmail == null || resolvedEmail.isEmpty) {
+      final user = await AuthService().getSavedUser();
+      resolvedEmail = user?.email.trim();
     }
-    candidateUrls.add(ApiConfig.myBookings);
+    if (resolvedEmail == null || resolvedEmail.isEmpty) {
+      resolvedEmail = 'user@example.com';
+    }
 
-    for (final url in candidateUrls) {
-      try {
-        final response = await ApiService.get(url);
-        if (response['success'] == true && response['data'] != null) {
-          final List list = response['data'] as List;
-          return list.cast<Map<String, dynamic>>();
+    final Map<String, Map<String, dynamic>> combinedBookings = {};
+
+    // 1. Query by email parameter
+    try {
+      final url = ApiConfig.myBookingsForEmail(resolvedEmail);
+      final response = await ApiService.get(url);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data'] as List;
+        for (final item in list) {
+          if (item is Map) {
+            final mapItem = Map<String, dynamic>.from(item);
+            final id = (mapItem['_id'] ?? mapItem['id'] ?? '').toString();
+            if (id.isNotEmpty) {
+              combinedBookings[id] = mapItem;
+            }
+          }
         }
-      } catch (_) {
-        continue;
       }
-    }
-    return [];
+    } catch (_) {}
+
+    // 2. Query by authenticated token endpoint
+    try {
+      final response = await ApiService.get(ApiConfig.myBookings);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data'] as List;
+        for (final item in list) {
+          if (item is Map) {
+            final mapItem = Map<String, dynamic>.from(item);
+            final id = (mapItem['_id'] ?? mapItem['id'] ?? '').toString();
+            if (id.isNotEmpty) {
+              combinedBookings[id] = mapItem;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    return combinedBookings.values.toList();
   }
 }

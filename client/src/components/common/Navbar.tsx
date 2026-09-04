@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
+import { NotificationBell } from './NotificationBell';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -78,6 +79,7 @@ export const Navbar: React.FC = () => {
     { label: 'International Tour', path: '/destinations?category=International' },
     { label: 'Theme Based', path: '/themes' },
     { label: 'Tour Packages', path: '/packages' },
+    { label: 'Activities', path: '/activities' },
     { label: 'Blogs', path: '/blogs' },
     { label: 'Contact', path: '/contact' },
   ];
@@ -143,6 +145,7 @@ export const Navbar: React.FC = () => {
                 </Link>
               ) : (
                 <div className="flex items-center gap-2 ml-3 lg:ml-4 shrink-0">
+                  <NotificationBell />
                   {(currentUser.email?.toLowerCase().startsWith('admin@') || currentUser.email?.toLowerCase() === 'admin@holidaycity.com') ? (
                     <Link
                       to="/admin/dashboard"
@@ -171,15 +174,18 @@ export const Navbar: React.FC = () => {
               )}
             </nav>
 
-            {/* Mobile Hamburger Button */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-transform active:scale-95"
-              aria-label="Toggle Navigation"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile Actions & Hamburger Button */}
+            <div className="lg:hidden flex items-center gap-2">
+              {currentUser && <NotificationBell />}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-transform active:scale-95"
+                aria-label="Toggle Navigation"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
 

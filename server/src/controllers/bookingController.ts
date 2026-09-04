@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Booking } from '../models/Booking.js';
 import { Package } from '../models/Package.js';
+import { Activity } from '../models/Activity.js';
 import { Destination } from '../models/Destination.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
@@ -19,8 +20,12 @@ export const createBooking = async (req: Request, res: Response) => {
       email,
       mobile,
       phone,
+      bookingType,
       package: packageId,
       packageName,
+      activity: activityId,
+      activityName,
+      activityCode,
       destination: destinationId,
       destinationName,
       travelDate,
@@ -83,9 +88,13 @@ export const createBooking = async (req: Request, res: Response) => {
       /^[0-9a-fA-F]{24}$/.test(id) &&
       mongoose.Types.ObjectId.isValid(id);
 
+    const resolvedBookingType = bookingType === 'activity' || activityId ? 'activity' : 'package';
     let resolvedPackage = isValidObjectId(packageId) ? packageId : null;
-    let resolvedPackageName = packageName || 'Custom Tour Package';
+    let resolvedPackageName = packageName || (resolvedBookingType === 'package' ? 'Custom Tour Package' : '');
     let resolvedPackageCode = '';
+    let resolvedActivity = isValidObjectId(activityId) ? activityId : null;
+    let resolvedActivityName = activityName || (resolvedBookingType === 'activity' ? 'Tour Activity' : '');
+    let resolvedActivityCode = activityCode || '';
     let resolvedDestination = isValidObjectId(destinationId) ? destinationId : null;
     let resolvedDestinationName = destinationName || '';
 
@@ -97,6 +106,18 @@ export const createBooking = async (req: Request, res: Response) => {
         resolvedPackageCode = pkg.packageCode || '';
         if (!resolvedDestination && pkg.destination) {
           resolvedDestination = pkg.destination;
+        }
+      }
+    }
+
+    // If activityId supplied and valid, fetch activity details
+    if (resolvedActivity) {
+      const act = await Activity.findById(resolvedActivity).lean();
+      if (act) {
+        resolvedActivityName = act.title;
+        resolvedActivityCode = act.activityCode || '';
+        if (!resolvedDestination && act.destination) {
+          resolvedDestination = act.destination;
         }
       }
     }
@@ -119,11 +140,15 @@ export const createBooking = async (req: Request, res: Response) => {
 
     const booking = await Booking.create({
       bookingId,
+      bookingType: resolvedBookingType,
       user: (req as AuthRequest).user?.id || null,
       package: resolvedPackage,
+      activity: resolvedActivity,
       destination: resolvedDestination,
       packageName: resolvedPackageName,
       packageCode: resolvedPackageCode,
+      activityName: resolvedActivityName,
+      activityCode: resolvedActivityCode,
       destinationName: resolvedDestinationName,
       customerName: resolvedName,
       email: normalizedEmail,
@@ -148,6 +173,7 @@ export const createBooking = async (req: Request, res: Response) => {
     const populatedBooking = await Booking.findById(booking._id)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration images')
+      .populate('activity', 'title slug activityCode startingPrice duration coverImage')
       .lean();
 
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
@@ -193,6 +219,7 @@ export const getAdminBookings = async (req: AuthRequest, res: Response) => {
     const bookings = await Booking.find(query)
       .populate('destination', 'name slug banner')
       .populate('package', 'title slug packageCode startingPrice duration images')
+      .populate('activity', 'title slug activityCode startingPrice duration coverImage')
       .populate('assignedTo', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .skip(skip)

@@ -9,6 +9,7 @@ import { FloatingActionWidget } from './components/common/FloatingActionWidget';
 const HomePage = lazy(() => import('./pages/Home/HomePage').then(m => ({ default: m.HomePage })));
 const PackageCatalogPage = lazy(() => import('./pages/Packages/PackageCatalogPage').then(m => ({ default: m.PackageCatalogPage })));
 const PackageDetailPage = lazy(() => import('./pages/Packages/PackageDetailPage').then(m => ({ default: m.PackageDetailPage })));
+const ActivityCatalogPage = lazy(() => import('./pages/Activities/ActivityCatalogPage').then(m => ({ default: m.ActivityCatalogPage })));
 const DestinationsLandingPage = lazy(() => import('./pages/Destinations/DestinationsLandingPage').then(m => ({ default: m.DestinationsLandingPage })));
 const DestinationDetailPage = lazy(() => import('./pages/Destinations/DestinationDetailPage').then(m => ({ default: m.DestinationDetailPage })));
 const AboutPage = lazy(() => import('./pages/About/AboutPage').then(m => ({ default: m.AboutPage })));
@@ -33,6 +34,8 @@ const AdminDashboardPage = lazy(() => import('./admin/pages/AdminDashboardPage')
 const LeadManagementPage = lazy(() => import('./admin/pages/LeadManagementPage').then(m => ({ default: m.LeadManagementPage })));
 const BookingsManagerPage = lazy(() => import('./admin/pages/BookingsManagerPage').then(m => ({ default: m.BookingsManagerPage })));
 const PackageManagerPage = lazy(() => import('./admin/pages/PackageManagerPage').then(m => ({ default: m.PackageManagerPage })));
+const ActivityManagerPage = lazy(() => import('./admin/pages/ActivityManagerPage').then(m => ({ default: m.ActivityManagerPage })));
+const CategoryManagerPage = lazy(() => import('./admin/pages/CategoryManagerPage').then(m => ({ default: m.CategoryManagerPage })));
 const DestinationManagerPage = lazy(() => import('./admin/pages/DestinationManagerPage').then(m => ({ default: m.DestinationManagerPage })));
 const BannerManagerPage = lazy(() => import('./admin/pages/BannerManagerPage').then(m => ({ default: m.BannerManagerPage })));
 const CMSManagerPage = lazy(() => import('./admin/pages/CMSManagerPage').then(m => ({ default: m.CMSManagerPage })));
@@ -97,6 +100,9 @@ export const App: React.FC = () => {
             <Route path="/packages" element={isMobile ? <MobilePackagesPage /> : <PackageCatalogPage />} />
             <Route path="/package/:slug" element={isMobile ? <MobilePackageDetailPage /> : <PackageDetailPage />} />
 
+            {/* Activities */}
+            <Route path="/activities" element={<ActivityCatalogPage />} />
+
             {/* Destinations */}
             <Route path="/destinations" element={isMobile ? <MobileDestinationsPage /> : <DestinationsLandingPage />} />
             <Route path="/destination/:slug" element={isMobile ? <MobileDestinationDetailPage /> : <DestinationDetailPage />} />
@@ -128,6 +134,8 @@ export const App: React.FC = () => {
             <Route path="/admin/bookings" element={<BookingsManagerPage />} />
             <Route path="/admin/leads" element={<LeadManagementPage />} />
             <Route path="/admin/packages" element={<PackageManagerPage />} />
+            <Route path="/admin/activities" element={<ActivityManagerPage />} />
+            <Route path="/admin/categories" element={<CategoryManagerPage />} />
             <Route path="/admin/destinations" element={<DestinationManagerPage />} />
             <Route path="/admin/banners" element={<BannerManagerPage />} />
             <Route path="/admin/cms" element={<CMSManagerPage />} />

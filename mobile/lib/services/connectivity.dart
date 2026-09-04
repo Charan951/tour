@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import '../config/api_config.dart';
 import 'offline_queue.dart';
 
-/// Lightweight reachability tracker — no plugin. Pings a well-known host on
-/// start and every 12s, and `ApiService` also nudges it on request
-/// success/failure so the offline banner reacts immediately.
+/// Lightweight reachability tracker. Pings local server / socket and DNS
+/// hosts to accurately detect online/offline state without false positives.
 class ConnectivityStatus extends ChangeNotifier {
   ConnectivityStatus._();
   static final ConnectivityStatus instance = ConnectivityStatus._();
@@ -16,7 +16,7 @@ class ConnectivityStatus extends ChangeNotifier {
   Timer? _timer;
 
   void start() {
-    _timer ??= Timer.periodic(const Duration(seconds: 12), (_) => check());
+    _timer ??= Timer.periodic(const Duration(seconds: 10), (_) => check());
     check();
   }
 
@@ -25,17 +25,40 @@ class ConnectivityStatus extends ChangeNotifier {
     _timer = null;
   }
 
-  /// Called by ApiService: `true` after any successful response, `false` after
-  /// a socket/timeout failure on every candidate.
+  /// Called by ApiService: `true` after any successful HTTP response.
   void report(bool ok) => _set(ok);
 
   Future<void> check() async {
     try {
-      final res = await InternetAddress.lookup('one.one.one.one')
-          .timeout(const Duration(seconds: 4));
-      _set(res.isNotEmpty && res.first.rawAddress.isNotEmpty);
+      // 1. Test connection to server host (port 5000) directly
+      final host = ApiConfig.hostIp;
+      final targetHost = (host.isNotEmpty && host != 'localhost') ? host : '127.0.0.1';
+
+      try {
+        final socket = await Socket.connect(
+          targetHost,
+          5000,
+          timeout: const Duration(seconds: 2),
+        );
+        socket.destroy();
+        _set(true);
+        return;
+      } catch (_) {}
+
+      // 2. Test DNS lookup for well-known internet host
+      try {
+        final res = await InternetAddress.lookup('google.com')
+            .timeout(const Duration(seconds: 3));
+        if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) {
+          _set(true);
+          return;
+        }
+      } catch (_) {}
+
+      // 3. Fallback: preserve current state if API requests were previously working
+      _set(_online);
     } catch (_) {
-      _set(false);
+      _set(_online);
     }
   }
 

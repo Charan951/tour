@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Search } from 'lucide-react';
+import { ChevronRight, Search, Zap } from 'lucide-react';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
+import { ActivityBookingModal } from '../../components/modals/ActivityBookingModal';
 import { MobilePackageCard } from '../Packages/MobilePackagesPage';
 import { formatImageUrl } from '../../utils/imageUrl';
 import CoverflowCarousel from '../../components/common/CoverflowCarousel';
 import ScrollStack, { ScrollStackItem } from '../../components/common/ScrollStack';
+import { FALLBACK_ACTIVITIES } from '../../utils/mobileDataFallback';
 
 /* ─────────────────────────────────────────
    Mobile Home Screen — matches Flutter home_screen.dart _buildHomeContent()
@@ -34,6 +36,11 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [searchQ, setSearchQ] = useState('');
+
+  // Activity Enquiry & Booking modal states
+  const [selectedAct, setSelectedAct] = useState<any | null>(null);
+  const [actModalMode, setActModalMode] = useState<'booking' | 'enquiry'>('booking');
+  const [actModalOpen, setActModalOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,32 +128,41 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
       {/* ── App bar: logo, greeting, and a search field on the header seam.
           Gutter is px-4 to line up with the section headings below.
           Rhythm: generous logo→greeting, tight greeting→subtitle, generous subtitle→search. ── */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-ocean-900 via-ocean-800 to-ocean-600 px-4 pt-5 pb-8 rounded-b-[28px] shadow-[0_18px_38px_-16px_rgba(6,59,109,0.5)]">
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-10 w-60 h-60 rounded-full bg-aqua-500/15 blur-3xl" />
+      <div className="relative overflow-hidden bg-[#F1F5F9] border-b border-slate-200/90 px-4 pt-5 pb-6 rounded-b-[28px] shadow-sm">
+        <div className="flex items-center justify-between">
+          <h2 className="relative font-display font-black text-2xl tracking-tight text-slate-900">
+            Holiday<span className="text-aqua-500">City</span>
+          </h2>
+        </div>
 
-        <h2 className="relative font-display font-black text-2xl tracking-tight text-white">
-          Holiday<span className="text-aqua-400">City</span>
-        </h2>
-
-        <div className="relative mt-6">
-          <h1 className="font-display font-black text-[1.75rem] text-white leading-[1.15]">
-            {userName ? `Hello, ${userName} ` : 'Welcome to HolidayCity '}
-            <span className="inline-block align-middle">👋</span>
-          </h1>
-          <p className="text-sm text-white/75 mt-1.5 max-w-[240px]">Plan your next trip with a real consultant</p>
+        <div className="relative mt-5 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+            {(userName || 'E')[0].toUpperCase()}
+          </div>
+          <div>
+            <h1 className="font-display font-black text-xl text-slate-900 leading-tight">
+              {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
+              <span className="inline-block align-middle">👋</span>
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">Where do you want to travel next?</p>
+          </div>
         </div>
 
         <form
           onSubmit={handleSearch}
-          className="relative z-10 mt-6 flex items-center gap-2 bg-white rounded-2xl2 shadow-[0_10px_28px_-10px_rgba(6,59,109,0.4)] pl-4 pr-2 h-14"
+          className="relative z-10 mt-5 flex items-center gap-2 bg-white border border-slate-300/80 rounded-2xl shadow-sm pl-4 pr-1.5 h-14"
         >
           <input
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
-            placeholder="Where do you want to go?"
-            className="flex-1 h-full bg-transparent outline-none text-sm text-ink placeholder:text-slate-muted"
+            placeholder="Search packages, destinations, activities..."
+            className="flex-1 h-full bg-transparent outline-none text-xs font-semibold text-slate-900 placeholder:text-slate-400"
           />
-          <button type="submit" aria-label="Search" className="w-10 h-10 rounded-2xl2 bg-ocean-600 text-white grid place-items-center active:scale-95 transition shrink-0">
+          <button
+            type="submit"
+            aria-label="Search"
+            className="w-10 h-10 rounded-xl bg-aqua-500 hover:bg-aqua-600 active:scale-95 text-white grid place-items-center transition shrink-0 shadow-md"
+          >
             <Search className="w-4 h-4" />
           </button>
         </form>
@@ -162,7 +178,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
         {/* ── Hero Banner Slider (height: 240px matching Flutter) ── */}
         {effectiveBanners.length > 0 && (
           <div className="px-2 mt-2">
-            <div className="relative rounded-2xl2 overflow-hidden shadow-md" style={{ height: 200 }}>
+            <div className="relative rounded-2xl2 overflow-hidden shadow-md" style={{ height: 165 }}>
               {effectiveBanners.map((slide: any, index: number) => {
                 const rawImg = slide.imageUrl || slide.url || slide.banner || slide.image;
                 const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200');
@@ -177,16 +193,8 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
                     <img
                       src={imgUrl}
                       alt={slide.title || 'Banner'}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-fill"
                     />
-                    {/* Gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                    {slide.title && (
-                      <div className="absolute bottom-3 left-4 right-4">
-                        <p className="text-white font-bold text-sm line-clamp-1">{slide.title}</p>
-                        {slide.subtitle && <p className="text-white/80 text-[0.6875rem] mt-0.5 line-clamp-1">{slide.subtitle}</p>}
-                      </div>
-                    )}
                   </Link>
                 );
               })}
@@ -218,7 +226,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           <div className="mt-6">
             <div className="flex items-center justify-between px-4 mb-3">
               <div>
-                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">Top Destination</span>
+                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">Domestic Destinations</span>
                 <h2 className="font-bold text-base text-slate-900">India Tours</h2>
               </div>
               <Link to="/destinations?region=Domestic" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
@@ -244,7 +252,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           <div className="mt-8">
             <div className="flex items-center justify-between px-4 mb-3">
               <div>
-                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">Top Destination</span>
+                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">International Destinations</span>
                 <h2 className="font-bold text-base text-slate-900">International Tours</h2>
               </div>
               <Link to="/destinations?region=International" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
@@ -302,6 +310,72 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           </div>
         )}
 
+        {/* ── Thrill & Adventure Activities Section ── */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between px-4 mb-3">
+            <div>
+              <h2 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
+                Thrill & Adventure Activities ⚡
+              </h2>
+              <p className="text-[0.6875rem] text-slate-500 mt-0.5">Bungee jumping, rafting, scuba diving & safari</p>
+            </div>
+            <Link to="/activities" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
+              See All <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="flex gap-3.5 overflow-x-auto pb-2 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+            {FALLBACK_ACTIVITIES.slice(0, 6).map((act: any, i: number) => {
+              const unitPrice = Number(act.startingPrice || act.price || 1500);
+              return (
+                <div
+                  key={act._id || i}
+                  className="shrink-0 relative rounded-2xl2 overflow-hidden shadow-md bg-white border border-slate-200 flex flex-col justify-between"
+                  style={{ width: 165, height: 180 }}
+                >
+                  <div className="relative h-24 overflow-hidden">
+                    <img src={act.coverImage} alt={act.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500 text-white font-black text-[9px]">
+                      {act.category || 'Adventure'}
+                    </span>
+                  </div>
+                  <div className="p-2 flex-1 flex flex-col justify-between">
+                    <div>
+                      <p className="text-slate-900 font-bold text-xs line-clamp-1">{act.title}</p>
+                      <p className="text-[10px] text-slate-500 line-clamp-1">{act.location || act.destinationName}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="font-black text-xs text-ocean-600">₹{unitPrice.toLocaleString()}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setSelectedAct(act);
+                            setActModalMode('enquiry');
+                            setActModalOpen(true);
+                          }}
+                          className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]"
+                        >
+                          Enquire
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedAct(act);
+                            setActModalMode('booking');
+                            setActModalOpen(true);
+                          }}
+                          className="px-1.5 py-0.5 rounded-md bg-ocean-600 text-white font-bold text-[10px]"
+                        >
+                          Book
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Trending Tour Packages List (matches Flutter PackageCard list) ── */}
         <div className="mt-6 px-4">
           <div className="flex items-center justify-between mb-3">
@@ -343,6 +417,16 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
         onClose={() => setEnquiryOpen(false)}
         selectedPackage={selectedPkg}
       />
+
+      {/* Activity Booking & Enquiry Modal */}
+      {selectedAct && (
+        <ActivityBookingModal
+          activity={selectedAct}
+          isOpen={actModalOpen}
+          initialMode={actModalMode}
+          onClose={() => setActModalOpen(false)}
+        />
+      )}
     </>
   );
 };

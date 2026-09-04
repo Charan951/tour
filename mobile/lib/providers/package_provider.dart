@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/package_model.dart';
 import '../services/package_service.dart';
@@ -10,6 +11,7 @@ class PackageProvider extends ChangeNotifier {
   String _selectedCategory = 'All';
   String _searchQuery = '';
   String? _errorMessage;
+  Timer? _realtimeTimer;
 
   PackageProvider() {
     // Populate instant fallback packages immediately so UI renders with zero lag
@@ -23,11 +25,19 @@ class PackageProvider extends ChangeNotifier {
     if (_selectedCategory != 'All' && _selectedCategory.trim().isNotEmpty) {
       final cat = _selectedCategory.toLowerCase().replaceAll('tour', '').trim();
       list = list.where((p) {
+        if (cat == 'domestic' || cat == 'india') {
+          return p.category.toLowerCase() == 'domestic' || p.destination.toLowerCase().contains('india');
+        }
+        if (cat == 'international' || cat == 'world') {
+          return p.category.toLowerCase() == 'international' || !p.destination.toLowerCase().contains('india');
+        }
         final categoryMatch = p.category.toLowerCase().contains(cat);
+        final themeNameMatch = p.themeName != null && p.themeName!.toLowerCase().contains(cat);
         final titleMatch = p.title.toLowerCase().contains(cat);
         final overviewMatch = p.overview.toLowerCase().contains(cat);
         final highlightMatch = p.highlights.any((h) => h.toLowerCase().contains(cat));
-        return categoryMatch || titleMatch || overviewMatch || highlightMatch;
+        final destMatch = p.destination.toLowerCase().contains(cat);
+        return categoryMatch || themeNameMatch || titleMatch || overviewMatch || highlightMatch || destMatch;
       }).toList();
     }
 
@@ -38,7 +48,8 @@ class PackageProvider extends ChangeNotifier {
         final titleMatch = p.title.toLowerCase().contains(q);
         final destMatch = p.destination.toLowerCase().contains(q);
         final catMatch = p.category.toLowerCase().contains(q);
-        return titleMatch || destMatch || catMatch;
+        final themeMatch = p.themeName != null && p.themeName!.toLowerCase().contains(q);
+        return titleMatch || destMatch || catMatch || themeMatch;
       }).toList();
     }
 
@@ -76,6 +87,18 @@ class PackageProvider extends ChangeNotifier {
     }
   }
 
+  void startRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      fetchPackages();
+    });
+  }
+
+  void stopRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = null;
+  }
+
   void setCategory(String category) {
     if (_selectedCategory != category) {
       _selectedCategory = category;
@@ -88,5 +111,11 @@ class PackageProvider extends ChangeNotifier {
     _searchQuery = query;
     notifyListeners();
     fetchPackages();
+  }
+
+  @override
+  void dispose() {
+    stopRealtimeUpdates();
+    super.dispose();
   }
 }

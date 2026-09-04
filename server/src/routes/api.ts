@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { login, register, forgotPassword, getMe, updateMe, changePassword } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
+import { getActivities, getActivityBySlug, createActivity, updateActivity, deleteActivity } from '../controllers/activityController.js';
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../controllers/categoryController.js';
 import { getDestinations, getDestinationBySlug, createDestination, updateDestination, deleteDestination } from '../controllers/destinationController.js';
 import { 
   getBlogs, getBlogBySlug, createBlog, updateBlog, deleteBlog, 
@@ -77,6 +79,13 @@ router.post('/auth/change-password', authRateLimiter, authenticateToken, changeP
 router.get('/packages', getPackages);
 router.get('/packages/:slug', getPackageBySlug);
 
+// Categories Catalog
+router.get('/categories', getCategories);
+
+// Activities Catalog & Detail
+router.get('/activities', getActivities);
+router.get('/activities/:slug', getActivityBySlug);
+
 // Destinations Landing & Detail (Live MongoDB Queries with No-Cache Headers)
 router.get('/destinations', getDestinations);
 router.get('/destinations/:slug', getDestinationBySlug);
@@ -131,6 +140,17 @@ router.delete('/admin/enquiries/:id', requireRole(['Super Admin', 'Admin', 'Cont
 router.post('/admin/packages', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createPackage);
 router.patch('/admin/packages/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updatePackage);
 router.delete('/admin/packages/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deletePackage);
+
+// Activities CRUD
+router.post('/admin/activities', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createActivity);
+router.patch('/admin/activities/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateActivity);
+router.delete('/admin/activities/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteActivity);
+
+// Categories CRUD
+router.get('/admin/categories', getCategories);
+router.post('/admin/categories', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createCategory);
+router.patch('/admin/categories/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), updateCategory);
+router.delete('/admin/categories/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteCategory);
 
 // Destinations CRUD
 router.post('/admin/destinations', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), createDestination);

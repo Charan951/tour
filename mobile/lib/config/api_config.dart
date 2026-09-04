@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Configured server host IP (defaults to localhost; 10.0.2.2 for Android emulator)
-  static String hostIp = 'localhost';
+  // LAN IP of the development machine — matches NETWORK_IP in server/.env
+  // so physical Android/iOS devices on the same WiFi can reach the server.
+  static String hostIp = '192.168.1.20';
   static String? customHost;
 
   static String get serverHost {
@@ -38,6 +39,9 @@ class ApiConfig {
       return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop';
     }
     final cleanUrl = url.trim();
+    if (cleanUrl.startsWith('data:') || cleanUrl.startsWith('blob:') || cleanUrl.startsWith('assets/')) {
+      return cleanUrl;
+    }
     if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
       if (cleanUrl.contains(':5000')) {
         return cleanUrl.replaceFirst(RegExp(r'http://[^/]+:5000'), serverHost);
@@ -61,6 +65,9 @@ class ApiConfig {
 
   static String get packages => '$baseUrl/packages';
   static String packageBySlug(String slug) => '$baseUrl/packages/$slug';
+
+  static String get activities => '$baseUrl/activities';
+  static String activityBySlug(String slug) => '$baseUrl/activities/$slug';
 
   static String get destinations => '$baseUrl/destinations';
   static String destinationBySlug(String slug) => '$baseUrl/destinations/$slug';

@@ -5,14 +5,17 @@ import 'package:provider/provider.dart';
 
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
+import '../../models/activity_model.dart';
 import '../../models/destination_model.dart';
 import '../../models/package_model.dart';
 import '../../models/theme_model.dart';
 import '../../providers/package_provider.dart';
 import '../../providers/specialization_theme_provider.dart';
+import '../../services/activity_service.dart';
 import '../../services/package_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/package_card.dart';
+import '../activities/activity_detail_screen.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 
@@ -29,6 +32,7 @@ class DestinationDetailScreen extends StatefulWidget {
 class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   List<PackageModel> _allDestinationPackages = [];
   List<PackageModel> _displayedPackages = [];
+  List<ActivityModel> _destinationActivities = [];
   List<ThemeModel> _availableThemes = [];
   String _selectedTheme = 'All Packages';
   bool _isLoading = true;
@@ -52,9 +56,16 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
 
     try {
       final service = PackageService();
-      // Fetch packages for this destination from API
-      final apiPackages =
-          await service.getPackages(destination: widget.destination.name);
+      final activityService = ActivityService();
+
+      // Fetch packages & activities for this destination in parallel
+      final results = await Future.wait([
+        service.getPackages(destination: widget.destination.name),
+        activityService.fetchActivities(destination: widget.destination.name),
+      ]);
+
+      final apiPackages = results[0] as List<PackageModel>;
+      final destActivities = results[1] as List<ActivityModel>;
 
       if (!mounted) return;
 
@@ -75,6 +86,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       if (mounted) {
         setState(() {
           _allDestinationPackages = combinedPackages;
+          _destinationActivities = destActivities;
           _availableThemes =
               _buildAllThemeCards(themeProvider.themes, combinedPackages);
           _isLoading = false;
@@ -437,6 +449,178 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                             fontWeight: FontWeight.bold,
                                             height: 1.1,
                                           ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                    ],
+
+                    // Activities Section in Destination
+                    if (_destinationActivities.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Activities in $destNameShort',
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_destinationActivities.length} Activities',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFD97706),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _destinationActivities.length,
+                          itemBuilder: (context, index) {
+                            final act = _destinationActivities[index];
+                            final actImage = ApiConfig.formatImageUrl(act.coverImage);
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ActivityDetailScreen(activity: act),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 170,
+                                margin: const EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.06),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Stack(
+                                        children: [
+                                          CachedNetworkImage(
+                                            imageUrl: actImage,
+                                            height: 105,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => Container(color: Colors.grey[300]),
+                                            errorWidget: (context, url, err) => Image.network(
+                                              'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&auto=format&fit=crop',
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 8,
+                                            left: 8,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.amber,
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                act.category,
+                                                style: GoogleFonts.outfit(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              act.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.textPrimary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              act.duration,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: AppTheme.textSecondary,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  '₹${act.price.toInt()}',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: AppTheme.primaryColor,
+                                                  ),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.star, size: 12, color: Colors.amber),
+                                                    const SizedBox(width: 2),
+                                                    Text(
+                                                      '${act.rating}',
+                                                      style: GoogleFonts.inter(
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: AppTheme.textPrimary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/banner_model.dart';
 import '../services/banner_service.dart';
@@ -6,6 +7,7 @@ class BannerProvider extends ChangeNotifier {
   final BannerService _bannerService = BannerService();
   List<BannerModel> _banners = [];
   bool _isLoading = false;
+  Timer? _realtimeTimer;
 
   BannerProvider() {
     _banners = _bannerService.getBannersSync();
@@ -28,5 +30,23 @@ class BannerProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void startRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      fetchBanners();
+    });
+  }
+
+  void stopRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = null;
+  }
+
+  @override
+  void dispose() {
+    stopRealtimeUpdates();
+    super.dispose();
   }
 }

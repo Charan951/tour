@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, LayoutDashboard, Users, ShoppingBag, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { Compass, LayoutDashboard, Users, ShoppingBag, Package as PkgIcon, MapPin, FileText, LogOut, ChevronRight, X, Image as ImageIcon, MessageSquare, Zap, Tag } from 'lucide-react';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -41,6 +41,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
       label: 'Package Manager',
       path: '/admin/packages',
       icon: PkgIcon
+    },
+    {
+      label: 'Activity Manager',
+      path: '/admin/activities',
+      icon: Zap
     },
     {
       label: 'Destination Manager',

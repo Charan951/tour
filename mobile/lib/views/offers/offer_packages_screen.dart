@@ -111,7 +111,7 @@ class _OfferPackagesScreenState extends State<OfferPackagesScreen> {
             w != 'offered')
         .toList();
 
-    if (words.isEmpty) return [];
+    if (words.isEmpty) return packages;
 
     final matched = packages.where((p) {
       final title = p.title.toLowerCase();
@@ -128,7 +128,7 @@ class _OfferPackagesScreenState extends State<OfferPackagesScreen> {
           overview.contains(w));
     }).toList();
 
-    return matched;
+    return matched.isNotEmpty ? matched : packages;
   }
 
   @override

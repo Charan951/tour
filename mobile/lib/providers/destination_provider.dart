@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/destination_model.dart';
 import '../services/destination_service.dart';
@@ -8,6 +9,7 @@ class DestinationProvider extends ChangeNotifier {
   List<DestinationModel> _destinations = [];
   bool _isLoading = false;
   String? _errorMessage;
+  Timer? _realtimeTimer;
 
   DestinationProvider() {
     _destinations = _destinationService.getDestinationsSync();
@@ -36,5 +38,23 @@ class DestinationProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void startRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      fetchDestinations();
+    });
+  }
+
+  void stopRealtimeUpdates() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = null;
+  }
+
+  @override
+  void dispose() {
+    stopRealtimeUpdates();
+    super.dispose();
   }
 }

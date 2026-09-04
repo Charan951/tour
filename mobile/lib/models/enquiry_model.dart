@@ -5,6 +5,9 @@ class EnquiryModel {
   final String phone;
   final String destination;
   final String? packageTitle;
+  final String? activityTitle;
+  final String? activityId;
+  final String enquiryType;
   final int adults;
   final int children;
   final int travelers;
@@ -21,6 +24,9 @@ class EnquiryModel {
     required this.phone,
     required this.destination,
     this.packageTitle,
+    this.activityTitle,
+    this.activityId,
+    this.enquiryType = 'package',
     this.adults = 1,
     this.children = 0,
     this.travelers = 1,
@@ -50,6 +56,20 @@ class EnquiryModel {
       pkgTitle = json['packageName'].toString();
     }
 
+    String? actTitle;
+    String? actId;
+    if (json['activity'] is Map) {
+      actTitle = json['activity']['title'];
+      actId = json['activity']['_id'] ?? json['activity']['id'];
+    } else if (json['activity'] != null && json['activity'].toString().isNotEmpty) {
+      actId = json['activity'].toString();
+    }
+    if (actTitle == null && json['activityTitle'] != null && json['activityTitle'].toString().isNotEmpty) {
+      actTitle = json['activityTitle'].toString();
+    }
+
+    String type = json['enquiryType'] ?? (actTitle != null && actTitle.isNotEmpty ? 'activity' : 'package');
+
     int a = 1;
     if (json['adults'] != null) {
       a = int.tryParse(json['adults'].toString()) ?? 1;
@@ -73,6 +93,9 @@ class EnquiryModel {
       phone: json['mobile'] ?? json['phone'] ?? '',
       destination: destName,
       packageTitle: pkgTitle,
+      activityTitle: actTitle,
+      activityId: actId,
+      enquiryType: type,
       adults: a,
       children: c,
       travelers: a + c,
@@ -85,7 +108,7 @@ class EnquiryModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'fullName': name,
       'name': name,
       'email': email,
@@ -98,7 +121,18 @@ class EnquiryModel {
       'travelDate': travelDate,
       'message': message,
       'source': 'ContactForm',
+      'enquiryType': enquiryType,
     };
+    if (activityTitle != null && activityTitle!.isNotEmpty) {
+      data['activityTitle'] = activityTitle;
+    }
+    if (activityId != null && activityId!.isNotEmpty) {
+      data['activity'] = activityId;
+    }
+    if (packageTitle != null && packageTitle!.isNotEmpty) {
+      data['packageTitle'] = packageTitle;
+    }
+    return data;
   }
 }
 

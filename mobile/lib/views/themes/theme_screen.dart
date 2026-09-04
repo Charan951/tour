@@ -19,6 +19,15 @@ class ThemeScreen extends StatefulWidget {
 
 class _ThemeScreenState extends State<ThemeScreen> {
   SpecializationThemeProvider? _themeProvider;
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'All Themes';
+
+  final List<String> _filters = const [
+    'All Themes',
+    'Top Pick',
+    'Trending',
+    'Popular',
+  ];
 
   @override
   void initState() {
@@ -32,6 +41,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _themeProvider?.stopRealtimeUpdates();
     super.dispose();
   }
@@ -40,171 +50,325 @@ class _ThemeScreenState extends State<ThemeScreen> {
   Widget build(BuildContext context) {
     return Consumer<SpecializationThemeProvider>(
       builder: (context, provider, child) {
-        final themes = provider.themes;
+        final allThemes = provider.themes;
+        final query = _searchController.text.trim().toLowerCase();
+
+        final filteredThemes = allThemes.where((theme) {
+          final matchesSearch = query.isEmpty ||
+              theme.name.toLowerCase().contains(query) ||
+              theme.description.toLowerCase().contains(query) ||
+              (theme.rating != null &&
+                  theme.rating!.toLowerCase().contains(query));
+
+          bool matchesFilter = true;
+          final ratingStr = (theme.rating ?? '').toLowerCase();
+          if (_selectedFilter == 'Top Pick') {
+            matchesFilter = ratingStr.contains('top') || ratingStr.contains('pick');
+          } else if (_selectedFilter == 'Trending') {
+            matchesFilter = ratingStr.contains('trend') ||
+                ratingStr.contains('star') ||
+                ratingStr.contains('popular');
+          } else if (_selectedFilter == 'Popular') {
+            matchesFilter = ratingStr.contains('popular') ||
+                ratingStr.contains('top') ||
+                ratingStr.contains('star');
+          }
+
+          return matchesSearch && matchesFilter;
+        }).toList();
 
         return Scaffold(
-          appBar: AppTheme.gradientAppBar(title: 'Themes'),
+          appBar: AppTheme.gradientAppBar(title: 'Travel Themes'),
           body: RefreshIndicator(
-          onRefresh: provider.fetchThemes,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.successColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 9,
-                          height: 9,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.successColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Live',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.successColor,
-                          ),
-                        ),
-                      ],
-                    ),
+            onRefresh: provider.fetchThemes,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
+              children: [
+                // Top Search Bar Widget
+                Container(
+                  height: 52,
+                  padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (provider.isLoading && themes.isEmpty)
-                const AppSkeletonList(count: 4)
-              else if (themes.isEmpty && !ConnectivityStatus.instance.online)
-                AppErrorState(onRetry: () => provider.fetchThemes())
-              else if (themes.isEmpty)
-                const AppEmptyState(
-                  icon: Icons.category_outlined,
-                  title: 'No themes yet',
-                  message: 'Travel themes will appear here once published.',
-                )
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: themes.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.82,
-                  ),
-                  itemBuilder: (context, index) {
-                    final theme = themes[index];
-                    final imageUrl = ApiConfig.formatImageUrl(theme.imageUrl);
-
-                    return SizedBox(
-                      height: 240,
-                      child: Material(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        elevation: 2,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ThemeDetailScreen(theme: theme),
-                              ),
-                            );
-                          },
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(18)),
-                                child: AspectRatio(
-                                  aspectRatio: 1.6,
-                                  child: CachedNetworkImage(
-                                    imageUrl: imageUrl,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      color: AppTheme.primaryColor
-                                          .withValues(alpha: 0.08),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        Container(
-                                      color: AppTheme.primaryColor
-                                          .withValues(alpha: 0.08),
-                                      child: const Icon(
-                                          Icons.image_not_supported_outlined,
-                                          color: AppTheme.textSecondary),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      theme.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.star_rounded,
-                                            size: 14,
-                                            color: AppTheme.accentColor),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            theme.rating ?? 'Top pick',
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 11,
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          textInputAction: TextInputAction.search,
+                          onChanged: (_) => setState(() {}),
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0F172A),
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: false,
+                            fillColor: Colors.transparent,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            hintText: 'Search travel themes...',
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: const Color(0xFF94A3B8),
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                       ),
-                    );
-                  },
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => setState(() {}),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0EA5E9),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.search_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-            ],
-          ),
+
+                const SizedBox(height: 14),
+
+                // Filter Option Chips Row
+                SizedBox(
+                  height: 38,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _filters.length,
+                    itemBuilder: (context, idx) {
+                      final f = _filters[idx];
+                      final isSelected = _selectedFilter == f;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(f),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _selectedFilter = f);
+                            }
+                          },
+                          labelStyle: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? Colors.white : const Color(0xFF475569),
+                          ),
+                          selectedColor: const Color(0xFF0EA5E9),
+                          backgroundColor: Colors.white,
+                          elevation: isSelected ? 3 : 0,
+                          pressElevation: 1,
+                          side: BorderSide(
+                            color: isSelected
+                                ? const Color(0xFF0EA5E9)
+                                : const Color(0xFFE2E8F0),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          showCheckmark: false,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Live status indicator row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${filteredThemes.length} ${filteredThemes.length == 1 ? 'Theme' : 'Themes'} Available',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.successColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'Live',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.successColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                if (provider.isLoading && allThemes.isEmpty)
+                  const AppSkeletonList(count: 4)
+                else if (allThemes.isEmpty && !ConnectivityStatus.instance.online)
+                  AppErrorState(onRetry: () => provider.fetchThemes())
+                else if (filteredThemes.isEmpty)
+                  const AppEmptyState(
+                    icon: Icons.category_outlined,
+                    title: 'No themes found',
+                    message: 'Try adjusting your search query or filter options.',
+                  )
+                else
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredThemes.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 0.82,
+                    ),
+                    itemBuilder: (context, index) {
+                      final theme = filteredThemes[index];
+                      final imageUrl = ApiConfig.formatImageUrl(theme.imageUrl);
+
+                      return SizedBox(
+                        height: 240,
+                        child: Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          elevation: 2,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(18),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ThemeDetailScreen(theme: theme),
+                                ),
+                              );
+                            },
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(18)),
+                                  child: AspectRatio(
+                                    aspectRatio: 1.6,
+                                    child: CachedNetworkImage(
+                                      imageUrl: imageUrl,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        color: AppTheme.primaryColor
+                                            .withValues(alpha: 0.08),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                        color: AppTheme.primaryColor
+                                            .withValues(alpha: 0.08),
+                                        child: const Icon(
+                                            Icons.image_not_supported_outlined,
+                                            color: AppTheme.textSecondary),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        theme.name,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star_rounded,
+                                              size: 14,
+                                              color: AppTheme.accentColor),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              theme.rating ?? 'Top pick',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: AppTheme.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
         );
       },

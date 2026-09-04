@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-27T00:00:00.000Z",
+  "title": "Design System: HolidayCity",
+  "extensions": {
+    "colorMeta": {
+      "primary-ocean": {
+        "role": "primary",
+        "displayName": "Ocean Blue",
+        "canonical": "#0A6FB5",
+        "tonalRamp": ["#05263D", "#073650", "#094E75", "#0A6FB5", "#2E8AC9", "#58B8E8", "#A9D9F2", "#E3F2FB"]
+      },
+      "deep-sea": {
+        "role": "primary",
+        "displayName": "Deep Sea",
+        "canonical": "#063B6D",
+        "tonalRamp": ["#041E38", "#06304F", "#063B6D", "#0A4E88", "#1E6BA8", "#4E93C6", "#9BC1E0", "#E0EDF7"]
+      },
+      "secondary-ocean": {
+        "role": "secondary",
+        "displayName": "Sky Ocean",
+        "canonical": "#58B8E8",
+        "tonalRamp": ["#0B3A54", "#11506F", "#1D6E97", "#2E8FBE", "#58B8E8", "#8FD0F0", "#BEE4F7", "#E6F5FC"]
+      },
+      "tropical-aqua": {
+        "role": "secondary",
+        "displayName": "Tropical Aqua",
+        "canonical": "#57D0C9",
+        "tonalRamp": ["#123F3C", "#1C605B", "#2E8A83", "#3FAAA2", "#57D0C9", "#86E0DB", "#B6ECE8", "#E4F8F6"]
+      },
+      "sunset-gold": {
+        "role": "tertiary",
+        "displayName": "Sunset Gold",
+        "canonical": "#F6C65B",
+        "tonalRamp": ["#6B4E12", "#8F6A1C", "#B98D2C", "#D9A93F", "#F6C65B", "#F9D888", "#FBE7B4", "#FDF4DE"]
+      },
+      "whatsapp-green": {
+        "role": "tertiary",
+        "displayName": "WhatsApp Green",
+        "canonical": "#25D366",
+        "tonalRamp": ["#0B3F1F", "#12602F", "#1A8442", "#1FA854", "#25D366", "#5FE18C", "#9CEDB8", "#DCF8E5"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#0F172A",
+        "tonalRamp": ["#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0"]
+      },
+      "slate-fill": {
+        "role": "neutral",
+        "displayName": "Slate Fill",
+        "canonical": "#F1F5F9",
+        "tonalRamp": ["#1E1E22", "#33333A", "#4B4B54", "#6B7280", "#94A3B8", "#CBD5E1", "#E2E8F0", "#F1F5F9"]
+      },
+      "bg-canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#FAFAFC",
+        "tonalRamp": ["#1E1E22", "#3A3A40", "#5C5C63", "#8A8A90", "#B5B5BA", "#D6D6DA", "#EDEDEF", "#FAFAFC"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines on Persuade surfaces. One per view." },
+      "headline": { "displayName": "Headline", "purpose": "Section headers." },
+      "title": { "displayName": "Title", "purpose": "Card titles, modal headers, list-group headings." },
+      "body": { "displayName": "Body", "purpose": "Descriptions, itinerary text, form help. Cap at 65-75ch." },
+      "price": { "displayName": "Price", "purpose": "Currency figures, always in Deep Sea #063B6D." },
+      "label": { "displayName": "Label", "purpose": "Uppercase black-weight micro-type: codes, badges, eyebrow labels. Always +0.1em tracking." }
+    },
+    "shadows": [
+      { "name": "resting-card", "value": "0 10px 30px -5px rgba(10,111,181,0.08), 0 4px 12px -2px rgba(0,0,0,0.03)", "purpose": "Default card elevation (premium-card-shadow). Present at rest, barely there." },
+      { "name": "raised-hover", "value": "0 24px 48px -12px rgba(10,111,181,0.18), 0 8px 24px -4px rgba(0,0,0,0.06)", "purpose": "Card and primary-CTA hover, paired with translateY(-5px)." },
+      { "name": "glass-panel", "value": "0 16px 40px rgba(6,59,109,0.07)", "purpose": "Frosted glass surfaces (glass-card). Cooler and lighter than resting-card." },
+      { "name": "dark-glass", "value": "0 20px 50px rgba(0,0,0,0.35)", "purpose": "Dark glass panels over photography (glass-card-dark). The only near-black shadow allowed." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(10,111,181,0.35)", "purpose": "Keyboard focus ring on all interactive elements." },
+      { "name": "live-glow", "value": "0 0 16px rgba(10,111,181,0.35), 0 0 30px rgba(87,208,201,0.2)", "purpose": "Animated glow (glowPulseVivid) for live indicators and at-rest primary CTAs on Persuade surfaces." }
+    ],
+    "motion": [
+      { "name": "ease-smooth-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Signature easing for reveals, lifts, shimmer sweeps." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.34, 1.56, 0.64, 1)", "purpose": "Overshoot bounce for magnetic hovers and elastic pops." },
+      { "name": "ease-pop", "value": "cubic-bezier(0.175, 0.885, 0.32, 1.275)", "purpose": "Modal / element pop-in." },
+      { "name": "spring-card", "value": "type: spring, stiffness: 280, damping: 20", "purpose": "Framer Motion config for card and button hover lift." },
+      { "name": "dur-fast", "value": "200ms", "purpose": "Hover and press feedback." },
+      { "name": "dur-media", "value": "350ms", "purpose": "Card expansion, shadow transitions." },
+      { "name": "dur-image", "value": "700ms", "purpose": "Cover-image zoom on card hover." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The dominant CTA across the app: flat ocean-to-aqua gradient, springy lift on hover.",
+      "html": "<button class=\"ds-btn-primary\">GET A QUOTE</button>",
+      "css": ".ds-btn-primary { font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: linear-gradient(90deg, #0A6FB5, #57D0C9); border: 0; border-radius: 16px; padding: 12px 20px; box-shadow: 0 10px 30px -5px rgba(10,111,181,0.08), 0 4px 12px -2px rgba(0,0,0,0.03); cursor: pointer; transition: background 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.34,1.56,0.64,1); } .ds-btn-primary:hover { background: linear-gradient(90deg, #085A94, #4BB8B1); box-shadow: 0 24px 48px -12px rgba(10,111,181,0.18), 0 8px 24px -4px rgba(0,0,0,0.06); transform: translateY(-3px); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(10,111,181,0.35); } .ds-btn-primary:active { transform: translateY(0) scale(0.96); }"
+    },
+    {
+      "name": "Booking Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Highest-intent action only (Book Now, confirm payment): deep three-stop gradient, shimmer sweep, gold sparkle.",
+      "html": "<button class=\"ds-btn-booking\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"#F6C65B\" aria-hidden=\"true\"><path d=\"M12 2l1.9 5.5L19.5 9l-4.6 3.3L16.4 18 12 14.8 7.6 18l1.5-5.7L4.5 9l5.6-1.5z\"/></svg><span>BOOK NOW</span></button>",
+      "css": ".ds-btn-booking { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: linear-gradient(90deg, #063B6D, #0A6FB5, #0891B2); border: 0; border-radius: 16px; padding: 12px 22px; box-shadow: 0 12px 28px -6px rgba(10,111,181,0.35); cursor: pointer; transition: box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.34,1.56,0.64,1); } .ds-btn-booking::after { content: ''; position: absolute; top: -50%; left: -70%; width: 45%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%); transform: rotate(25deg); transition: left 0.5s cubic-bezier(0.16,1,0.3,1); } .ds-btn-booking:hover::after { left: 140%; } .ds-btn-booking:hover { transform: translateY(-3px); box-shadow: 0 22px 44px -10px rgba(10,111,181,0.45); } .ds-btn-booking:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(10,111,181,0.35); } .ds-btn-booking:active { transform: translateY(0) scale(0.96); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Low-emphasis path (Details, Cancel): slate fill, hairline border, press scale.",
+      "html": "<button class=\"ds-btn-secondary\">DETAILS</button>",
+      "css": ".ds-btn-secondary { font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: #0F172A; background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 16px; padding: 10px 16px; cursor: pointer; transition: background 0.2s ease, transform 0.15s ease; } .ds-btn-secondary:hover { background: #E2E8F0; } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(10,111,181,0.35); } .ds-btn-secondary:active { transform: scale(0.95); }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field: white, hairline slate border, border-shift + ring on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">DESTINATION</span><input class=\"ds-input\" type=\"text\" placeholder=\"Where to?\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: #94A3B8; } .ds-input { font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-size: 1rem; color: #0F172A; background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 10px 14px; transition: border-color 0.2s ease, box-shadow 0.2s ease; } .ds-input::placeholder { color: #94A3B8; } .ds-input:focus { outline: none; border-color: #0A6FB5; box-shadow: 0 0 0 3px rgba(10,111,181,0.2); }"
+    },
+    {
+      "name": "Nav Link (active)",
+      "kind": "nav",
+      "refersTo": "chip-nav-active",
+      "description": "Primary nav item states: heavy weight, animated underline on hover, ocean-tint pill when active.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link\" href=\"#\">Tour Packages</a><a class=\"ds-nav-link is-active\" href=\"#\">Destinations</a></nav>",
+      "css": ".ds-nav { display: inline-flex; gap: 16px; align-items: center; } .ds-nav-link { position: relative; font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 0.875rem; color: #0F172A; text-decoration: none; padding: 4px 8px; transition: color 0.2s ease; } .ds-nav-link::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; background: #0A6FB5; border-radius: 9999px; transform: scaleX(0); transform-origin: left; transition: transform 0.2s cubic-bezier(0.16,1,0.3,1); } .ds-nav-link:hover { color: #0A6FB5; } .ds-nav-link:hover::after { transform: scaleX(1); } .ds-nav-link.is-active { color: #0A6FB5; background: rgba(10,111,181,0.1); border: 1px solid rgba(10,111,181,0.2); border-radius: 9999px; padding: 4px 12px; } .ds-nav-link.is-active::after { display: none; }"
+    },
+    {
+      "name": "Package Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Primary content card: glass surface, 24px radius, full-bleed media with scrim, spring lift on hover.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-media\"><span class=\"ds-card-badge\">5N / 6D</span></div><div class=\"ds-card-body\"><span class=\"ds-card-code\">PKG-KER-001</span><h3 class=\"ds-card-title\">Backwaters &amp; Hills of Kerala</h3><div class=\"ds-card-foot\"><div><p class=\"ds-card-eyebrow\">Starting From</p><p class=\"ds-card-price\">₹18,500</p></div><button class=\"ds-btn-secondary\">DETAILS</button></div></div></article>",
+      "css": ".ds-card { display: flex; flex-direction: column; overflow: hidden; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.8); border-radius: 24px; box-shadow: 0 10px 30px -5px rgba(10,111,181,0.08), 0 4px 12px -2px rgba(0,0,0,0.03); transition: box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.35s cubic-bezier(0.16,1,0.3,1); } .ds-card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px -12px rgba(10,111,181,0.18), 0 8px 24px -4px rgba(0,0,0,0.06); } .ds-card-media { position: relative; height: 180px; background: linear-gradient(180deg, #58B8E8, #063B6D); } .ds-card-media::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,6,23,0.85), rgba(2,6,23,0.1) 60%, transparent); } .ds-card-badge { position: absolute; top: 14px; left: 14px; z-index: 1; font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.6875rem; letter-spacing: 0.06em; color: #fff; background: rgba(2,6,23,0.7); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.2); border-radius: 9999px; padding: 4px 12px; } .ds-card-body { display: flex; flex-direction: column; gap: 8px; padding: 20px; font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; } .ds-card-code { align-self: flex-start; font-weight: 900; font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: #0A6FB5; background: #F1F5F9; border: 1px solid rgba(10,111,181,0.2); border-radius: 6px; padding: 2px 10px; } .ds-card-title { margin: 0; font-weight: 800; font-size: 1.125rem; line-height: 1.3; letter-spacing: -0.01em; color: #0F172A; } .ds-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 16px; border-top: 1px solid #E2E8F0; } .ds-card-eyebrow { margin: 0; font-weight: 900; font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: #94A3B8; } .ds-card-price { margin: 0; font-weight: 900; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.02em; color: #063B6D; } .ds-card .ds-btn-secondary { font-size: 0.6875rem; padding: 8px 14px; }"
+    },
+    {
+      "name": "Live Indicator",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signature status badge: pulsing dot + label reflecting the socket connection. The one place glow is status, not decoration.",
+      "html": "<span class=\"ds-live\"><span class=\"ds-live-dot\"></span>LIVE REAL-TIME SYNC</span>",
+      "css": ".ds-live { display: inline-flex; align-items: center; gap: 8px; font-family: Urbanist, Manrope, 'Plus Jakarta Sans', sans-serif; font-weight: 900; font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase; color: #1A8442; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.25); border-radius: 9999px; padding: 4px 12px; } .ds-live-dot { width: 8px; height: 8px; border-radius: 9999px; background: #25D366; animation: dsLiveGlow 2.8s ease-in-out infinite; } @keyframes dsLiveGlow { 0%, 100% { box-shadow: 0 0 6px rgba(37,211,102,0.5); } 50% { box-shadow: 0 0 14px rgba(37,211,102,0.95); } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Glass Concierge",
+    "overview": "HolidayCity presents like the front desk of a premium travel house: frosted glass panels resting over deep-ocean color, confident blues carrying the weight, gold used the way a concierge uses a lapel pin - sparingly, and only to mark something worth noticing. The interface is warm and reassuring rather than loud. It should feel like a knowledgeable person is already on your side, because the product's entire premise is that a human consultant is - the UI's job is to get a well-briefed enquiry to that person as fast as possible, and to let the back-office team move it forward without friction.\n\nThe system is glass-forward and luminous: translucent surfaces float above a near-white canvas on soft, blue-tinted shadows, and depth is real - nothing is flat by decree. Type is the counterweight. One family (Urbanist) does everything, but it is set heavy - headings and labels run at 800-900 weight with tight tracking, so the layout stays crisp and structured even under all the glass. Motion is present and physical (spring lifts, shimmer sweeps, gentle glow pulses on live or interactive elements), tuned to reassure and confirm rather than to demand attention.\n\nTwo audiences share this world at equal priority: travelers on the public site (Persuade) and consultants in the /admin back-office (Operate). The glass identity is shared; the intensity is not. Persuasive surfaces may use the full gradient-and-shimmer vocabulary; operational surfaces keep the palette and the glass but lean on type weight and slate neutrals for structure.",
+    "keyCharacteristics": [
+      "Frosted glass over deep-ocean gradients on a near-white canvas.",
+      "One typeface (Urbanist), set very heavy, doing all hierarchy work.",
+      "Soft blue-tinted shadows - depth reads cool, never neutral-grey.",
+      "Gold is a pin, not a paint - accent only, never a surface.",
+      "Physical, spring-based motion; shimmer and glow reserved for interactive or live elements.",
+      "Radius language is generous and consistent: 12-24px on everything, full-pill on badges."
+    ],
+    "rules": [
+      { "name": "The Gold-as-Pin Rule", "body": "Gold (#F6C65B / #F59E0B) only ever appears as an icon, a small badge, or a thin gradient on text - never as a fill behind content, never as body text, never on more than a few square centimeters of any screen. Its scarcity is what makes it read as premium.", "section": "colors" },
+      { "name": "The One Blue Rule", "body": "Within a single component, pick one ocean blue as the actor. Gradients may travel across two or three stops, but flat elements, borders, and text should not mix #0A6FB5 and #063B6D as if they were interchangeable - they are a hierarchy, not a set.", "section": "colors" },
+      { "name": "The Cool-Shadow Rule", "body": "Every shadow is tinted with ocean blue (rgba(10,111,181,.) or rgba(6,59,109,.)), never plain rgba(0,0,0,.). Neutral-black shadows look borrowed from another system. The only exception is dark glass over photography.", "section": "elevation" },
+      { "name": "The Heavy-or-Nothing Rule", "body": "Headings, buttons, badges, and labels are 800 or 900 - there is no 600 semibold heading in this system. Body text is 400-500. The gap between those two zones is the hierarchy; don't fill it with medium weights.", "section": "typography" },
+      { "name": "The Uppercase-Label Rule", "body": "Any text below ~13px is uppercase, black weight, and tracked to +0.1em. Small-and-sentence-case does not exist here; small means label, and labels shout quietly.", "section": "typography" },
+      { "name": "The Glow-Means-Alive Rule", "body": "A pulsing glow or a shimmer sweep signals interactive or live. Never apply it to a passive heading, paragraph, or decorative divider - it makes the UI feel noisy and cries wolf on the indicators that actually matter (socket connection, new lead, unread chat).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Ocean Blue (#0A6FB5) as the single load-bearing blue; let Deep Sea (#063B6D) be its darker rank for prices, hovers, and dark glass - not a coequal.",
+      "Do tint every shadow with ocean blue (rgba(10,111,181,.) / rgba(6,59,109,.)); reserve black shadows for dark glass over photography only.",
+      "Do set all headings, buttons, badges, and labels at Urbanist 800-900 with the tracking rules (-0.015em headings, +0.1em uppercase labels); body stays 400-500.",
+      "Do use the deep three-stop gradient + shimmer-sheen + gold Sparkles only for Book Now and payment-confirmation actions; use the flat ocean-to-aqua gradient for every other primary CTA.",
+      "Do give every interactive element a visible Ocean-Blue focus ring and a ~0.95 press scale.",
+      "Do use rounded-xl/rounded-2xl/rounded-3xl consistently and full-pill for badges; never ship a 0px corner.",
+      "Do design /admin (Operate) surfaces with the same palette and glass but calmer: more slate neutrals, rounded-xl, tighter rhythm, motion limited to feedback and the Live Indicator.",
+      "Do design real empty and loading states - variable itinerary lengths, missing images, empty catalogs are normal per PRODUCT.md, not edge cases."
+    ],
+    "donts": [
+      "Don't use gold as a background, as body text, or on more than a small badge/icon's worth of any screen (the Gold-as-Pin Rule).",
+      "Don't apply glow, shimmer, or animate-pulse to passive text, headings, or dividers - it's reserved for interactive or live elements (the Glow-Means-Alive Rule).",
+      "Don't introduce a second typeface, a serif, or a mono; hierarchy is weight and size only.",
+      "Don't fill the weight gap with 600 semibold headings - it's 800/900 or it's body.",
+      "Don't flatten cards to zero elevation at rest; this system reads depth as identity.",
+      "Don't repaint the WhatsApp green (#25D366) as a generic success color - it belongs to the WhatsApp action alone.",
+      "Don't carry the full Persuade shimmer/gradient/sparkle vocabulary into dense admin tables; keep operational surfaces quiet.",
+      "Don't treat the :root tokens (canvas #FAFAFC, ink #0F172A) and the hardcoded index.html body values (#FCFCFC, #1F2937) as two systems - the :root tokens are normative; align strays to them."
+    ]
+  }
+}

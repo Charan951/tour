@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Headphones, User, ChevronRight } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { MobilePackageCard } from '../Packages/MobilePackagesPage';
-
 import { formatImageUrl } from '../../utils/imageUrl';
+import CoverflowCarousel from '../../components/common/CoverflowCarousel';
+import ScrollStack, { ScrollStackItem } from '../../components/common/ScrollStack';
 
 /* ─────────────────────────────────────────
    Mobile Home Screen — matches Flutter home_screen.dart _buildHomeContent()
@@ -30,7 +31,15 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   const navigate = useNavigate();
   const [heroSlide, setHeroSlide] = useState(0);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [searchQ, setSearchQ] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQ.trim();
+    navigate(q ? `/packages?search=${encodeURIComponent(q)}` : '/packages');
+  };
 
   // Safely extract a renderable string from any field (handles populated objects)
   const safeStr = (val: any): string => {
@@ -71,6 +80,14 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   const effectiveBanners = banners.length > 0 ? banners : defaultHeroBanners;
   const effectiveThemes = themeBanners.length > 0 ? themeBanners : defaultThemes;
 
+  // Split destinations into India (domestic) vs International — same predicate as HomePage.tsx.
+  const isIndia = (d: any) =>
+    d.category === 'Domestic' ||
+    (d.isDomestic !== false &&
+      (d.country?.isoCode === 'IN' || d.country?.name === 'India' || d.country === 'India' || !d.country));
+  const indiaDestinations = destinations.filter(isIndia);
+  const intlDestinations = destinations.filter((d: any) => !isIndia(d));
+
   const userName = currentUser?.firstName || null;
 
   // Banner tap target matching Flutter _handleBannerTap()
@@ -101,37 +118,51 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
 
   return (
     <>
-      {/* ── AppBar ── Matches Flutter AppBar with logo on Home tab */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <img
-          src="/logo.png"
-          alt="HolidayCity"
-          className="h-10 w-auto object-contain"
-          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-        <button
-          onClick={() => navigate('/my-bookings')}
-          className="w-9 h-9 rounded-full bg-[#0A6FB5]/10 flex items-center justify-center active:bg-[#0A6FB5]/20 transition-colors"
+      {/* ── App bar: logo, greeting, and a search field on the header seam.
+          Gutter is px-4 to line up with the section headings below.
+          Rhythm: generous logo→greeting, tight greeting→subtitle, generous subtitle→search. ── */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-ocean-900 via-ocean-800 to-ocean-600 px-4 pt-5 pb-8 rounded-b-[28px] shadow-[0_18px_38px_-16px_rgba(6,59,109,0.5)]">
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-10 w-60 h-60 rounded-full bg-aqua-500/15 blur-3xl" />
+
+        <h2 className="relative font-display font-black text-2xl tracking-tight text-white">
+          Holiday<span className="text-aqua-400">City</span>
+        </h2>
+
+        <div className="relative mt-6">
+          <h1 className="font-display font-black text-[1.75rem] text-white leading-[1.15]">
+            {userName ? `Hello, ${userName} ` : 'Welcome to HolidayCity '}
+            <span className="inline-block align-middle">👋</span>
+          </h1>
+          <p className="text-sm text-white/75 mt-1.5 max-w-[240px]">Plan your next trip with a real consultant</p>
+        </div>
+
+        <form
+          onSubmit={handleSearch}
+          className="relative z-10 mt-6 flex items-center gap-2 bg-white rounded-2xl2 shadow-[0_10px_28px_-10px_rgba(6,59,109,0.4)] pl-4 pr-2 h-14"
         >
-          <User className="w-5 h-5 text-[#0A6FB5]" />
-        </button>
+          <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder="Where do you want to go?"
+            className="flex-1 h-full bg-transparent outline-none text-sm text-ink placeholder:text-slate-muted"
+          />
+          <button type="submit" aria-label="Search" className="w-10 h-10 rounded-2xl2 bg-ocean-600 text-white grid place-items-center active:scale-95 transition shrink-0">
+            <Search className="w-4 h-4" />
+          </button>
+        </form>
       </div>
 
-      {/* ── Scrollable Content (matches Flutter SingleChildScrollView) ── */}
-      <div className="overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
-
-        {/* ── Welcome Header ── */}
-        <div className="px-4 pt-4 pb-2">
-          <h1 className="text-lg font-semibold text-slate-900" style={{ fontFamily: 'Inter, sans-serif' }}>
-            {userName ? `Hello, ${userName} 👋` : 'Welcome to HolidayCity 👋'}
-          </h1>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">Your Travel Companion</p>
-        </div>
+      {/* Content flows in the page scroll. NOTE: no `overflow-y-auto` here — it never
+          actually scrolled (content-height) and it silently breaks `position: sticky`
+          for descendants (e.g. the ScrollStack in Trending Packages).
+          pb-40 clears the fixed MobileStickyBar (nav pills + Call/WhatsApp/Enquire
+          row on the home route). */}
+      <div className="pt-4 pb-72">
 
         {/* ── Hero Banner Slider (height: 240px matching Flutter) ── */}
         {effectiveBanners.length > 0 && (
           <div className="px-2 mt-2">
-            <div className="relative rounded-[18px] overflow-hidden shadow-md" style={{ height: 200 }}>
+            <div className="relative rounded-2xl2 overflow-hidden shadow-md" style={{ height: 200 }}>
               {effectiveBanners.map((slide: any, index: number) => {
                 const rawImg = slide.imageUrl || slide.url || slide.banner || slide.image;
                 const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200');
@@ -152,8 +183,8 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                     {slide.title && (
                       <div className="absolute bottom-3 left-4 right-4">
-                        <p className="text-white font-bold text-sm line-clamp-1" style={{ fontFamily: 'Outfit, sans-serif' }}>{slide.title}</p>
-                        {slide.subtitle && <p className="text-white/80 text-[11px] mt-0.5 line-clamp-1">{slide.subtitle}</p>}
+                        <p className="text-white font-bold text-sm line-clamp-1">{slide.title}</p>
+                        {slide.subtitle && <p className="text-white/80 text-[0.6875rem] mt-0.5 line-clamp-1">{slide.subtitle}</p>}
                       </div>
                     )}
                   </Link>
@@ -170,8 +201,10 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
                     <button
                       key={idx}
                       onClick={() => setHeroSlide(idx)}
-                      style={{ width: isActive ? 18 : 6, height: 6, borderRadius: 3, transition: 'width 0.3s' }}
-                      className={`${isActive ? 'bg-[#0A6FB5]' : 'bg-slate-300'}`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        isActive ? 'w-[18px] bg-ocean-600' : 'w-1.5 bg-slate-300'
+                      }`}
                     />
                   );
                 })}
@@ -180,74 +213,87 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           </div>
         )}
 
-        {/* ── Specialization Themes Horizontal Scroll (matches Flutter) ── */}
-        {effectiveThemes.length > 0 && (
-          <div className="mt-5">
+        {/* ── India Tours — fanned coverflow carousel ── */}
+        {indiaDestinations.length > 0 && (
+          <div className="mt-6">
             <div className="flex items-center justify-between px-4 mb-3">
               <div>
-                <h2 className="font-bold text-base text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>Specialization Themes</h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">Find tours tailored to your travel style</p>
+                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">Top Destination</span>
+                <h2 className="font-bold text-base text-slate-900">India Tours</h2>
               </div>
-              <Link to="/themes" className="text-[#0A6FB5] text-xs font-bold flex items-center gap-0.5">
+              <Link to="/destinations?region=Domestic" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
+                See All <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <CoverflowCarousel
+              className="px-4"
+              ctaLabel="Contact Us"
+              items={indiaDestinations.slice(0, 8).map((dest: any, i: number) => ({
+                id: dest._id || String(i),
+                image: formatImageUrl(dest.image || dest.imageUrl || dest.banner, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'),
+                title: dest.name,
+                subtitle: [safeStr(dest.state), safeStr(dest.country)].filter(Boolean).join(', '),
+                href: `/destination/${dest.slug}`,
+              }))}
+            />
+          </div>
+        )}
+
+        {/* ── International Tours — fanned coverflow carousel ── */}
+        {intlDestinations.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between px-4 mb-3">
+              <div>
+                <span className="block font-script text-xl leading-none text-ocean-800 -mb-0.5">Top Destination</span>
+                <h2 className="font-bold text-base text-slate-900">International Tours</h2>
+              </div>
+              <Link to="/destinations?region=International" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
+                See All <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <CoverflowCarousel
+              className="px-4"
+              ctaLabel="Contact Us"
+              items={intlDestinations.slice(0, 8).map((dest: any, i: number) => ({
+                id: dest._id || String(i),
+                image: formatImageUrl(dest.image || dest.imageUrl || dest.banner, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800'),
+                title: dest.name,
+                subtitle: [safeStr(dest.state), safeStr(dest.country)].filter(Boolean).join(', '),
+                href: `/destination/${dest.slug}`,
+              }))}
+            />
+          </div>
+        )}
+
+        {/* ── Specialization Themes Horizontal Scroll ── */}
+        {effectiveThemes.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between px-4 mb-3">
+              <div>
+                <h2 className="font-bold text-base text-slate-900">Specialization Themes</h2>
+                <p className="text-[0.6875rem] text-slate-500 mt-0.5">Find tours tailored to your travel style</p>
+              </div>
+              <Link to="/themes" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
                 See All <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
             <div className="flex gap-3.5 overflow-x-auto pb-2 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
               {effectiveThemes.slice(0, 6).map((theme: any, i: number) => {
-                const rawImg = theme.imageUrl || theme.defaultBanner || theme.image;
+                const themeName = theme.themeName || theme.name || theme.title || 'Theme';
+                const rawImg = theme.imageUrl || theme.defaultBanner || theme.image || theme.banner;
                 const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400');
-                const link = `/packages?category=${encodeURIComponent(theme.name)}`;
+                const link = `/packages?category=${encodeURIComponent(themeName)}`;
                 return (
                   <Link
                     key={theme._id || i}
                     to={link}
-                    className="shrink-0 relative rounded-[18px] overflow-hidden shadow-md"
+                    className="shrink-0 relative rounded-2xl2 overflow-hidden shadow-md"
                     style={{ width: 148, height: 210 }}
                   >
-                    <img src={imgUrl} alt={theme.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <img src={imgUrl} alt={themeName} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
-                      <p className="text-white font-bold text-sm line-clamp-2 leading-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>{theme.name}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Popular Destinations Horizontal Scroll (matches Flutter) ── */}
-        {destinations.length > 0 && (
-          <div className="mt-5">
-            <div className="flex items-center justify-between px-4 mb-3">
-              <div>
-                <h2 className="font-bold text-base text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>Popular Destinations</h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">Top places travelers are loving</p>
-              </div>
-              <Link to="/destinations" className="text-[#0A6FB5] text-xs font-bold flex items-center gap-0.5">
-                See All <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-            <div className="flex gap-3.5 overflow-x-auto pb-2 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-              {destinations.slice(0, 6).map((dest: any, i: number) => {
-                const rawImg = dest.image || dest.imageUrl || dest.banner;
-                const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400');
-                return (
-                  <Link
-                    key={dest._id || i}
-                    to={`/destination/${dest.slug}`}
-                    className="shrink-0 relative rounded-[18px] overflow-hidden shadow-md"
-                    style={{ width: 148, height: 210 }}
-                  >
-                    <img src={imgUrl} alt={dest.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3">
-                      {(dest.state || dest.country) && (
-                        <p className="text-white/70 text-[10px] font-semibold">
-                          {[safeStr(dest.state), safeStr(dest.country)].filter(Boolean).join(', ')}
-                        </p>
-                      )}
-                      <p className="text-white font-bold text-sm line-clamp-2 leading-tight mt-0.5" style={{ fontFamily: 'Outfit, sans-serif' }}>{dest.name}</p>
+                      <p className="text-white font-bold text-sm line-clamp-2 leading-tight drop-shadow">{themeName}</p>
                     </div>
                   </Link>
                 );
@@ -257,48 +303,45 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
         )}
 
         {/* ── Trending Tour Packages List (matches Flutter PackageCard list) ── */}
-        <div className="mt-5 px-4">
+        <div className="mt-6 px-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="font-bold text-base text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>Trending Tour Packages</h2>
-              <p className="text-[11px] text-slate-500 mt-0.5">Exclusive deals curated for you</p>
+              <h2 className="font-bold text-base text-slate-900">Trending Tour Packages</h2>
+              <p className="text-[0.6875rem] text-slate-500 mt-0.5">Exclusive deals curated for you</p>
             </div>
-            <Link to="/packages" className="text-[#0A6FB5] text-xs font-bold flex items-center gap-0.5">
+            <Link to="/packages" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
               See All <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           {packages.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">No packages found</div>
+            <div className="text-center py-8 text-slate-500 text-sm">No packages yet</div>
           ) : (
-            <div>
+            <ScrollStack stackTop={16} fan={10} minScale={0.93}>
               {packages.slice(0, 6).map((pkg: any, i: number) => (
-                <MobilePackageCard
-                  key={pkg._id || i}
-                  pkg={pkg}
-                  onBookNow={() => setEnquiryOpen(true)}
-                />
+                <ScrollStackItem key={pkg._id || i}>
+                  <MobilePackageCard
+                    pkg={pkg}
+                    onBookNow={(p) => {
+                      setSelectedPkg(p || pkg);
+                      setEnquiryOpen(true);
+                    }}
+                  />
+                </ScrollStackItem>
               ))}
-            </div>
+            </ScrollStack>
           )}
         </div>
 
-        {/* ── Enquire Now FAB area (bottom) ── */}
-        <div className="px-4 mt-6 mb-4">
-          <button
-            onClick={() => setEnquiryOpen(true)}
-            className="w-full py-3.5 bg-[#57D0C9] text-white font-extrabold rounded-2xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-transform text-sm"
-          >
-            <Headphones className="w-4 h-4" />
-            Enquire Now
-          </button>
-        </div>
+        {/* Extra bottom spacer to ensure the last package card and its buttons clear MobileStickyBar */}
+        <div className="h-44" aria-hidden="true" />
       </div>
 
       {/* Enquiry Modal */}
       <PackageEnquiryModal
         isOpen={enquiryOpen}
         onClose={() => setEnquiryOpen(false)}
+        selectedPackage={selectedPkg}
       />
     </>
   );

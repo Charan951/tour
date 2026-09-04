@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
@@ -14,6 +15,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  Timer? _autoTimer;
 
   final List<Map<String, dynamic>> _slides = [
     {
@@ -43,12 +45,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Pre-cache all onboarding slide images into Flutter memory cache for instantaneous rendering
     for (final slide in _slides) {
       precacheImage(NetworkImage(slide['image']), context);
     }
+  }
+
+  @override
+  void dispose() {
+    _autoTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // Auto-advance the carousel; loops back to the first slide at the end.
+  void _startAutoScroll() {
+    _autoTimer?.cancel();
+    _autoTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted || !_pageController.hasClients) return;
+      final next = (_currentPage + 1) % _slides.length;
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   void _nextPage() {
@@ -187,6 +216,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   setState(() {
                     _currentPage = index;
                   });
+                  _startAutoScroll(); // reset the timer after any page change
                 },
                 itemCount: _slides.length,
                 itemBuilder: (context, index) {

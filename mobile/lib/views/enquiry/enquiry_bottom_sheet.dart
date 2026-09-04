@@ -3,8 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
+import '../../config/api_config.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/connectivity.dart';
 import '../../services/enquiry_service.dart';
+import '../../services/offline_queue.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -66,8 +69,43 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
           message: _messageController.text.trim(),
         );
 
+        // Offline → save to the outbox and tell the truth about it.
+        if (!ConnectivityStatus.instance.online) {
+          await OfflineQueue.instance
+              .enqueue(ApiConfig.enquiries, enquiry.toJson());
+          if (!mounted) return;
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Saved. We’ll send this enquiry automatically once you’re back online.'),
+              backgroundColor: Color(0xFF334155),
+            ),
+          );
+          return;
+        }
+
         final service = EnquiryService();
-        final success = await service.submitEnquiry(enquiry);
+        bool success;
+        try {
+          success = await service.submitEnquiry(enquiry);
+        } catch (_) {
+          // Went offline mid-request — queue it rather than losing it.
+          await OfflineQueue.instance
+              .enqueue(ApiConfig.enquiries, enquiry.toJson());
+          success = false;
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Saved. We’ll send this enquiry once your connection is back.'),
+                backgroundColor: Color(0xFF334155),
+              ),
+            );
+          }
+          return;
+        }
 
         if (!mounted) return;
 
@@ -184,11 +222,13 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
                     Row(
                       children: [
                         IconButton(
+                          tooltip: 'Fewer travellers',
                           icon: const Icon(Icons.remove_circle_outline),
                           onPressed: _travelers > 1 ? () => setState(() => _travelers--) : null,
                         ),
                         Text('$_travelers', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         IconButton(
+                          tooltip: 'More travellers',
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed: () => setState(() => _travelers++),
                         ),

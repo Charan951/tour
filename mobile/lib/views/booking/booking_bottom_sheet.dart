@@ -459,11 +459,13 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                     Row(
                       children: [
                         IconButton(
+                          tooltip: 'Remove adult',
                           icon: const Icon(Icons.remove_circle_outline),
                           onPressed: _adults > 1 ? () => setState(() => _adults--) : null,
                         ),
                         Text('$_adults', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         IconButton(
+                          tooltip: 'Add adult',
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed: () => setState(() => _adults++),
                         ),
@@ -485,11 +487,13 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                     Row(
                       children: [
                         IconButton(
+                          tooltip: 'Remove child',
                           icon: const Icon(Icons.remove_circle_outline),
                           onPressed: _children > 0 ? () => setState(() => _children--) : null,
                         ),
                         Text('$_children', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         IconButton(
+                          tooltip: 'Add child',
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed: () => setState(() => _children++),
                         ),

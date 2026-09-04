@@ -140,6 +140,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                               ),
                               const SizedBox(width: 6),
                               IconButton(
+                                tooltip: 'Copy booking ID',
                                 icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
                                 onPressed: () {
                                   Clipboard.setData(ClipboardData(text: bookingId));

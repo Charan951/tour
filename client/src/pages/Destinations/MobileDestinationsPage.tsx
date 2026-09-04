@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 
 const safeStr = (val: any): string => {
@@ -50,15 +51,22 @@ export const MobileDestinationsPage: React.FC = () => {
   return (
     <>
       {/* AppBar */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-30 shadow-sm">
-        <h1 className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>All Destinations</h1>
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center gap-2.5">
+        <Link
+          to="/"
+          aria-label="Back to home"
+          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <h1 className="font-display font-black text-lg text-white">All Destinations</h1>
       </div>
 
       <div className="overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading ? (
-          <div className="text-center py-16 text-slate-400">Loading destinations...</div>
+          <div className="text-center py-16 text-slate-500">Loading destinations...</div>
         ) : destinations.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">No destinations available.</div>
+          <div className="text-center py-16 text-slate-500">No destinations available.</div>
         ) : (
           /* 2-column grid matching Flutter SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.85) */
           <div
@@ -82,7 +90,7 @@ export const MobileDestinationsPage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                   {/* Name + Country — bottom left */}
                   <div className="absolute bottom-3 left-3 right-3">
-                    <p className="text-white font-bold text-base leading-tight line-clamp-2" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                    <p className="text-white font-bold text-base leading-tight line-clamp-2">
                       {dest.name}
                     </p>
                     {countryName && (

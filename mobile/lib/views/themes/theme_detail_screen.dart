@@ -141,6 +141,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                           ],
                         ),
                         child: IconButton(
+                          tooltip: 'Back',
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.arrow_back_rounded,
                               color: AppTheme.textPrimary),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/package_provider.dart';
 import '../../widgets/package_card.dart';
+import '../../widgets/app_states.dart';
 import 'package_detail_screen.dart';
 
 class PackageListScreen extends StatefulWidget {
@@ -147,13 +148,11 @@ class _PackageListScreenState extends State<PackageListScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Explore Packages'),
-      ),
+      appBar: AppTheme.gradientAppBar(title: 'Explore Packages'),
       body: RefreshIndicator(
         onRefresh: () => packageProvider.fetchPackages(),
-        child: packageProvider.isLoading
-            ? const Center(child: CircularProgressIndicator())
+        child: packageProvider.isLoading && packageProvider.allPackages.isEmpty
+            ? const AppSkeletonList(count: 5)
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 children: [
@@ -168,6 +167,7 @@ class _PackageListScreenState extends State<PackageListScreen> {
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
+                                    tooltip: 'Clear search',
                                     icon: const Icon(Icons.clear),
                                     onPressed: () {
                                       _searchController.clear();
@@ -195,6 +195,7 @@ class _PackageListScreenState extends State<PackageListScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: IconButton(
+                          tooltip: 'Filters',
                           onPressed: _showFilterSheet,
                           icon: const Icon(Icons.filter_list_rounded,
                               color: AppTheme.primaryColor),
@@ -204,10 +205,27 @@ class _PackageListScreenState extends State<PackageListScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (packageProvider.packages.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
-                        child: Text('No holiday packages available.'),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: AppEmptyState(
+                        icon: Icons.travel_explore_outlined,
+                        title: (packageProvider.searchQuery.isNotEmpty ||
+                                packageProvider.selectedCategory != 'All')
+                            ? 'No packages match your filters'
+                            : 'No packages available',
+                        message: (packageProvider.searchQuery.isNotEmpty ||
+                                packageProvider.selectedCategory != 'All')
+                            ? 'Try a different search or clear the filters.'
+                            : 'Pull down to refresh, or check back soon.',
+                        actionLabel: (packageProvider.searchQuery.isNotEmpty ||
+                                packageProvider.selectedCategory != 'All')
+                            ? 'Clear filters'
+                            : null,
+                        onAction: () {
+                          _searchController.clear();
+                          packageProvider.setSearchQuery('');
+                          packageProvider.setCategory('All');
+                        },
                       ),
                     )
                   else ...[

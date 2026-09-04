@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, register, forgotPassword, getMe } from '../controllers/authController.js';
+import { login, register, forgotPassword, getMe, updateMe, changePassword } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getDestinations, getDestinationBySlug, createDestination, updateDestination, deleteDestination } from '../controllers/destinationController.js';
@@ -67,6 +67,11 @@ router.use('/upload', uploadRoutes);
 router.post('/auth/login', authRateLimiter, login);
 router.post('/auth/register', authRateLimiter, register);
 router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
+
+// Signed-in user managing their own account (any authenticated role).
+router.get('/auth/me', authenticateToken, getMe);
+router.patch('/auth/me', authenticateToken, updateMe);
+router.post('/auth/change-password', authRateLimiter, authenticateToken, changePassword);
 
 // Packages Catalog & Detail (Live MongoDB Queries with No-Cache Headers)
 router.get('/packages', getPackages);

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../providers/specialization_theme_provider.dart';
+import '../../services/connectivity.dart';
+import '../../widgets/app_states.dart';
 import 'theme_detail_screen.dart';
 
 class ThemeScreen extends StatefulWidget {
@@ -40,32 +42,17 @@ class _ThemeScreenState extends State<ThemeScreen> {
       builder: (context, provider, child) {
         final themes = provider.themes;
 
-        return RefreshIndicator(
+        return Scaffold(
+          appBar: AppTheme.gradientAppBar(title: 'Themes'),
+          body: RefreshIndicator(
           onRefresh: provider.fetchThemes,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 2),
-                        child: Text(
-                          'Themes',
-                          textAlign: TextAlign.left,
-                          style: GoogleFonts.outfit(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -101,24 +88,14 @@ class _ThemeScreenState extends State<ThemeScreen> {
               ),
               const SizedBox(height: 16),
               if (provider.isLoading && themes.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
+                const AppSkeletonList(count: 4)
+              else if (themes.isEmpty && !ConnectivityStatus.instance.online)
+                AppErrorState(onRetry: () => provider.fetchThemes())
               else if (themes.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Text(
-                      'No themes available right now',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ),
+                const AppEmptyState(
+                  icon: Icons.category_outlined,
+                  title: 'No themes yet',
+                  message: 'Travel themes will appear here once published.',
                 )
               else
                 GridView.builder(
@@ -227,6 +204,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                   },
                 ),
             ],
+          ),
           ),
         );
       },

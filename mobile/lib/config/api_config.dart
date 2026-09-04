@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Configured server host IP (192.168.1.32 matches local network address for physical Android devices)
-  static String hostIp = '192.168.1.32';
+  // Configured server host IP (defaults to localhost; 10.0.2.2 for Android emulator)
+  static String hostIp = 'localhost';
   static String? customHost;
 
   static String get serverHost {
@@ -18,8 +18,12 @@ class ApiConfig {
       return 'http://localhost:5000';
     }
 
+    // Android: default to localhost — with `adb reverse tcp:5000 tcp:5000`
+    // running, the device/emulator loopback tunnels to the host over USB,
+    // which is far faster than a LAN IP over Wi-Fi. Set `customHost` (or an
+    // explicit `hostIp` other than 'localhost') only if you can't use adb.
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final ip = hostIp.isNotEmpty ? hostIp : "192.168.1.32";
+      final ip = (hostIp.isNotEmpty && hostIp != 'localhost') ? hostIp : 'localhost';
       return 'http://$ip:5000';
     }
 
@@ -50,7 +54,10 @@ class ApiConfig {
   static String get login => '$baseUrl/auth/login';
   static String get register => '$baseUrl/auth/register';
   static String get forgotPassword => '$baseUrl/auth/forgot-password';
-  static String get me => '$baseUrl/admin/auth/me';
+  static String get me => '$baseUrl/auth/me';
+  static String get updateProfile => '$baseUrl/auth/me';
+  static String get changePassword => '$baseUrl/auth/change-password';
+  static String get uploadImage => '$baseUrl/upload/single';
 
   static String get packages => '$baseUrl/packages';
   static String packageBySlug(String slug) => '$baseUrl/packages/$slug';

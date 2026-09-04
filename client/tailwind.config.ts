@@ -1,16 +1,10 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Tailwind v4: the design system lives in `src/styles/globals.css` under `@theme`
+ * (colours, fonts, radii, shadows, easing). This file only sets `content` for
+ * class scanning — do not re-declare tokens here.
+ */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      fontFamily: {
-        poppins: ['Poppins', 'sans-serif'],
-        'times-roman': ['Times New Roman', 'Times', 'serif'],
-        sans: ['Poppins', 'sans-serif'],
-        serif: ['Times New Roman', 'Times', 'serif'],
-      },
-    },
-  },
-  plugins: [],
 } satisfies Config;

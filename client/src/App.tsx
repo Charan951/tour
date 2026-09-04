@@ -4,7 +4,6 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { MobileStickyBar } from './components/common/MobileStickyBar';
 import { FloatingActionWidget } from './components/common/FloatingActionWidget';
-import { SplashScreen } from './components/common/SplashScreen';
 
 // Lazy-loaded Desktop Pages
 const HomePage = lazy(() => import('./pages/Home/HomePage').then(m => ({ default: m.HomePage })));
@@ -15,6 +14,8 @@ const DestinationDetailPage = lazy(() => import('./pages/Destinations/Destinatio
 const AboutPage = lazy(() => import('./pages/About/AboutPage').then(m => ({ default: m.AboutPage })));
 const ContactPage = lazy(() => import('./pages/Contact/ContactPage').then(m => ({ default: m.ContactPage })));
 const BlogsPage = lazy(() => import('./pages/Blogs/BlogsPage').then(m => ({ default: m.BlogsPage })));
+const BlogDetailPage = lazy(() => import('./pages/Blogs/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
+const FaqPage = lazy(() => import('./pages/Faq/FaqPage').then(m => ({ default: m.FaqPage })));
 const ThemeCatalogPage = lazy(() => import('./pages/Themes/ThemeCatalogPage').then(m => ({ default: m.ThemeCatalogPage })));
 const UserDashboardPage = lazy(() => import('./pages/User/UserDashboardPage').then(m => ({ default: m.UserDashboardPage })));
 
@@ -44,7 +45,7 @@ const PageFallback: React.FC = () => (
         <img src="/favicon.png" alt="HolidayCity" className="h-16 w-auto object-contain" />
       </div>
       <div className="flex items-center gap-2">
-        <div className="w-4 h-4 border-2 border-[#0A6FB5] border-t-transparent rounded-full animate-spin" />
+        <div className="w-4 h-4 border-2 border-ocean-600 border-t-transparent rounded-full animate-spin" />
         <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Loading HolidayCity...</span>
       </div>
     </div>
@@ -58,13 +59,16 @@ export const App: React.FC = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
-  // Real-time mobile detection (< 1024px = lg)
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+  // Real-time viewport width — the mobile page components render below 1024px (lg).
+  const [vw, setVw] = useState(() => window.innerWidth);
   useEffect(() => {
-    const h = () => setIsMobile(window.innerWidth < 1024);
+    const h = () => setVw(window.innerWidth);
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
+  const isMobile = vw < 1024;
+  // On a tablet (640–1023px) the phone layout would stretch — sit it in a phone-width column.
+  const tabletFrame = isMobile && vw >= 640;
 
   // On mobile → hide ALL website chrome (navbar, footer, FAB, splash)
   // Mobile navigates entirely via bottom tab bar — matches Flutter app
@@ -76,11 +80,14 @@ export const App: React.FC = () => {
   const hideWebChrome = isMobile;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FCFCFC] text-[#1F2937]">
-      {!isAdminRoute && !hideWebChrome && <SplashScreen />}
+    <div className="min-h-screen flex flex-col bg-canvas text-ink">
       {!isAdminRoute && !hideWebChrome && <Navbar />}
 
-      <main className={`flex-1 ${!isAdminRoute && !hideWebChrome && !isLoginPage ? 'pt-[64px]' : ''}`}>
+      <main
+        className={`flex-1 ${!isAdminRoute && !hideWebChrome && !isLoginPage ? 'pt-[64px]' : ''} ${
+          tabletFrame ? 'mx-auto w-full max-w-[480px] border-x border-line shadow-glass min-h-screen' : ''
+        }`}
+      >
         <Suspense fallback={<PageFallback />}>
           <Routes>
             {/* ── PUBLIC ROUTES — desktop always, mobile shows mobile-optimised version ── */}
@@ -103,6 +110,9 @@ export const App: React.FC = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/blogs" element={<BlogsPage />} />
             <Route path="/stories" element={<BlogsPage />} />
+            <Route path="/blog/:slug" element={<BlogDetailPage />} />
+            <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+            <Route path="/faq" element={<FaqPage />} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
             <Route path="/login" element={<UserDashboardPage />} />

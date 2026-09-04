@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Filter, X, MapPin, Clock, Star } from 'lucide-react';
+import { Search, Filter, X, MapPin, Clock, Star, ArrowLeft } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { FALLBACK_PACKAGES } from '../../utils/mobileDataFallback';
@@ -56,7 +56,7 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
       <Link to={`/package/${pkg.slug}`} className="block relative" style={{ height: 180 }}>
         <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover" />
         {/* Category badge — top left */}
-        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#0A6FB5]/90 text-white text-xs font-bold">
+        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-ocean-600/90 text-white text-xs font-bold">
           {category}
         </div>
         {/* Rating badge — top right */}
@@ -69,23 +69,23 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
       {/* Content */}
       <div className="px-4 py-3">
         {/* Location + Duration row */}
-        <div className="flex items-center gap-2 text-[13px] text-slate-500 font-medium mb-2">
+        <div className="flex items-center gap-2 text-[0.8125rem] text-slate-500 font-medium mb-2">
           {destName && (
             <>
-              <MapPin className="w-3.5 h-3.5 text-[#0A6FB5] shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-ocean-600 shrink-0" />
               <span className="flex-1 truncate">{destName}</span>
             </>
           )}
           {duration && (
             <div className="flex items-center gap-1 ml-auto shrink-0">
-              <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <span className="text-xs">{duration}</span>
             </div>
           )}
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-3" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-3">
           {pkg.title}
         </h3>
 
@@ -93,11 +93,11 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
         <div className="flex items-center justify-between gap-2">
           {/* Price */}
           <div>
-            <p className="text-[11px] text-slate-400">Starting from</p>
+            <p className="text-[0.6875rem] text-slate-500">Starting from</p>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-bold text-[#0A6FB5]">₹{price.toLocaleString()}</span>
+              <span className="text-base font-bold text-ocean-600">₹{price.toLocaleString()}</span>
               {originalPrice && originalPrice > price && (
-                <span className="text-[11px] text-slate-400 line-through">₹{originalPrice.toLocaleString()}</span>
+                <span className="text-[0.6875rem] text-slate-500 line-through">₹{originalPrice.toLocaleString()}</span>
               )}
             </div>
           </div>
@@ -106,13 +106,13 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
           <div className="flex items-center gap-1.5 shrink-0">
             <Link
               to={`/package/${pkg.slug}`}
-              className="px-3 py-2 rounded-xl border-2 border-[#57D0C9] text-[#57D0C9] text-xs font-bold"
+              className="px-3 py-2 rounded-xl border-2 border-aqua-500 text-aqua-500 text-xs font-bold"
             >
               View Deal
             </Link>
             <button
               onClick={() => onBookNow?.(pkg)}
-              className="px-3 py-2 rounded-xl bg-[#0A6FB5] text-white text-xs font-bold active:opacity-80"
+              className="px-3 py-2 rounded-xl bg-ocean-600 text-white text-xs font-bold active:opacity-80"
             >
               Book Now
             </button>
@@ -183,41 +183,48 @@ export const MobilePackagesPage: React.FC = () => {
   return (
     <>
       {/* AppBar */}
-      <div className="bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-30 shadow-sm">
-        <h1 className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>Explore Packages</h1>
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center gap-2.5">
+        <Link
+          to="/"
+          aria-label="Back to home"
+          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <h1 className="font-display font-black text-lg text-white">Explore Packages</h1>
       </div>
 
-      <div className="overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="overflow-y-auto pb-48" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="px-4 pt-4 pb-2">
           {/* Search + Filter row */}
           <div className="flex items-center gap-2.5">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search packages..."
-                className="w-full pl-9 pr-8 py-3 rounded-2xl bg-slate-100 text-slate-900 text-sm outline-none border border-transparent focus:border-[#0A6FB5]/30"
+                className="w-full pl-9 pr-8 py-3 rounded-2xl bg-slate-100 text-slate-900 text-sm outline-none border border-transparent focus:border-ocean-600/30"
               />
               {search && (
                 <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-slate-400" />
+                  <X className="w-4 h-4 text-slate-500" />
                 </button>
               )}
             </div>
             <button
               onClick={() => setFilterOpen(true)}
-              className="w-12 h-12 rounded-2xl bg-[#0A6FB5]/10 flex items-center justify-center shrink-0 active:bg-[#0A6FB5]/20 transition-colors"
+              className="w-12 h-12 rounded-2xl bg-ocean-600/10 flex items-center justify-center shrink-0 active:bg-ocean-600/20 transition-colors"
             >
-              <Filter className="w-5 h-5 text-[#0A6FB5]" />
+              <Filter className="w-5 h-5 text-ocean-600" />
             </button>
           </div>
 
           {/* Active filter chip */}
           {selectedCategory !== 'All' && (
             <div className="flex items-center gap-2 mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0A6FB5] rounded-full">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-ocean-600 rounded-full">
                 <span className="text-white text-xs font-bold">{selectedCategory}</span>
                 <button onClick={() => setSelectedCategory('All')}>
                   <X className="w-3 h-3 text-white" />
@@ -229,9 +236,9 @@ export const MobilePackagesPage: React.FC = () => {
 
         <div className="px-4">
           {loading ? (
-            <div className="text-center py-16 text-slate-400">Loading packages...</div>
+            <div className="text-center py-16 text-slate-500">Loading packages...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-slate-400">No holiday packages available.</div>
+            <div className="text-center py-16 text-slate-500">No holiday packages available.</div>
           ) : (
             filtered.map((pkg, i) => (
               <MobilePackageCard
@@ -242,6 +249,9 @@ export const MobilePackagesPage: React.FC = () => {
             ))
           )}
         </div>
+
+        {/* Extra bottom spacer for MobileStickyBar clearance */}
+        <div className="h-28" aria-hidden="true" />
       </div>
 
       {/* Filter Bottom Sheet — matches Flutter _showFilterSheet() */}
@@ -255,7 +265,7 @@ export const MobilePackagesPage: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900">Filters</h2>
               <button
                 onClick={() => { setSelectedCategory('All'); setFilterOpen(false); }}
-                className="text-[#0A6FB5] font-semibold text-sm"
+                className="text-ocean-600 font-semibold text-sm"
               >
                 Reset
               </button>
@@ -268,7 +278,7 @@ export const MobilePackagesPage: React.FC = () => {
                   onClick={() => { setSelectedCategory(cat); setFilterOpen(false); }}
                   className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                     selectedCategory === cat
-                      ? 'bg-[#0A6FB5] text-white shadow-sm'
+                      ? 'bg-ocean-600 text-white shadow-sm'
                       : 'bg-slate-100 text-slate-800'
                   }`}
                 >
@@ -278,7 +288,7 @@ export const MobilePackagesPage: React.FC = () => {
             </div>
             <button
               onClick={() => setFilterOpen(false)}
-              className="w-full py-3.5 rounded-2xl bg-[#0A6FB5] text-white font-bold text-base"
+              className="w-full py-3.5 rounded-2xl bg-ocean-600 text-white font-bold text-base"
             >
               Apply Filters
             </button>

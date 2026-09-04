@@ -14,6 +14,52 @@ class AppTheme {
   static const Color successColor = Color(0xFF10B981);
   static const Color errorColor = Color(0xFFEF4444);
 
+  /// Shared header gradient (primaryDark -> primary -> secondary) used on
+  /// Home / Profile / Destinations / Themes / Packages headers, ported from
+  /// the web mobile redesign's `from-ocean-800 via-ocean-700 to-cyan-700`.
+  static const LinearGradient headerGradient = LinearGradient(
+    colors: [primaryDarkColor, primaryColor, secondaryColor],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const BorderRadius headerRadius = BorderRadius.only(
+    bottomLeft: Radius.circular(32),
+    bottomRight: Radius.circular(32),
+  );
+
+  /// A gradient AppBar matching the shared header look, for list/tab screens.
+  static PreferredSizeWidget gradientAppBar({
+    required String title,
+    List<Widget>? actions,
+    Widget? leading,
+  }) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(kToolbarHeight),
+      child: ClipRRect(
+        borderRadius: headerRadius,
+        child: AppBar(
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: false,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          leading: leading,
+          actions: actions,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(gradient: headerGradient),
+          ),
+        ),
+      ),
+    );
+  }
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

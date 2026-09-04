@@ -197,7 +197,7 @@ export const LeadManagementPage: React.FC = () => {
       action={
         <button
           onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
-          className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+          className="px-4 py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
         >
           <Plus className="w-4 h-4" /> Add New Lead
         </button>
@@ -216,7 +216,7 @@ export const LeadManagementPage: React.FC = () => {
           </div>
           <button
             onClick={() => fetchEnquiries()}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-[#0A6FB5] hover:text-white text-slate-700 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-ocean-600 hover:text-white text-slate-700 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span>🔄</span> Refresh Leads
           </button>
@@ -252,7 +252,7 @@ export const LeadManagementPage: React.FC = () => {
                             const foundPkg = typeof enq.package === 'string' && enq.package ? packages.find(p => p._id === enq.package) : null;
                             const pkgTitle = hasPkgObj ? enq.package.title : (foundPkg?.title || enq.packageName);
                             if (pkgTitle) {
-                              return <span className="text-[#0A6FB5]">📦 {pkgTitle}</span>;
+                              return <span className="text-ocean-600">📦 {pkgTitle}</span>;
                             }
                             return <span className="text-slate-600 font-extrabold bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">🌐 General Trip Enquiry</span>;
                           })()}
@@ -261,7 +261,7 @@ export const LeadManagementPage: React.FC = () => {
                       </td>
                       <td className="p-4 space-y-1">
                         <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                          <Phone className="w-3.5 h-3.5 text-[#0A6FB5]" /> {enq.mobile}
+                          <Phone className="w-3.5 h-3.5 text-ocean-600" /> {enq.mobile}
                         </div>
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <Mail className="w-3.5 h-3.5 text-slate-400" /> {enq.email}
@@ -276,7 +276,7 @@ export const LeadManagementPage: React.FC = () => {
                         <select
                           value={enq.status || 'New'}
                           onChange={(e) => handleStatusChange(enq._id, e.target.value)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 outline-none focus:border-[#0A6FB5] cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 outline-none focus:border-ocean-600 cursor-pointer"
                         >
                           <option value="New">🟢 New Lead</option>
                           <option value="Contacted">🟡 Contacted</option>
@@ -288,7 +288,7 @@ export const LeadManagementPage: React.FC = () => {
                       <td className="p-4 text-right space-x-1.5">
                         <button
                           onClick={() => setSelectedLead(enq)}
-                          className="px-2.5 py-1.5 rounded-xl bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white font-bold transition-all"
+                          className="px-2.5 py-1.5 rounded-xl bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white font-bold transition-all"
                         >
                           View
                         </button>
@@ -337,7 +337,7 @@ export const LeadManagementPage: React.FC = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     placeholder="e.g. Ramesh Kumar"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -348,7 +348,7 @@ export const LeadManagementPage: React.FC = () => {
                     onChange={(e) => setMobile(e.target.value)}
                     required
                     placeholder="+91 98765 43210"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -362,7 +362,7 @@ export const LeadManagementPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="ramesh@example.com"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -371,7 +371,7 @@ export const LeadManagementPage: React.FC = () => {
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -384,7 +384,7 @@ export const LeadManagementPage: React.FC = () => {
                     value={adults}
                     onChange={(e) => setAdults(Number(e.target.value))}
                     min={1}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export const LeadManagementPage: React.FC = () => {
                     value={children}
                     onChange={(e) => setChildren(Number(e.target.value))}
                     min={0}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -404,7 +404,7 @@ export const LeadManagementPage: React.FC = () => {
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
                     placeholder="e.g. 50000"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -415,7 +415,7 @@ export const LeadManagementPage: React.FC = () => {
                   <select
                     value={destinationId}
                     onChange={(e) => setDestinationId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="">Select Destination (Optional)</option>
                     {destinations.map((d) => (
@@ -428,7 +428,7 @@ export const LeadManagementPage: React.FC = () => {
                   <select
                     value={packageId}
                     onChange={(e) => setPackageId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="">Select Package (Optional)</option>
                     {packages.map((p) => (
@@ -444,7 +444,7 @@ export const LeadManagementPage: React.FC = () => {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="New">🟢 New Lead</option>
                     <option value="Contacted">🟡 Contacted</option>
@@ -459,7 +459,7 @@ export const LeadManagementPage: React.FC = () => {
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -476,12 +476,12 @@ export const LeadManagementPage: React.FC = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
                   placeholder="Enter details of customer enquiry..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] font-bold text-white shadow-md cursor-pointer">
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
                   {editingId ? 'Update Lead Details' : 'Create Lead in Database'}
                 </button>
                 <button type="button" onClick={() => { setIsCreateModalOpen(false); setIsEditModalOpen(false); }} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold cursor-pointer">
@@ -528,9 +528,9 @@ export const LeadManagementPage: React.FC = () => {
                   }
 
                   return (
-                    <div className="bg-gradient-to-r from-[#063B6D] to-[#0A6FB5] p-4.5 rounded-2xl text-white space-y-3 shadow-md">
+                    <div className="bg-gradient-to-r from-ocean-800 to-ocean-600 p-4.5 rounded-2xl text-white space-y-3 shadow-md">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-aqua-500 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
                           Requested Tour Package
                         </span>
                         {pkgCode && (
@@ -545,7 +545,7 @@ export const LeadManagementPage: React.FC = () => {
                           {pkgName}
                         </h4>
                         <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
-                          <MapPin className="w-3.5 h-3.5 text-[#57D0C9]" />
+                          <MapPin className="w-3.5 h-3.5 text-aqua-500" />
                           <span>Destination: <strong className="text-white font-bold">{destName}</strong></span>
                         </p>
                       </div>
@@ -557,7 +557,7 @@ export const LeadManagementPage: React.FC = () => {
                         </div>
                         <div className="bg-white/10 p-2 rounded-xl border border-white/15">
                           <span className="text-[10px] text-slate-300 block font-bold">Est. Total</span>
-                          <span className="font-extrabold text-[#57D0C9] text-sm">{estPrice}</span>
+                          <span className="font-extrabold text-aqua-500 text-sm">{estPrice}</span>
                         </div>
                         <div className="bg-white/10 p-2 rounded-xl border border-white/15">
                           <span className="text-[10px] text-slate-300 block font-bold">Status</span>
@@ -569,12 +569,12 @@ export const LeadManagementPage: React.FC = () => {
                 }
 
                 return (
-                  <div className="bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#063B6D] p-4.5 rounded-2xl text-white space-y-2 shadow-md">
+                  <div className="bg-gradient-to-r from-ocean-800 via-ocean-600 to-ocean-800 p-4.5 rounded-2xl text-white space-y-2 shadow-md">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-aqua-500 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
                         🌐 General Custom Trip Enquiry
                       </span>
-                      <span className="text-xs font-bold text-[#57D0C9] bg-white/10 px-2 py-0.5 rounded-md border border-white/20">
+                      <span className="text-xs font-bold text-aqua-500 bg-white/10 px-2 py-0.5 rounded-md border border-white/20">
                         Home Screen Lead
                       </span>
                     </div>
@@ -584,7 +584,7 @@ export const LeadManagementPage: React.FC = () => {
                         {destName && destName !== 'Flexible Destination' ? `Custom Trip Request (${destName})` : 'General Custom Trip Enquiry'}
                       </h4>
                       <p className="text-xs text-slate-200 flex items-center gap-1 mt-1 font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-[#57D0C9]" />
+                        <MapPin className="w-3.5 h-3.5 text-aqua-500" />
                         <span>Preferred Destination: <strong className="text-white font-bold">{destName}</strong></span>
                       </p>
                     </div>
@@ -612,7 +612,7 @@ export const LeadManagementPage: React.FC = () => {
                 {selectedLead.preferredDestination && (
                   <div className="col-span-2 border-t border-slate-200/60 pt-2">
                     <span className="text-slate-400 block font-semibold">Preferred Destination</span>
-                    <span className="font-bold text-[#0A6FB5]">{selectedLead.preferredDestination}</span>
+                    <span className="font-bold text-ocean-600">{selectedLead.preferredDestination}</span>
                   </div>
                 )}
               </div>
@@ -645,11 +645,11 @@ export const LeadManagementPage: React.FC = () => {
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     placeholder="e.g. Sent quotation on WhatsApp, following up tomorrow"
-                    className="flex-1 p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-[#0A6FB5]"
+                    className="flex-1 p-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:border-ocean-600"
                   />
                   <button
                     onClick={() => handleAddNote(selectedLead._id)}
-                    className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] text-white font-bold text-xs cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-ocean-600 text-white font-bold text-xs cursor-pointer"
                   >
                     Save Note
                   </button>

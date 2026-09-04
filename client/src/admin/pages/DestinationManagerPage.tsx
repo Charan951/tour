@@ -158,7 +158,7 @@ export const DestinationManagerPage: React.FC = () => {
       action={
         <button
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+          className="px-4 py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
         >
           <Plus className="w-4 h-4" /> Add Destination
         </button>
@@ -175,7 +175,7 @@ export const DestinationManagerPage: React.FC = () => {
           </div>
           <button
             onClick={() => fetchDestinations()}
-            className="text-[#0A6FB5] hover:underline font-bold text-xs"
+            className="text-ocean-600 hover:underline font-bold text-xs"
           >
             ↻ Refresh Destinations
           </button>
@@ -212,12 +212,12 @@ export const DestinationManagerPage: React.FC = () => {
 
                   <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
                     <div className="text-slate-600 text-[11px]">
-                      <span className="text-[#0A6FB5] font-semibold">Best: {d.bestTime || 'Nov - Feb'}</span> | <span>{d.weather || 'Tropical'}</span>
+                      <span className="text-ocean-600 font-semibold">Best: {d.bestTime || 'Nov - Feb'}</span> | <span>{d.weather || 'Tropical'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEdit(d)}
-                        className="p-1.5 rounded-lg bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white transition-colors"
+                        className="p-1.5 rounded-lg bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white transition-colors"
                         title="Edit Destination"
                       >
                         <Edit className="w-4 h-4" />
@@ -288,7 +288,7 @@ export const DestinationManagerPage: React.FC = () => {
                     onChange={(e) => setName(e.target.value)}
                     required
                     placeholder="e.g. Goa Beaches or Himachal"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -299,7 +299,7 @@ export const DestinationManagerPage: React.FC = () => {
                     onChange={(e) => setCountryName(e.target.value)}
                     required
                     placeholder="e.g. India or Maldives"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -313,7 +313,7 @@ export const DestinationManagerPage: React.FC = () => {
                     onChange={(e) => setBestTime(e.target.value)}
                     required
                     placeholder="e.g. Nov - Feb"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -324,7 +324,7 @@ export const DestinationManagerPage: React.FC = () => {
                     onChange={(e) => setWeather(e.target.value)}
                     required
                     placeholder="e.g. Pleasant Tropical Breezes"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -343,7 +343,7 @@ export const DestinationManagerPage: React.FC = () => {
                   onChange={(e) => setBanner(e.target.value)}
                   required
                   placeholder="https://res.cloudinary.com/charan12/..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -355,12 +355,12 @@ export const DestinationManagerPage: React.FC = () => {
                   required
                   rows={2}
                   placeholder="Enter destination overview..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] font-bold text-white shadow-md cursor-pointer">
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
                   {editingId ? 'Update Destination' : 'Publish Destination'}
                 </button>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold">

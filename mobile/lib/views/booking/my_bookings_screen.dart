@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/booking_service.dart';
+import '../../services/connectivity.dart';
+import '../../widgets/app_states.dart';
 import 'booking_detail_screen.dart';
 import '../chat/chat_bottom_sheet.dart';
 
@@ -131,37 +133,17 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               const SizedBox(height: 12),
 
               if (_isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                )
+                const AppSkeletonList(count: 3)
+              else if (_bookings.isEmpty && !ConnectivityStatus.instance.online)
+                AppErrorState(onRetry: () => _fetchBookings())
               else if (_bookings.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.shopping_bag_outlined, size: 48, color: Colors.grey),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No bookings found',
-                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Book a package from home screen or package catalog to track it here!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                      ),
-                    ],
-                  ),
+                AppEmptyState(
+                  icon: Icons.shopping_bag_outlined,
+                  title: 'No bookings yet',
+                  message:
+                      'Book a package from the home screen or catalog and track it here.',
+                  actionLabel: 'Refresh',
+                  onAction: () => _fetchBookings(),
                 )
               else
                 ListView.builder(

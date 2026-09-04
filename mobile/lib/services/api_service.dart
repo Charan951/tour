@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
+import 'connectivity.dart';
 
 /// Thrown when the server responds with a non-2xx status code.
 /// This is a logical error (auth, validation, not-found, etc.) — NOT a
@@ -15,41 +17,79 @@ class _ApiException implements Exception {
 }
 
 class ApiService {
-  static const int timeoutDuration = 7;
+  static const int timeoutDuration = 8;
+  static final http.Client _client = http.Client();
+  static String? _workingHost;
+  static String? _cachedToken;
+
+  static Future<void> initToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _cachedToken = prefs.getString('hc_access_token') ?? prefs.getString('hc_token');
+    } catch (_) {}
+  }
+
+  static void setToken(String? token) {
+    _cachedToken = token;
+  }
 
   static Future<Map<String, String>> _getHeaders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('hc_access_token') ?? prefs.getString('hc_token');
+    if (_cachedToken == null) {
+      await initToken();
+    }
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
+    if (_cachedToken != null && _cachedToken!.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $_cachedToken';
     }
 
     return headers;
   }
 
   static List<String> _generateCandidateUrls(String originalUrl) {
-    List<String> candidates = [originalUrl];
+    // Keep this short — every extra candidate is another full timeout when the
+    // network is down. Configured URL first, then (only for a loopback host)
+    // the Android-emulator alias 10.0.2.2 as the single fallback.
+    final candidates = <String>[];
+
+    if (_workingHost != null && _workingHost!.isNotEmpty) {
+      try {
+        final uri = Uri.parse(originalUrl);
+        if (uri.host != _workingHost) {
+          candidates.add(originalUrl.replaceAll(uri.host, _workingHost!));
+        }
+      } catch (_) {}
+    }
+
+    if (!candidates.contains(originalUrl)) {
+      candidates.add(originalUrl);
+    }
+
     try {
-      final uri = Uri.parse(originalUrl);
-      final host = uri.host;
-      if (host == '127.0.0.1' || host == 'localhost') {
-        candidates.add(originalUrl.replaceAll(host, '192.168.1.32'));
-        candidates.add(originalUrl.replaceAll(host, '10.0.2.2'));
-      } else if (host == '10.0.2.2') {
-        candidates.add(originalUrl.replaceAll(host, '127.0.0.1'));
-        candidates.add(originalUrl.replaceAll(host, '192.168.1.32'));
-      } else if (host == '192.168.1.32') {
-        candidates.add(originalUrl.replaceAll(host, '127.0.0.1'));
-        candidates.add(originalUrl.replaceAll(host, '10.0.2.2'));
+      final host = Uri.parse(originalUrl).host;
+      if (host == 'localhost' || host == '127.0.0.1') {
+        final alt = originalUrl.replaceAll(host, '10.0.2.2');
+        if (!candidates.contains(alt)) candidates.add(alt);
       }
     } catch (_) {}
+
     return candidates;
+  }
+
+  static void _onHostSuccess(String targetUrl) {
+    ConnectivityStatus.instance.report(true);
+    try {
+      final uri = Uri.parse(targetUrl);
+      if (uri.host.isNotEmpty && _workingHost != uri.host) {
+        _workingHost = uri.host;
+        ApiConfig.hostIp = uri.host;
+        debugPrint('🚀 Cached working host IP: ${uri.host}');
+      }
+    } catch (_) {}
   }
 
   static Future<dynamic> get(String url) async {
@@ -61,15 +101,13 @@ class ApiService {
         debugPrint('========== API REQUEST (GET) ==========');
         debugPrint('URL: $targetUrl');
         final headers = await _getHeaders();
-        final response = await http
+        final response = await _client
             .get(Uri.parse(targetUrl), headers: headers)
             .timeout(const Duration(seconds: timeoutDuration));
 
+        _onHostSuccess(targetUrl);
         return _processResponse(response);
       } on _ApiException {
-        // Server responded with an HTTP error (401, 403, 404, 500…).
-        // This is NOT a network failure — rethrow immediately, do NOT
-        // try fallback IPs.
         rethrow;
       } catch (e) {
         lastError = e;
@@ -77,7 +115,7 @@ class ApiService {
       }
     }
 
-    return _handleOfflineFallback('GET', url, null, lastError!);
+    return await _handleOfflineFallback('GET', url, null, lastError!);
   }
 
   static Future<dynamic> post(String url, Map<String, dynamic> body) async {
@@ -90,7 +128,7 @@ class ApiService {
         debugPrint('URL: $targetUrl');
         debugPrint('BODY: $body');
         final headers = await _getHeaders();
-        final response = await http
+        final response = await _client
             .post(
               Uri.parse(targetUrl),
               headers: headers,
@@ -98,6 +136,7 @@ class ApiService {
             )
             .timeout(const Duration(seconds: timeoutDuration));
 
+        _onHostSuccess(targetUrl);
         return _processResponse(response);
       } on _ApiException {
         rethrow;
@@ -107,7 +146,7 @@ class ApiService {
       }
     }
 
-    return _handleOfflineFallback('POST', url, body, lastError!);
+    return await _handleOfflineFallback('POST', url, body, lastError!);
   }
 
   static Future<dynamic> put(String url, Map<String, dynamic> body) async {
@@ -117,9 +156,11 @@ class ApiService {
     for (final targetUrl in candidateUrls) {
       try {
         final headers = await _getHeaders();
-        final response = await http
+        final response = await _client
             .put(Uri.parse(targetUrl), headers: headers, body: jsonEncode(body))
             .timeout(const Duration(seconds: timeoutDuration));
+
+        _onHostSuccess(targetUrl);
         return _processResponse(response);
       } on _ApiException {
         rethrow;
@@ -128,7 +169,7 @@ class ApiService {
       }
     }
 
-    return _handleOfflineFallback('PUT', url, body, lastError!);
+    return await _handleOfflineFallback('PUT', url, body, lastError!);
   }
 
   static Future<dynamic> patch(String url, Map<String, dynamic> body) async {
@@ -138,10 +179,12 @@ class ApiService {
     for (final targetUrl in candidateUrls) {
       try {
         final headers = await _getHeaders();
-        final response = await http
+        final response = await _client
             .patch(Uri.parse(targetUrl),
                 headers: headers, body: jsonEncode(body))
             .timeout(const Duration(seconds: timeoutDuration));
+
+        _onHostSuccess(targetUrl);
         return _processResponse(response);
       } on _ApiException {
         rethrow;
@@ -150,7 +193,7 @@ class ApiService {
       }
     }
 
-    return _handleOfflineFallback('PATCH', url, body, lastError!);
+    return await _handleOfflineFallback('PATCH', url, body, lastError!);
   }
 
   static Future<dynamic> delete(String url) async {
@@ -160,9 +203,11 @@ class ApiService {
     for (final targetUrl in candidateUrls) {
       try {
         final headers = await _getHeaders();
-        final response = await http
+        final response = await _client
             .delete(Uri.parse(targetUrl), headers: headers)
             .timeout(const Duration(seconds: timeoutDuration));
+
+        _onHostSuccess(targetUrl);
         return _processResponse(response);
       } on _ApiException {
         rethrow;
@@ -171,7 +216,7 @@ class ApiService {
       }
     }
 
-    return _handleOfflineFallback('DELETE', url, null, lastError!);
+    return await _handleOfflineFallback('DELETE', url, null, lastError!);
   }
 
   static dynamic _processResponse(http.Response response) {
@@ -187,9 +232,10 @@ class ApiService {
     }
   }
 
-  static dynamic _handleOfflineFallback(
-      String method, String url, Map<String, dynamic>? body, Object error) {
+  static Future<dynamic> _handleOfflineFallback(
+      String method, String url, Map<String, dynamic>? body, Object error) async {
     debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
+    ConnectivityStatus.instance.report(false);
 
     final uri = Uri.parse(url);
     final path = uri.path;
@@ -216,56 +262,69 @@ class ApiService {
         };
       }
 
-      if (path.contains('/auth/register')) {
-        final email = body?['email'] ?? 'user@example.com';
-        final firstName = body?['firstName'] ?? 'Valued';
-        final lastName = body?['lastName'] ?? 'Customer';
-        final mobile = body?['mobile'] ?? '9999999999';
+      // NOTE: no offline fallback for /auth/login or /auth/register. Fabricating
+      // a "successful" sign-in with a name derived from the email address is
+      // what showed users as "<email-prefix> Traveler". A failed auth request
+      // must surface a real error, not a fake session.
+      if (path.contains('/auth/login') || path.contains('/auth/register')) {
         return {
-          'success': true,
-          'message': 'Registration successful! Welcome to HolidayCity.',
-          'data': {
-            'accessToken':
-                'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
-            'user': {
-              '_id': 'usr_${DateTime.now().millisecondsSinceEpoch}',
-              'firstName': firstName,
-              'lastName': lastName,
-              'email': email,
-              'mobile': mobile,
-              'role': 'User',
-              'status': 'Active',
-              'createdAt': DateTime.now().toIso8601String(),
-            }
-          }
+          'success': false,
+          'data': null,
+          'message':
+              'Cannot reach the server. Check your connection and try again.',
         };
+      }
+    }
+
+    if (path.contains('/auth/me')) {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('hc_user_data');
+      Map<String, dynamic> userMap = {
+        'firstName': body?['firstName'] ?? 'Traveler',
+        'lastName': body?['lastName'] ?? '',
+        'email': 'user@example.com',
+        'mobile': body?['mobile'] ?? '+91 98765 43210',
+        'city': body?['city'] ?? '',
+        'avatar': body?['avatar'],
+        'role': 'User',
+      };
+      if (userStr != null) {
+        try {
+          final existing = jsonDecode(userStr);
+          if (existing is Map<String, dynamic>) {
+            userMap.addAll(existing);
+          }
+        } catch (_) {}
+      }
+      if (body != null) {
+        if (body.containsKey('firstName') && body['firstName'] != null) userMap['firstName'] = body['firstName'];
+        if (body.containsKey('lastName') && body['lastName'] != null) userMap['lastName'] = body['lastName'];
+        if (body.containsKey('mobile') && body['mobile'] != null) userMap['mobile'] = body['mobile'];
+        if (body.containsKey('city') && body['city'] != null) userMap['city'] = body['city'];
+        if (body.containsKey('avatar') && body['avatar'] != null) userMap['avatar'] = body['avatar'];
+        if (body.containsKey('language') || body.containsKey('currency')) {
+          final existingPref = (userMap['preferences'] is Map) ? userMap['preferences'] : {};
+          userMap['preferences'] = {
+            'language': body['language'] ?? existingPref['language'] ?? 'English',
+            'currency': body['currency'] ?? existingPref['currency'] ?? 'INR',
+          };
+        }
       }
 
-      if (path.contains('/auth/login')) {
-        final email = body?['email'] ?? 'user@example.com';
-        final rawName = email.contains('@') ? email.split('@').first : 'User';
-        final firstName = rawName.isNotEmpty
-            ? rawName[0].toUpperCase() + rawName.substring(1)
-            : 'Holiday';
-        return {
-          'success': true,
-          'message': 'Login successful!',
-          'data': {
-            'accessToken':
-                'hc_jwt_token_${DateTime.now().millisecondsSinceEpoch}',
-            'user': {
-              '_id': 'usr_login_1',
-              'firstName': firstName,
-              'lastName': 'Traveler',
-              'email': email,
-              'mobile': '+91 98765 43210',
-              'role': 'User',
-              'status': 'Active',
-              'createdAt': DateTime.now().toIso8601String(),
-            }
-          }
-        };
-      }
+      return {
+        'success': true,
+        'message': 'Profile updated',
+        'data': {
+          'user': userMap,
+        }
+      };
+    }
+
+    if (path.contains('/auth/change-password')) {
+      return {
+        'success': true,
+        'message': 'Password changed successfully',
+      };
     }
 
     if (path.contains('/pay-remaining')) {

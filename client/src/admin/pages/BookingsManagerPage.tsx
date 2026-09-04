@@ -183,7 +183,7 @@ export const BookingsManagerPage: React.FC = () => {
               <span className="text-xs font-semibold text-slate-400 block">Total Bookings</span>
               <span className="text-2xl font-bold text-slate-900">{totalBookingsCount}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0A6FB5] flex items-center justify-center font-bold">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-ocean-600 flex items-center justify-center font-bold">
               <ShoppingBag className="w-6 h-6" />
             </div>
           </div>
@@ -211,7 +211,7 @@ export const BookingsManagerPage: React.FC = () => {
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-slate-400 block">Confirmed Orders</span>
-              <span className="text-2xl font-bold text-[#0A6FB5]">{confirmedCount}</span>
+              <span className="text-2xl font-bold text-ocean-600">{confirmedCount}</span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
               <CheckCircle className="w-6 h-6" />
@@ -229,7 +229,7 @@ export const BookingsManagerPage: React.FC = () => {
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     activeTab === tab
-                      ? 'bg-[#0A6FB5] text-white shadow-md'
+                      ? 'bg-ocean-600 text-white shadow-md'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -244,11 +244,11 @@ export const BookingsManagerPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ID, customer, phone, package..."
-                className="w-full sm:w-64 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:border-[#0A6FB5]"
+                className="w-full sm:w-64 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:border-ocean-600"
               />
               <button
                 onClick={() => fetchBookings()}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-[#0A6FB5] hover:text-white text-slate-600 transition-all cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-ocean-600 hover:text-white text-slate-600 transition-all cursor-pointer"
                 title="Refresh Bookings"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -284,7 +284,7 @@ export const BookingsManagerPage: React.FC = () => {
                     return (
                       <tr key={b._id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="p-4">
-                          <div className="font-bold text-[#0A6FB5] text-sm">{b.bookingId}</div>
+                          <div className="font-bold text-ocean-600 text-sm">{b.bookingId}</div>
                           <div className="text-[11px] text-slate-400">
                             {new Date(b.createdAt).toLocaleDateString()}
                           </div>
@@ -292,7 +292,7 @@ export const BookingsManagerPage: React.FC = () => {
                         <td className="p-4 space-y-1">
                           <div className="font-bold text-slate-900 text-sm">{b.customerName}</div>
                           <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                            <Phone className="w-3.5 h-3.5 text-[#0A6FB5]" /> {b.mobile}
+                            <Phone className="w-3.5 h-3.5 text-ocean-600" /> {b.mobile}
                           </div>
                           <div className="flex items-center gap-1.5 text-slate-400">
                             <Mail className="w-3.5 h-3.5" /> {b.email}
@@ -360,7 +360,7 @@ export const BookingsManagerPage: React.FC = () => {
                         <td className="p-4 text-right space-x-1.5">
                           <button
                             onClick={() => setSelectedBooking(b)}
-                            className="p-1.5 rounded-xl bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white transition-all"
+                            className="p-1.5 rounded-xl bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white transition-all"
                             title="View Full Booking Info"
                           >
                             <Eye className="w-4 h-4" />
@@ -412,7 +412,7 @@ export const BookingsManagerPage: React.FC = () => {
                     type="number"
                     value={editTotalPrice}
                     onChange={(e) => setEditTotalPrice(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl bg-white border border-slate-200 outline-none text-slate-900 font-bold focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
                   />
                 </div>
                 <div>
@@ -421,7 +421,7 @@ export const BookingsManagerPage: React.FC = () => {
                     type="number"
                     value={editAdvanceAmount}
                     onChange={(e) => setEditAdvanceAmount(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl bg-white border border-slate-200 outline-none text-slate-900 font-bold focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
                   />
                   <div className="flex gap-1.5 mt-2 flex-wrap">
                     <button
@@ -468,7 +468,7 @@ export const BookingsManagerPage: React.FC = () => {
                         setEditPaymentStatus('Advance Paid');
                       }
                     }}
-                    className="w-4 h-4 text-[#0A6FB5] rounded cursor-pointer"
+                    className="w-4 h-4 text-ocean-600 rounded cursor-pointer"
                   />
                   <label htmlFor="editAdvancePaid" className="text-slate-800 font-bold cursor-pointer">
                     Advance Payment Received
@@ -485,7 +485,7 @@ export const BookingsManagerPage: React.FC = () => {
                         setEditAdvancePaid(true);
                       }
                     }}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
                   >
                     <option value="Pending Advance">🟡 Pending Advance</option>
                     <option value="Advance Paid">🟢 Advance Paid</option>
@@ -501,7 +501,7 @@ export const BookingsManagerPage: React.FC = () => {
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
                   >
                     <option value="Pending">🟡 Pending</option>
                     <option value="Confirmed">🟢 Confirmed</option>
@@ -515,7 +515,7 @@ export const BookingsManagerPage: React.FC = () => {
                   <select
                     value={editPaymentMethod}
                     onChange={(e) => setEditPaymentMethod(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="UPI / Online">UPI / GPay / PhonePe</option>
                     <option value="Bank Transfer">Bank Transfer / IMPS</option>
@@ -532,7 +532,7 @@ export const BookingsManagerPage: React.FC = () => {
                   value={editTransactionId}
                   onChange={(e) => setEditTransactionId(e.target.value)}
                   placeholder="e.g. UPI-REF-984729184"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -542,12 +542,12 @@ export const BookingsManagerPage: React.FC = () => {
                   value={editSpecialRequests}
                   onChange={(e) => setEditSpecialRequests(e.target.value)}
                   rows={3}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] font-bold text-white shadow-md cursor-pointer">
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
                   Save Changes
                 </button>
                 <button type="button" onClick={() => setEditBooking(null)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold cursor-pointer">

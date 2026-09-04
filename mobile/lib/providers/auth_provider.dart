@@ -137,6 +137,40 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(Map<String, dynamic> changes) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _safeNotifyListeners();
+    try {
+      _user = await _authService.updateProfile(changes);
+      _isLoading = false;
+      _safeNotifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      _safeNotifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _safeNotifyListeners();
+    try {
+      final ok = await _authService.changePassword(currentPassword, newPassword);
+      _isLoading = false;
+      _safeNotifyListeners();
+      return ok;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      _safeNotifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _authService.logout();
     _user = null;

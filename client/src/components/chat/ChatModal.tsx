@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, MessageSquare, ShieldCheck, Clock, CheckCheck, User, Sparkles } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
+import { Modal } from '../common/Modal';
 
 interface ChatMessageItem {
   _id?: string;
@@ -126,39 +127,40 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col h-[600px] max-h-[90vh]">
-        
+    <Modal isOpen={isOpen} onClose={onClose} labelledBy="chat-modal-title" panelClassName="max-w-lg">
+      <div className="relative w-full bg-white rounded-3xl shadow-raised overflow-hidden border border-slate-100 flex flex-col h-[600px] max-h-[90vh]">
+
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] px-5 py-4 text-white flex items-center justify-between shrink-0 shadow-md">
+        <div className="bg-gradient-to-r from-ocean-700 to-ocean-600 px-5 py-4 text-white flex items-center justify-between shrink-0 shadow-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base leading-tight truncate">Direct Admin Support</h3>
-                <span className="bg-white/20 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-white/30 uppercase tracking-wider">
+                <h3 id="chat-modal-title" className="font-black text-base leading-tight truncate">Chat with your consultant</h3>
+                <span className="bg-white/20 text-white text-[0.6875rem] font-black px-2 py-0.5 rounded-full border border-white/30 uppercase tracking-wider">
                   {topicType}
                 </span>
               </div>
               <p className="text-xs text-white/90 truncate font-medium">
-                Ref: <span className="font-extrabold text-white">{topicId}</span> {topicTitle ? `• ${topicTitle}` : ''}
+                Ref: <span className="font-black text-white">{topicId}</span> {topicTitle ? `• ${topicTitle}` : ''}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white shrink-0 cursor-pointer"
+            aria-label="Close chat"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Support Guarantee Bar */}
-        <div className="bg-slate-50 border-b border-slate-100 px-4 py-2 flex items-center justify-between text-[11px] font-bold text-slate-500 shrink-0">
-          <span className="flex items-center gap-1 text-[#0A6FB5]">
+        <div className="bg-slate-50 border-b border-slate-100 px-4 py-2 flex items-center justify-between text-[0.6875rem] font-bold text-slate-500 shrink-0">
+          <span className="flex items-center gap-1 text-ocean-600">
             <ShieldCheck className="w-3.5 h-3.5" /> Verified Support Team
           </span>
           <span className="flex items-center gap-1 text-emerald-600">
@@ -169,13 +171,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         {/* Message Thread Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
           {loading && messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-400 text-xs font-bold gap-2">
-              <div className="w-4 h-4 border-2 border-[#0A6FB5] border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center justify-center h-full text-slate-500 text-xs font-bold gap-2">
+              <div className="w-4 h-4 border-2 border-ocean-600 border-t-transparent rounded-full animate-spin"></div>
               Loading conversation history...
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-10 px-4">
-              <div className="w-12 h-12 rounded-2xl bg-sky-100 text-[#0A6FB5] flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 text-ocean-600 flex items-center justify-center mx-auto mb-3">
                 <Sparkles className="w-6 h-6" />
               </div>
               <h4 className="font-extrabold text-slate-800 text-sm mb-1">Start Direct Conversation</h4>
@@ -190,7 +192,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
                     onClick={() => {
                       setNewMessage(q);
                     }}
-                    className="text-[11px] font-bold bg-white text-[#0A6FB5] border border-sky-200 hover:bg-sky-50 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+                    className="text-[0.6875rem] font-bold bg-white text-ocean-600 border border-sky-200 hover:bg-sky-50 px-3 py-1.5 rounded-full transition-colors cursor-pointer"
                   >
                     "{q}"
                   </button>
@@ -208,13 +210,13 @@ export const ChatModal: React.FC<ChatModalProps> = ({
                     isUser ? 'ml-auto' : 'mr-auto'
                   }`}
                 >
-                  <span className="text-[10px] font-bold text-slate-400 mb-1 px-1">
+                  <span className="text-[0.6875rem] font-bold text-slate-500 mb-1 px-1">
                     {msg.senderName} • {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                   </span>
                   <div
                     className={`p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-sm ${
                       isUser
-                        ? 'bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white rounded-br-none'
+                        ? 'bg-gradient-to-r from-ocean-600 to-cyan-600 text-white rounded-br-none'
                         : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-none'
                     }`}
                   >
@@ -229,21 +231,21 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
         {/* Input Box */}
         <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100 shrink-0">
-          <div className="flex items-center gap-2 bg-slate-100/80 rounded-full px-4 py-1.5 border border-slate-200/80 focus-within:border-[#0A6FB5] focus-within:bg-white transition-all">
+          <div className="flex items-center gap-2 bg-slate-100/80 rounded-full px-4 py-1.5 border border-slate-200/80 focus-within:border-ocean-600 focus-within:bg-white transition-all">
             <input
               type="text"
               value={newMessage}
               onChange={e => setNewMessage(e.target.value)}
               placeholder={`Type message regarding ${topicId}...`}
-              className="flex-1 bg-transparent text-xs font-semibold text-slate-800 outline-none py-1.5 placeholder:text-slate-400"
+              className="flex-1 bg-transparent text-xs font-semibold text-slate-800 outline-none py-1.5 placeholder:text-slate-500"
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
               className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 newMessage.trim() && !sending
-                  ? 'bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white shadow-md hover:scale-105'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-ocean-600 to-cyan-600 text-white shadow-md hover:scale-105'
+                  : 'bg-slate-200 text-slate-500 cursor-not-allowed'
               }`}
             >
               <Send className="w-4 h-4" />
@@ -252,6 +254,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         </form>
 
       </div>
-    </div>
+    </Modal>
   );
 };

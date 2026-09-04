@@ -1,0 +1,39 @@
+@layer components {
+  .scroll-stack {
+    display: block;
+    width: 100%;
+    /* space for the stacked cards to pin and scroll smoothly above MobileStickyBar */
+    padding-bottom: 260px;
+  }
+
+  .scroll-stack-slot {
+    position: sticky;
+    top: calc(var(--stack-top, 16px) + var(--i, 0) * var(--stack-fan, 10px));
+    margin-bottom: 16px;
+    z-index: calc(1 + var(--i, 0));
+  }
+  .scroll-stack-slot:last-child {
+    margin-bottom: 0;
+  }
+
+  .scroll-stack-card {
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    transform-origin: 50% 0;
+    box-shadow: 0 12px 32px -10px rgba(6, 59, 109, 0.25);
+    transition: transform 0.18s linear, filter 0.18s linear;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-stack-slot {
+      position: relative;
+      top: auto;
+    }
+    .scroll-stack-slot > .scroll-stack-card {
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+}

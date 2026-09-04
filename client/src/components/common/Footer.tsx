@@ -51,10 +51,10 @@ export const Footer: React.FC = () => {
   }
 
   return (
-    <footer className="relative bg-[#063B6D] text-white pt-8 pb-20 lg:pb-6 overflow-hidden border-t border-white/10">
+    <footer className="relative bg-ocean-800 text-white pt-8 pb-20 lg:pb-6 overflow-hidden border-t border-white/10">
       {/* Background Decorative Glow */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#57D0C9]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#0A6FB5]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-aqua-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-ocean-600/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         {/* 5-Column Navigation Grid */}
@@ -66,62 +66,82 @@ export const Footer: React.FC = () => {
               <img
                 src="/logo.png"
                 alt="HolidayCity Pvt. Ltd. - YOUR RELIABLE TRAVEL PARTNER"
-                className="w-[220px] sm:w-[260px] md:w-[280px] h-auto object-contain"
-                style={{ aspectRatio: '881 / 147' }}
+                className="w-[200px] sm:w-[230px] md:w-[250px] h-auto object-contain"
               />
             </Link>
-            <p className="text-slate-300 text-[11.5px] leading-relaxed max-w-sm font-medium">
-              HolidayCity is India's premier luxury travel agency and holiday package curation platform. Experience unforgettable journeys crafted by certified destination experts.
+            <p className="text-slate-300 text-xs leading-relaxed max-w-sm font-medium">
+              HolidayCity plans custom domestic and international holidays. Every trip is handled
+              end to end by a personal travel consultant — you browse and enquire here, and a real
+              person takes it from there.
             </p>
 
-            <div className="flex items-center gap-2.5 pt-1">
-              <a href="#" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all border border-white/10 shadow-sm"><Facebook className="w-3.5 h-3.5" /></a>
-              <a href="#" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 hover:text-white transition-all border border-white/10 shadow-sm"><Instagram className="w-3.5 h-3.5" /></a>
-              <a href="#" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-[#FF0000] hover:text-white transition-all border border-white/10 shadow-sm"><Youtube className="w-3.5 h-3.5" /></a>
-              <a href="#" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all border border-white/10 shadow-md"><Linkedin className="w-3.5 h-3.5" /></a>
-            </div>
+            {(() => {
+              const social: Array<[string, string, React.ComponentType<{ className?: string }>]> = [
+                ['Facebook', settings?.socialLinks?.facebook, Facebook],
+                ['Instagram', settings?.socialLinks?.instagram, Instagram],
+                ['YouTube', settings?.socialLinks?.youtube, Youtube],
+                ['LinkedIn', settings?.socialLinks?.linkedin, Linkedin],
+              ].filter(([, url]) => !!url) as any;
+              if (social.length === 0) return null;
+              return (
+                <div className="flex items-center gap-2.5 pt-1">
+                  {social.map(([name, url, Icon]: any) => (
+                    <a
+                      key={name}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`HolidayCity on ${name}`}
+                      className="w-11 h-11 rounded-xl2 bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white transition-all border border-white/10"
+                    >
+                      <Icon className="w-4 h-4" />
+                    </a>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Popular Destinations */}
           <div className="space-y-2.5">
-            <h4 className="font-poppins font-extrabold text-sm text-[#F6C65B]">Popular Destinations</h4>
+            <h4 className="font-poppins font-extrabold text-sm text-gold-500">Popular Destinations</h4>
             <ul className="space-y-1.5 text-xs text-slate-300 font-medium">
-              <li><Link to="/destinations?search=Kerala" className="hover:text-[#57D0C9] transition-colors">Kerala Backwaters</Link></li>
-              <li><Link to="/destinations?search=Rajasthan" className="hover:text-[#57D0C9] transition-colors">Rajasthan Heritage</Link></li>
-              <li><Link to="/destinations?search=Kashmir" className="hover:text-[#57D0C9] transition-colors">Kashmir Paradise</Link></li>
-              <li><Link to="/destinations?search=Dubai" className="hover:text-[#57D0C9] transition-colors">Dubai City Escapes</Link></li>
-              <li><Link to="/destinations?search=Bali" className="hover:text-[#57D0C9] transition-colors">Bali Resort Island</Link></li>
-              <li><Link to="/destinations" className="hover:text-[#57D0C9] font-extrabold text-[#57D0C9] transition-colors">Explore All →</Link></li>
+              <li><Link to="/destinations?search=Kerala" className="hover:text-aqua-500 transition-colors">Kerala Backwaters</Link></li>
+              <li><Link to="/destinations?search=Rajasthan" className="hover:text-aqua-500 transition-colors">Rajasthan Heritage</Link></li>
+              <li><Link to="/destinations?search=Kashmir" className="hover:text-aqua-500 transition-colors">Kashmir Paradise</Link></li>
+              <li><Link to="/destinations?search=Dubai" className="hover:text-aqua-500 transition-colors">Dubai City Escapes</Link></li>
+              <li><Link to="/destinations?search=Bali" className="hover:text-aqua-500 transition-colors">Bali Resort Island</Link></li>
+              <li><Link to="/destinations" className="hover:text-aqua-500 font-extrabold text-aqua-500 transition-colors">Explore All →</Link></li>
             </ul>
           </div>
 
           {/* Tour Categories */}
           <div className="space-y-2.5">
-            <h4 className="font-poppins font-extrabold text-sm text-[#F6C65B]">Tour Packages</h4>
+            <h4 className="font-poppins font-extrabold text-sm text-gold-500">Tour Packages</h4>
             <ul className="space-y-1.5 text-xs text-slate-300 font-medium">
-              <li><Link to="/packages?theme=Honeymoon+Tour" className="hover:text-[#57D0C9] transition-colors">Honeymoon Specials</Link></li>
-              <li><Link to="/packages?theme=Family+Tour" className="hover:text-[#57D0C9] transition-colors">Family Vacation Packages</Link></li>
-              <li><Link to="/packages?theme=Hill+Station" className="hover:text-[#57D0C9] transition-colors">Hill Station Retreats</Link></li>
-              <li><Link to="/packages?theme=Adventure" className="hover:text-[#57D0C9] transition-colors">Adventure & Trekking</Link></li>
-              <li><Link to="/packages?theme=Religious" className="hover:text-[#57D0C9] transition-colors">Char Dham & Religious</Link></li>
-              <li><Link to="/packages" className="hover:text-[#57D0C9] font-extrabold text-[#57D0C9] transition-colors">All Packages →</Link></li>
+              <li><Link to="/packages?theme=Honeymoon+Tour" className="hover:text-aqua-500 transition-colors">Honeymoon Specials</Link></li>
+              <li><Link to="/packages?theme=Family+Tour" className="hover:text-aqua-500 transition-colors">Family Vacation Packages</Link></li>
+              <li><Link to="/packages?theme=Hill+Station" className="hover:text-aqua-500 transition-colors">Hill Station Retreats</Link></li>
+              <li><Link to="/packages?theme=Adventure" className="hover:text-aqua-500 transition-colors">Adventure & Trekking</Link></li>
+              <li><Link to="/packages?theme=Religious" className="hover:text-aqua-500 transition-colors">Char Dham & Religious</Link></li>
+              <li><Link to="/packages" className="hover:text-aqua-500 font-extrabold text-aqua-500 transition-colors">All Packages →</Link></li>
             </ul>
           </div>
 
           {/* Contact Details */}
           <div className="space-y-2.5">
-            <h4 className="font-poppins font-extrabold text-sm text-[#F6C65B]">Get In Touch</h4>
+            <h4 className="font-poppins font-extrabold text-sm text-gold-500">Get In Touch</h4>
             <ul className="space-y-2 text-xs text-slate-300 font-medium">
               <li className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-[#57D0C9] shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-aqua-500 shrink-0 mt-0.5" />
                 <span>{address}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-[#57D0C9] shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-aqua-500 shrink-0" />
                 <span>{phone}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-[#57D0C9] shrink-0" />
+                <Mail className="w-3.5 h-3.5 text-aqua-500 shrink-0" />
                 <span>{email}</span>
               </li>
             </ul>
@@ -131,14 +151,15 @@ export const Footer: React.FC = () => {
         <hr className="border-white/10 my-4" />
 
         {/* Bottom Legal & Copyright Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between text-[11px] text-slate-400 gap-2">
+        <div className="flex flex-col md:flex-row items-center justify-between text-[0.6875rem] text-slate-500 gap-2">
           <p className="flex items-center gap-1">
             © 2026 HolidayCity Pvt. Ltd. All rights reserved. Crafted with <Heart className="w-3 h-3 text-rose-500 fill-current" /> for travelers worldwide.
           </p>
           <div className="flex items-center gap-5 font-bold">
             <Link to="/about" className="hover:text-white transition-colors">About Us</Link>
+            <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact Support</Link>
-            <Link to="/admin/login" className="text-[#F6C65B] hover:underline">Admin Login</Link>
+            <Link to="/admin/login" className="text-gold-500 hover:underline">Admin Login</Link>
           </div>
         </div>
       </div>

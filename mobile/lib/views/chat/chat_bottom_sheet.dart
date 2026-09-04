@@ -190,6 +190,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Close',
                     icon: const Icon(Icons.close, color: Colors.grey),
                     onPressed: () => Navigator.pop(context),
                   ),

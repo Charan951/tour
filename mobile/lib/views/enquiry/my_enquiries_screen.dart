@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 
 import '../../config/theme.dart';
+import '../../services/connectivity.dart';
+import '../../widgets/app_states.dart';
 import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/enquiry_service.dart';
@@ -149,51 +151,25 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
           // Main Enquiries List View
           Expanded(
             child: _isLoading && _enquiries.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppSkeletonList(count: 4)
                 : RefreshIndicator(
                     onRefresh: _loadEnquiries,
                     child: _filteredEnquiries.isEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-                              Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(20),
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFF1F5F9),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.chat_bubble_outline_rounded,
-                                        size: 48,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'No Enquiries Found',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 32.0),
-                                      child: Text(
-                                        'Tap "Enquire Now" on any package to submit a request to our travel specialists.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-                                      ),
-                                    ),
-                                  ],
+                              SizedBox(
+                                  height: MediaQuery.of(context).size.height * 0.12),
+                              if (_enquiries.isEmpty &&
+                                  !ConnectivityStatus.instance.online)
+                                AppErrorState(onRetry: _loadEnquiries)
+                              else
+                                const AppEmptyState(
+                                  icon: Icons.chat_bubble_outline_rounded,
+                                  title: 'No enquiries yet',
+                                  message:
+                                      'Tap “Enquire Now” on any package to send a request to our travel specialists.',
                                 ),
-                              ),
                             ],
                           )
                         : ListView.builder(
@@ -420,7 +396,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                       children: [
                         const Text(
                           'ADMIN RESPONSE / QUOTE:',
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.black, color: Color(0xFF0284C7)),
+                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF0284C7)),
                         ),
                         const SizedBox(height: 2),
                         Text(

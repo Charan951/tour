@@ -174,7 +174,7 @@ export const AdminMessagesPage: React.FC = () => {
             <div className="p-4 border-b border-slate-200/80 bg-white space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-[#0A6FB5]" /> Customer Support Messages
+                  <MessageSquare className="w-5 h-5 text-ocean-600" /> Customer Support Messages
                 </h2>
                 <button
                   onClick={fetchConversations}
@@ -193,7 +193,7 @@ export const AdminMessagesPage: React.FC = () => {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search Ref ID, customer or message..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-100/80 rounded-xl text-xs font-semibold text-slate-800 outline-none border border-slate-200 focus:bg-white focus:border-[#0A6FB5] transition-all"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-100/80 rounded-xl text-xs font-semibold text-slate-800 outline-none border border-slate-200 focus:bg-white focus:border-ocean-600 transition-all"
                 />
               </div>
 
@@ -205,7 +205,7 @@ export const AdminMessagesPage: React.FC = () => {
                     onClick={() => setFilterType(f)}
                     className={`px-3 py-1 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                       filterType === f
-                        ? 'bg-[#0A6FB5] text-white shadow-sm'
+                        ? 'bg-ocean-600 text-white shadow-sm'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}
                   >
@@ -219,7 +219,7 @@ export const AdminMessagesPage: React.FC = () => {
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
               {loadingConv ? (
                 <div className="p-8 text-center text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-[#0A6FB5] border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-ocean-600 border-t-transparent rounded-full animate-spin"></div>
                   Loading conversations...
                 </div>
               ) : filteredConversations.length === 0 ? (
@@ -237,14 +237,14 @@ export const AdminMessagesPage: React.FC = () => {
                       }}
                       className={`p-3.5 transition-colors cursor-pointer text-left border-l-4 ${
                         isSelected
-                          ? 'bg-white border-[#0A6FB5] shadow-sm'
+                          ? 'bg-white border-ocean-600 shadow-sm'
                           : conv.unreadCount > 0
                           ? 'bg-sky-50/70 border-sky-400 hover:bg-sky-50'
                           : 'bg-slate-50/40 border-transparent hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-extrabold text-xs text-[#0A6FB5]">{conv.topicId}</span>
+                        <span className="font-extrabold text-xs text-ocean-600">{conv.topicId}</span>
                         <span className="text-[10px] text-slate-400 font-semibold">
                           {conv.lastTimestamp ? new Date(conv.lastTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                         </span>
@@ -281,7 +281,7 @@ export const AdminMessagesPage: React.FC = () => {
           <div className="flex-1 flex flex-col bg-white overflow-hidden">
             {!selectedTopicId ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/20">
-                <div className="w-16 h-16 rounded-3xl bg-cyan-50 text-[#0A6FB5] flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-3xl bg-cyan-50 text-ocean-600 flex items-center justify-center mb-4">
                   <MessageSquare className="w-8 h-8" />
                 </div>
                 <h3 className="font-extrabold text-slate-800 text-base mb-1">Select a Conversation Thread</h3>
@@ -294,13 +294,13 @@ export const AdminMessagesPage: React.FC = () => {
                 {/* Active Chat Header */}
                 <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between shrink-0 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0A6FB5] to-[#57D0C9] text-white font-bold flex items-center justify-center text-sm shadow-md">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-ocean-600 to-aqua-500 text-white font-bold flex items-center justify-center text-sm shadow-md">
                       {activeConv?.customerName?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-extrabold text-sm text-slate-900">{activeConv?.customerName || 'Customer'}</h3>
-                        <span className="bg-sky-100 text-[#0A6FB5] font-extrabold text-[10px] px-2 py-0.5 rounded-full">
+                        <span className="bg-sky-100 text-ocean-600 font-extrabold text-[10px] px-2 py-0.5 rounded-full">
                           Ref: {selectedTopicId}
                         </span>
                       </div>
@@ -323,7 +323,7 @@ export const AdminMessagesPage: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/40">
                   {loadingMsgs && messages.length === 0 ? (
                     <div className="text-center py-12 text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-[#0A6FB5] border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-ocean-600 border-t-transparent rounded-full animate-spin"></div>
                       Loading message history...
                     </div>
                   ) : messages.map((msg, index) => {
@@ -341,7 +341,7 @@ export const AdminMessagesPage: React.FC = () => {
                         <div
                           className={`p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-sm ${
                             isAdmin
-                              ? 'bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white rounded-br-none'
+                              ? 'bg-gradient-to-r from-ocean-600 to-aqua-500 text-white rounded-br-none'
                               : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'
                           }`}
                         >
@@ -355,7 +355,7 @@ export const AdminMessagesPage: React.FC = () => {
 
                 {/* Message Reply Composer */}
                 <form onSubmit={handleSendReply} className="p-4 bg-white border-t border-slate-100 shrink-0">
-                  <div className="flex items-center gap-2 bg-slate-100/90 rounded-2xl p-2 border border-slate-200 focus-within:border-[#0A6FB5] focus-within:bg-white transition-all">
+                  <div className="flex items-center gap-2 bg-slate-100/90 rounded-2xl p-2 border border-slate-200 focus-within:border-ocean-600 focus-within:bg-white transition-all">
                     <input
                       type="text"
                       value={replyText}
@@ -368,7 +368,7 @@ export const AdminMessagesPage: React.FC = () => {
                       disabled={!replyText.trim() || sending}
                       className={`px-5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                         replyText.trim() && !sending
-                          ? 'bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white shadow-md hover:scale-105'
+                          ? 'bg-gradient-to-r from-ocean-600 to-aqua-500 text-white shadow-md hover:scale-105'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >

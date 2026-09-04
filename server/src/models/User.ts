@@ -11,6 +11,8 @@ export interface IUserDocument extends Document {
   role: any;
   department: string;
   avatar?: string;
+  city?: string;
+  preferences?: { language: string; currency: string };
   status: 'Active' | 'Inactive' | 'Suspended';
   lastLogin?: Date;
   failedAttempts: number;
@@ -26,13 +28,18 @@ export interface IUserDocument extends Document {
 const userSchema = new Schema<IUserDocument>(
   {
     firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: false, trim: true, default: '' },
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     mobile: { type: String, required: true },
     password: { type: String, required: true, select: false },
     role: { type: Schema.Types.ObjectId, ref: 'Role', required: true },
     department: { type: String, enum: ['Sales', 'Content', 'Marketing', 'Management', 'IT'], default: 'Sales' },
     avatar: { type: String, default: null },
+    city: { type: String, default: '', trim: true },
+    preferences: {
+      language: { type: String, default: 'English' },
+      currency: { type: String, default: 'INR' },
+    },
     status: { type: String, enum: ['Active', 'Inactive', 'Suspended'], default: 'Active' },
     lastLogin: { type: Date, default: null },
     failedAttempts: { type: Number, default: 0 },

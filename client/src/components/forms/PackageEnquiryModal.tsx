@@ -10,6 +10,7 @@ import {
   Minus, Plus, Info, Sparkles, Send, MessageSquare, ShieldCheck, Clock
 } from 'lucide-react';
 import { UserAuthModal } from '../auth/UserAuthModal';
+import { Modal } from '../common/Modal';
 
 interface PackageEnquiryModalProps {
   isOpen: boolean;
@@ -201,17 +202,16 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
     );
   }
 
-  const pkgTitle = selectedPackage?.title;
-  const destText = typeof selectedPackage?.destination === 'object' 
-    ? selectedPackage.destination?.name 
+  const destText = typeof selectedPackage?.destination === 'object'
+    ? selectedPackage.destination?.name
     : (selectedPackage?.destination || selectedDestination?.name || destinationInput);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in overflow-y-auto">
-      <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden relative text-slate-800 border border-slate-200/80 shadow-2xl animate-in zoom-in-95 duration-200 my-auto">
-        
+    <Modal isOpen={isOpen} onClose={onClose} labelledBy="enquiry-modal-title" panelClassName="max-w-lg" disableBackdropClose>
+      <div className="bg-white rounded-3xl overflow-hidden relative text-slate-800 border border-slate-200/80 shadow-raised">
+
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#063B6D] p-6 text-white relative">
+        <div className="bg-gradient-to-r from-ocean-800 via-ocean-600 to-ocean-800 p-6 text-white relative">
           <button
             type="button"
             onClick={onClose}
@@ -223,14 +223,14 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
 
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
-              <Send className="w-5 h-5 text-[#57D0C9]" />
+              <Send className="w-5 h-5 text-aqua-500" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#57D0C9] bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 inline-block">
-                Instant Response Guaranteed
+              <span className="text-[0.6875rem] font-black uppercase tracking-wider text-aqua-500 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 inline-block">
+                A consultant replies personally
               </span>
-              <h2 className="font-poppins font-black text-xl text-white leading-tight mt-0.5">
-                {mode === 'booking' ? 'Complete Your Booking' : 'Plan Your Trip With Us'}
+              <h2 id="enquiry-modal-title" className="font-display font-black text-xl text-white leading-tight mt-0.5">
+                {mode === 'booking' ? 'Start your booking request' : 'Plan your trip with us'}
               </h2>
             </div>
           </div>
@@ -249,7 +249,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 onClick={() => setMode('enquiry')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
                   mode === 'enquiry'
-                    ? 'bg-[#57D0C9] text-slate-950 shadow-sm'
+                    ? 'bg-aqua-500 text-slate-950 shadow-sm'
                     : 'text-white/80 hover:text-white'
                 }`}
               >
@@ -260,7 +260,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 onClick={() => setMode('booking')}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
                   mode === 'booking'
-                    ? 'bg-[#57D0C9] text-slate-950 shadow-sm'
+                    ? 'bg-aqua-500 text-slate-950 shadow-sm'
                     : 'text-white/80 hover:text-white'
                 }`}
               >
@@ -282,14 +282,14 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 />
               )}
               <div className="overflow-hidden">
-                <span className="text-[9px] font-black uppercase text-[#0A6FB5] tracking-wider block">Selected Tour</span>
+                <span className="text-[0.6875rem] font-black uppercase text-ocean-600 tracking-wider block">Selected Tour</span>
                 <h4 className="text-xs font-extrabold text-slate-900 truncate">{selectedPackage.title}</h4>
               </div>
             </div>
             {selectedPackage.startingPrice && (
               <div className="text-right shrink-0">
-                <span className="text-[10px] text-slate-400 font-bold block">Starting From</span>
-                <span className="text-xs font-black text-[#063B6D]">₹{selectedPackage.startingPrice.toLocaleString()}</span>
+                <span className="text-[0.6875rem] text-slate-500 font-bold block">Starting From</span>
+                <span className="text-xs font-black text-ocean-800">₹{selectedPackage.startingPrice.toLocaleString()}</span>
               </div>
             )}
           </div>
@@ -303,15 +303,15 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
             <div>
               <label className="block text-xs font-extrabold text-slate-800 mb-1">Full Name *</label>
               <div className="relative flex items-center">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                <User className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
                 <input
                   {...register('fullName')}
                   type="text"
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
                 />
               </div>
-              {errors.fullName && <p className="text-rose-600 text-[10px] mt-1 font-semibold">{errors.fullName.message as string}</p>}
+              {errors.fullName && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.fullName.message as string}</p>}
             </div>
 
             {/* Email & Phone 2-Column Grid */}
@@ -319,29 +319,29 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div>
                 <label className="block text-xs font-extrabold text-slate-800 mb-1">Email Address *</label>
                 <div className="relative flex items-center">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
                   <input
                     {...register('email')}
                     type="email"
                     placeholder="name@example.com"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
                   />
                 </div>
-                {errors.email && <p className="text-rose-600 text-[10px] mt-1 font-semibold">{errors.email.message as string}</p>}
+                {errors.email && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.email.message as string}</p>}
               </div>
 
               <div>
                 <label className="block text-xs font-extrabold text-slate-800 mb-1">Phone / Mobile *</label>
                 <div className="relative flex items-center">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
                   <input
                     {...register('mobile')}
                     type="text"
                     placeholder="+91 98765 43210"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
                   />
                 </div>
-                {errors.mobile && <p className="text-rose-600 text-[10px] mt-1 font-semibold">{errors.mobile.message as string}</p>}
+                {errors.mobile && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.mobile.message as string}</p>}
               </div>
             </div>
 
@@ -350,13 +350,13 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div>
                 <label className="block text-xs font-extrabold text-slate-800 mb-1">Destination</label>
                 <div className="relative flex items-center">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
                   <input
                     type="text"
                     value={destText || destinationInput}
                     onChange={(e) => setDestinationInput(e.target.value)}
                     placeholder="e.g. Kerala, Kashmir, Bali"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
                   />
                 </div>
               </div>
@@ -364,13 +364,13 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               <div>
                 <label className="block text-xs font-extrabold text-slate-800 mb-1">Travel Date / Month</label>
                 <div className="relative flex items-center">
-                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <Calendar className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
                   <input
                     type="text"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
                     placeholder="e.g. Nov 2026 / Diwali"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
                   />
                 </div>
               </div>
@@ -384,7 +384,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-extrabold text-slate-800 block">Adults (12+)</span>
-                    <span className="text-[10px] text-slate-400 font-semibold">Full Fare</span>
+                    <span className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -411,7 +411,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 <div className="flex items-center justify-between pl-2 border-l border-slate-200/80">
                   <div>
                     <span className="text-xs font-extrabold text-slate-800 block">Kids (5-11)</span>
-                    <span className="text-[10px] text-slate-400 font-semibold">Child Fare</span>
+                    <span className="text-[0.6875rem] text-slate-500 font-semibold">Child Fare</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -453,12 +453,12 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                           onClick={() => setSelectedTier(tierItem.name as any)}
                           className={`py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-[#0A6FB5] border-[#0A6FB5] text-white font-bold shadow-md'
+                              ? 'bg-ocean-600 border-ocean-600 text-white font-bold shadow-md'
                               : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-100'
                           }`}
                         >
-                          <p className="text-[10px] font-bold">{tierItem.name}</p>
-                          <p className={`font-extrabold text-xs mt-0.5 ${isSelected ? 'text-white' : 'text-[#0A6FB5]'}`}>
+                          <p className="text-[0.6875rem] font-bold">{tierItem.name}</p>
+                          <p className={`font-extrabold text-xs mt-0.5 ${isSelected ? 'text-white' : 'text-ocean-600'}`}>
                             ₹{tierItem.price.toLocaleString()}
                           </p>
                         </button>
@@ -470,8 +470,8 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] font-extrabold text-slate-800">Adults (12+)</p>
-                      <p className="text-[9px] text-slate-400 font-semibold">Full Fare</p>
+                      <p className="text-[0.6875rem] font-extrabold text-slate-800">Adults (12+)</p>
+                      <p className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -494,8 +494,8 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] font-extrabold text-slate-800">Children (5-11)</p>
-                      <p className="text-[9px] text-slate-400 font-semibold">50% Fare</p>
+                      <p className="text-[0.6875rem] font-extrabold text-slate-800">Children (5-11)</p>
+                      <p className="text-[0.6875rem] text-slate-500 font-semibold">50% Fare</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -517,9 +517,14 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-[#E0F2FE]/70 rounded-xl p-2.5 border border-[#BAE6FD] flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800">Estimated Total:</span>
-                  <span className="font-poppins font-black text-base text-[#0369A1]">₹{estimatedTotal.toLocaleString()}</span>
+                <div className="bg-ocean-100/70 rounded-xl2 p-3 border border-ocean-300 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink">Indicative total</span>
+                    <span className="font-display font-black text-base text-ocean-800">₹{estimatedTotal.toLocaleString()}</span>
+                  </div>
+                  <p className="text-[0.6875rem] text-slate-muted font-medium">
+                    A guide only. Your consultant confirms the final price with the itinerary.
+                  </p>
                 </div>
               </div>
             )}
@@ -530,12 +535,12 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 {mode === 'booking' ? 'Special Requests / Notes' : 'Preferences / Travel Notes (Optional)'}
               </label>
               <div className="relative flex items-start">
-                <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+                <MessageSquare className="w-4 h-4 text-slate-500 absolute left-3.5 top-3 pointer-events-none" />
                 <textarea
                   {...register('message')}
                   rows={2}
                   placeholder="e.g. 4-star resort, flight inclusion, veg meal preferences..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-[#0A6FB5] focus:ring-2 focus:ring-[#0A6FB5]/20 transition-all resize-none"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all resize-none"
                 />
               </div>
             </div>
@@ -544,7 +549,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-sm shadow-lg hover:shadow-xl active:scale-[0.99] transition-all cursor-pointer border-0 flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 hover:from-ocean-700 hover:to-cyan-600 text-white font-extrabold text-sm shadow-lg hover:shadow-xl active:scale-[0.99] transition-all cursor-pointer border-0 flex items-center justify-center gap-2 mt-2"
             >
               {submitting ? (
                 <span>Submitting Request...</span>
@@ -563,23 +568,19 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
               href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 font-extrabold text-xs transition-colors cursor-pointer w-full group"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 font-black text-xs transition-colors cursor-pointer w-full group"
             >
-              <WhatsAppIcon className="w-4 h-4 text-[#25D366] group-hover:scale-110 transition-transform" />
-              <span>Or Chat Directly on WhatsApp</span>
+              <WhatsAppIcon className="w-4 h-4 text-whatsapp group-hover:scale-110 transition-transform" />
+              <span>Prefer WhatsApp? Message us instead</span>
             </a>
           </div>
 
-          {/* Trust Guarantees */}
-          <div className="flex items-center justify-center gap-4 text-[10.5px] font-bold text-slate-400 pt-1">
+          <div className="flex items-center justify-center gap-4 text-[0.6875rem] font-bold text-slate-muted pt-1">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" /> 100% Confidential
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Your details stay private
             </span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#0A6FB5]" /> 15-Min Response
-            </span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" /> Free Custom Quote
+              <Sparkles className="w-3.5 h-3.5 text-gold-600" /> Custom quote, no charge
             </span>
           </div>
         </div>
@@ -593,6 +594,6 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
           }}
         />
       </div>
-    </div>
+    </Modal>
   );
 };

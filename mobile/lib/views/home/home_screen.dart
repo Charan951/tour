@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -16,7 +17,6 @@ import '../../widgets/destination_card.dart';
 import '../../widgets/package_card.dart';
 import '../../widgets/section_header.dart';
 import '../destinations/destination_detail_screen.dart';
-import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 import '../packages/package_list_screen.dart';
 import '../profile/profile_screen.dart';
@@ -58,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _bannerPageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchAllData();
-      // Removed aggressive 2-second sync - only fetch on explicit user action
     });
   }
 
@@ -72,9 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchAllData() async {
-    // Fire ALL requests in TRUE PARALLEL without waiting - instant display + background updates
-    // This achieves <1 second load time by not awaiting network requests
-
     final bannerProvider = Provider.of<BannerProvider>(context, listen: false);
     final themeProvider =
         Provider.of<SpecializationThemeProvider>(context, listen: false);
@@ -82,34 +78,26 @@ class _HomeScreenState extends State<HomeScreen> {
         Provider.of<DestinationProvider>(context, listen: false);
     final pkgProvider = Provider.of<PackageProvider>(context, listen: false);
 
-    // Fire all requests in background without blocking - use unawaited for true fire-and-forget
     unawaited(bannerProvider.fetchBanners());
     unawaited(themeProvider.fetchThemes());
     unawaited(destProvider.fetchDestinations());
     unawaited(pkgProvider.fetchPackages());
 
-    // Start banner auto-scroll immediately with cached data if available
     if (mounted && bannerProvider.banners.isNotEmpty) {
       _startBannerAutoScroll();
     }
 
-    // Precache images in background
     if (mounted) {
       _preCacheAllImages();
     }
   }
 
   void _preCacheAllImages() {
-    // Lazy load images only for visible banners instead of all images
-    // This significantly reduces initial load time
     final bannerProvider = Provider.of<BannerProvider>(context, listen: false);
-
     if (bannerProvider.banners.isEmpty) return;
 
-    // Only precache the current and next banner to avoid heavy load
     Future.microtask(() {
       if (!mounted) return;
-
       final currentIndex = _currentBannerIndex;
       final nextIndex = (currentIndex + 1) % bannerProvider.banners.length;
 
@@ -118,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
           final imageUrl = ApiConfig.formatImageUrl(
             bannerProvider.banners[index].imageUrl,
           );
-          // Let CachedNetworkImage handle caching internally
           precacheImage(CachedNetworkImageProvider(imageUrl), context);
         }
       }
@@ -143,15 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _openEnquirySheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const EnquiryBottomSheet(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
@@ -173,128 +151,122 @@ class _HomeScreenState extends State<HomeScreen> {
       _BottomNavItem(icon: Icons.person, label: 'Profile', selected: false),
     ];
 
-    return Scaffold(
-      appBar: _currentIndex == 0
-          ? AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              centerTitle: false,
-              title: Image.asset(
-                'assets/images/logo.png',
-                height: 70,
-                fit: BoxFit.contain,
-              ),
-            )
-          : null,
-      body: SafeArea(child: pages[_currentIndex]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openEnquirySheet,
-        backgroundColor: AppTheme.accentColor,
-        icon: const Icon(Icons.headset_mic_outlined, color: Colors.white),
-        label: const Text('Enquire Now',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        left: true,
-        right: true,
-        bottom: true,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppTheme.borderLight.withValues(alpha: 0.9),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  offset: const Offset(0, -2),
-                  blurRadius: 16,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: pages[_currentIndex],
+        bottomNavigationBar: SafeArea(
+          top: false,
+          left: true,
+          right: true,
+          bottom: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppTheme.borderLight.withValues(alpha: 0.9),
+                  width: 1,
                 ),
-              ],
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final selectedWidth = constraints.maxWidth * 0.34;
-                final otherWidth = (constraints.maxWidth - selectedWidth) /
-                    (navItems.length - 1);
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    offset: const Offset(0, -2),
+                    blurRadius: 16,
+                  ),
+                ],
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final selectedWidth = constraints.maxWidth * 0.34;
+                  final otherWidth = (constraints.maxWidth - selectedWidth) /
+                      (navItems.length - 1);
 
-                return Row(
-                  children: List.generate(navItems.length, (index) {
-                    final item = navItems[index];
-                    final isSelected = index == _currentIndex;
+                  return Row(
+                    children: List.generate(navItems.length, (index) {
+                      final item = navItems[index];
+                      final isSelected = index == _currentIndex;
 
-                    return SizedBox(
-                      width: isSelected ? selectedWidth : otherWidth,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _currentIndex = index),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          curve: Curves.easeInOut,
-                          height: 56,
-                          margin: const EdgeInsets.fromLTRB(4, 6, 4, 6),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isSelected ? 10 : 6,
-                            vertical: 6,
-                          ),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.primaryColor
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: AppTheme.primaryColor
-                                          .withValues(alpha: 0.22),
-                                      offset: const Offset(0, 4),
-                                      blurRadius: 10,
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                          child: isSelected
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Icon(item.icon,
-                                        color: Colors.white, size: 22),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        item.label,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        overflow: TextOverflow.clip,
-                                        style: GoogleFonts.outfit(
-                                          color: Colors.white,
-                                          fontSize: 8.5,
-                                          fontWeight: FontWeight.w700,
+                      return SizedBox(
+                        width: isSelected ? selectedWidth : otherWidth,
+                        child: Semantics(
+                          button: true,
+                          selected: isSelected,
+                          label: '${item.label} tab',
+                          child: GestureDetector(
+                          onTap: () => setState(() => _currentIndex = index),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeInOut,
+                            height: 56,
+                            margin: const EdgeInsets.fromLTRB(4, 6, 4, 6),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isSelected ? 10 : 6,
+                              vertical: 6,
+                            ),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppTheme.primaryColor
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.primaryColor
+                                            .withValues(alpha: 0.22),
+                                        offset: const Offset(0, 4),
+                                        blurRadius: 10,
+                                      ),
+                                    ]
+                                  : [],
+                            ),
+                            child: isSelected
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(item.icon,
+                                          color: Colors.white, size: 22),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          item.label,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          overflow: TextOverflow.clip,
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontSize: 8.5,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
+                                    ],
+                                  )
+                                : Center(
+                                    child: Icon(
+                                      item.icon,
+                                      color: AppTheme.textSecondary,
+                                      size: 24,
                                     ),
-                                  ],
-                                )
-                              : Center(
-                                  child: Icon(
-                                    item.icon,
-                                    color: AppTheme.textSecondary,
-                                    size: 24,
                                   ),
-                                ),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
-                );
-              },
+                        ),
+                      );
+                    }),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -302,64 +274,281 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomeContent() {
+  Widget _buildHomeGradientHeader() {
     final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+    final double topPadding = MediaQuery.of(context).padding.top;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16, topPadding + 14, 16, 20),
+      decoration: const BoxDecoration(
+        gradient: AppTheme.headerGradient,
+        borderRadius: AppTheme.headerRadius,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Holiday',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'City',
+                    style: GoogleFonts.outfit(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF26C6DA),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            (user != null && user.firstName.trim().isNotEmpty)
+                ? 'Hello, ${user.firstName.trim()} 👋'
+                : 'Welcome to HolidayCity 👋',
+            style: GoogleFonts.outfit(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Plan your next trip with a real consultant',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.75),
+            ),
+          ),
+          const SizedBox(height: 22),
+          Container(
+            height: 52,
+            padding: const EdgeInsets.only(left: 18, right: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF063B6D).withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => setState(() => _currentIndex = 3),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: false,
+                      fillColor: Colors.transparent,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: 'Where do you want to go?',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 3),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.search, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDestinationScroller(
+    String title,
+    String eyebrow,
+    List<DestinationModel> list,
+  ) {
+    if (list.isEmpty) return const SizedBox.shrink();
+    final items = list.length > 8 ? list.sublist(0, 8) : list;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: title,
+          eyebrow: eyebrow,
+          onSeeAll: () => setState(() => _currentIndex = 1),
+        ),
+        SizedBox(
+          height: 210,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final dest = items[index];
+              final formattedUrl = ApiConfig.formatImageUrl(dest.image);
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DestinationDetailScreen(destination: dest),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 155,
+                  margin: const EdgeInsets.only(right: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CachedNetworkImage(
+                            imageUrl: formattedUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                Container(color: Colors.grey[300]),
+                            errorWidget: (context, url, error) => Image.network(
+                              'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.2),
+                                  Colors.black.withValues(alpha: 0.8),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          left: 12,
+                          right: 12,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${dest.state}, ${dest.country}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                dest.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.15,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildHomeContent() {
     final bannerProvider = Provider.of<BannerProvider>(context);
     final themeProvider = Provider.of<SpecializationThemeProvider>(context);
     final packageProvider = Provider.of<PackageProvider>(context);
     final destinationProvider = Provider.of<DestinationProvider>(context);
 
-    final user = authProvider.user;
-
     return RefreshIndicator(
       onRefresh: _fetchAllData,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Bar - Welcome Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user != null
-                          ? 'Hello, ${user.firstName} 👋'
-                          : 'Welcome to HolidayCity 👋',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Your Travel Companion',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: () => setState(() => _currentIndex = 3),
-                  child: CircleAvatar(
-                    backgroundColor:
-                        AppTheme.primaryColor.withValues(alpha: 0.1),
-                    child:
-                        const Icon(Icons.person, color: AppTheme.primaryColor),
-                  ),
-                ),
-              ],
-            ),
+            _buildHomeGradientHeader(),
             const SizedBox(height: 16),
-
-            // Hero Banner Slider
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hero Banner Slider
             if (bannerProvider.banners.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -401,6 +590,41 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
             ],
 
+            // India & International destination rows (split by country).
+            if (destinationProvider.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (destinationProvider.destinations.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Center(
+                  child: Text(
+                    'No destinations available.',
+                    style:
+                        TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                  ),
+                ),
+              )
+            else ...[
+              _buildDestinationScroller(
+                'India Tours',
+                'Top Destination',
+                destinationProvider.destinations
+                    .where((d) => d.country.trim().toLowerCase() == 'india')
+                    .toList(),
+              ),
+              _buildDestinationScroller(
+                'International Tours',
+                'Top Destination',
+                destinationProvider.destinations
+                    .where((d) => d.country.trim().toLowerCase() != 'india')
+                    .toList(),
+              ),
+            ],
+            const SizedBox(height: 24),
+
             // Specialization Themes Horizontal Scroller
             if (themeProvider.themes.isNotEmpty) ...[
               SectionHeader(
@@ -413,8 +637,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
-                  itemCount: themeProvider.themes.length > 4
-                      ? 4
+                  itemCount: themeProvider.themes.length > 6
+                      ? 6
                       : themeProvider.themes.length,
                   itemBuilder: (context, index) {
                     final theme = themeProvider.themes[index];
@@ -468,8 +692,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.2),
-                                        Colors.black.withValues(alpha: 0.8),
+                                        Colors.black.withValues(alpha: 0.25),
+                                        Colors.black.withValues(alpha: 0.85),
                                       ],
                                     ),
                                   ),
@@ -479,21 +703,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 bottom: 12,
                                 left: 12,
                                 right: 12,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      theme.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  theme.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.15,
+                                  ),
                                 ),
                               ),
                             ],
@@ -506,138 +725,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
             ],
-
-            // Popular Destinations Horizontal Scroller
-            SectionHeader(
-              title: 'Popular Destinations',
-              subtitle: 'Top places travelers are loving',
-              onSeeAll: () => setState(() => _currentIndex = 1),
-            ),
-            if (destinationProvider.isLoading)
-              const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (destinationProvider.destinations.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Center(
-                  child: Text(
-                    'No destinations available.',
-                    style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                  ),
-                ),
-              )
-            else
-              SizedBox(
-                height: 210,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: destinationProvider.destinations.length > 4
-                      ? 4
-                      : destinationProvider.destinations.length,
-                  itemBuilder: (context, index) {
-                    final dest = destinationProvider.destinations[index];
-                    final formattedUrl = ApiConfig.formatImageUrl(dest.image);
-
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                DestinationDetailScreen(destination: dest),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 155,
-                        margin: const EdgeInsets.only(right: 14),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: CachedNetworkImage(
-                                  imageUrl: formattedUrl,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      Container(color: Colors.grey[300]),
-                                  errorWidget: (context, url, error) =>
-                                      Image.network(
-                                    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop',
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.2),
-                                        Colors.black.withValues(alpha: 0.8),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 12,
-                                left: 12,
-                                right: 12,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${dest.state}, ${dest.country}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white70,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      dest.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 24),
 
             // Trending Tour Packages
             SectionHeader(
@@ -679,10 +766,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 
   void _handleBannerTap(BannerModel banner) {
@@ -791,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final destinationProvider = Provider.of<DestinationProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('All Destinations')),
+      appBar: AppTheme.gradientAppBar(title: 'All Destinations'),
       body: destinationProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : GridView.builder(

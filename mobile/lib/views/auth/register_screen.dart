@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
+import '../legal/legal_screen.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/banner_provider.dart';
@@ -21,8 +23,10 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  // Single "Full name" field, matching the web mobile redesign — split
+  // client-side into firstName/lastName the same way UserDashboardPage.tsx
+  // does: first word -> firstName, remainder (may be empty) -> lastName.
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,8 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _fullNameController.dispose();
     _emailController.dispose();
     _mobileController.dispose();
     _passwordController.dispose();
@@ -93,9 +96,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final parts = _fullNameController.text.trim().split(RegExp(r'\s+'))
+        ..removeWhere((p) => p.isEmpty);
+      final firstName = parts.isNotEmpty ? parts.first : '';
+      final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
       final success = await authProvider.register(
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
+        firstName: firstName,
+        lastName: lastName,
         email: _emailController.text.trim(),
         mobile: _mobileController.text.trim(),
         password: _passwordController.text,
@@ -135,6 +142,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  Widget _agreementLine(BuildContext context) {
+    const base = TextStyle(fontSize: 11.5, color: AppTheme.textSecondary, height: 1.4);
+    final link = base.copyWith(
+        color: AppTheme.primaryColor, fontWeight: FontWeight.w700);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text.rich(
+        TextSpan(
+          style: base,
+          children: [
+            const TextSpan(text: 'By creating an account you agree to our '),
+            TextSpan(
+              text: 'Terms',
+              style: link,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => LegalScreen.terms())),
+            ),
+            const TextSpan(text: ' and '),
+            TextSpan(
+              text: 'Privacy Policy',
+              style: link,
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => LegalScreen.privacy())),
+            ),
+            const TextSpan(text: '.'),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -168,32 +209,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _firstNameController,
-                        label: 'First Name',
-                        hint: 'John',
-                        prefixIcon: Icons.person_outline,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Required'
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _lastNameController,
-                        label: 'Last Name',
-                        hint: 'Doe',
-                        prefixIcon: Icons.person_outline,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Required'
-                            : null,
-                      ),
-                    ),
-                  ],
+                CustomTextField(
+                  controller: _fullNameController,
+                  label: 'Full Name',
+                  hint: 'John Doe',
+                  prefixIcon: Icons.person_outline,
+                  validator: (value) =>
+                      value == null || value.trim().isEmpty ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -230,6 +252,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
+                    tooltip:
+                        _obscurePassword ? 'Show password' : 'Hide password',
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off_outlined
@@ -257,6 +281,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscureConfirmPassword,
                   suffixIcon: IconButton(
+                    tooltip: _obscureConfirmPassword
+                        ? 'Show password'
+                        : 'Hide password',
                     icon: Icon(
                       _obscureConfirmPassword
                           ? Icons.visibility_off_outlined
@@ -276,14 +303,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 CustomButton(
                   text: 'Create Account',
                   isLoading: authProvider.isLoading,
                   onPressed: _handleRegister,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
+                _agreementLine(context),
+                const SizedBox(height: 20),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

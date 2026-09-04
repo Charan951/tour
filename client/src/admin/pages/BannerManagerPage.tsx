@@ -218,7 +218,7 @@ export const BannerManagerPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add Destination Banner
           </button>
@@ -303,7 +303,7 @@ export const BannerManagerPage: React.FC = () => {
         {/* SECTION 2: DESTINATION PROMO OFFER BANNERS */}
         <section className="space-y-4 pt-4 border-t border-slate-200">
           <h2 className="font-['Outfit'] font-bold text-xl text-slate-900 flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-[#0A6FB5]" /> Destination Promo Offer Banners ({banners.length})
+            <ImageIcon className="w-5 h-5 text-ocean-600" /> Destination Promo Offer Banners ({banners.length})
           </h2>
 
           {loading ? (
@@ -322,7 +322,7 @@ export const BannerManagerPage: React.FC = () => {
                     <div className="relative h-44 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
                       <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
                       <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                        <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-[#0A6FB5] text-white shadow-md">
+                        <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold bg-ocean-600 text-white shadow-md">
                           {b.targetSection || 'OfferCard'}
                         </span>
                         {destObj && (
@@ -336,7 +336,7 @@ export const BannerManagerPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <h3 className="font-['Outfit'] font-bold text-sm text-slate-900 line-clamp-1">{b.title}</h3>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleEdit(b)} className="p-1.5 rounded-lg bg-blue-50 text-[#0A6FB5]">
+                        <button onClick={() => handleEdit(b)} className="p-1.5 rounded-lg bg-blue-50 text-ocean-600">
                           <Edit className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleDelete(b._id)} className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
@@ -371,7 +371,7 @@ export const BannerManagerPage: React.FC = () => {
                   onChange={(e) => setTitle(e.target.value)}
                   required
                   placeholder="e.g. Kedarnath Tour Offer"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -387,7 +387,7 @@ export const BannerManagerPage: React.FC = () => {
                   <select
                     value={destinationId}
                     onChange={(e) => setDestinationId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="">General Destination Promo</option>
                     {destinations.map((d) => (
@@ -401,7 +401,7 @@ export const BannerManagerPage: React.FC = () => {
                   <select
                     value={targetSection}
                     onChange={(e) => setTargetSection(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   >
                     <option value="HeroBanner">Home Page Hero Banner</option>
                     <option value="HomeBanner">Right Specialization Slider</option>
@@ -419,7 +419,7 @@ export const BannerManagerPage: React.FC = () => {
                     value={offerText}
                     onChange={(e) => setOfferText(e.target.value)}
                     placeholder="e.g. Special Deal 20% OFF"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
 
@@ -430,7 +430,7 @@ export const BannerManagerPage: React.FC = () => {
                     value={priceText}
                     onChange={(e) => setPriceText(e.target.value)}
                     placeholder="e.g. ₹8,500 Per Person"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
 
@@ -441,7 +441,7 @@ export const BannerManagerPage: React.FC = () => {
                     value={durationText}
                     onChange={(e) => setDurationText(e.target.value)}
                     placeholder="e.g. 03 Night / 04 Days"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                   />
                 </div>
               </div>
@@ -453,12 +453,12 @@ export const BannerManagerPage: React.FC = () => {
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="e.g. /packages/kedarnath-yatra or https://..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] font-bold text-white shadow-md">
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md">
                   Save Banner Image
                 </button>
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold">
@@ -485,7 +485,7 @@ export const BannerManagerPage: React.FC = () => {
                 <select
                   value={selectedThemeName}
                   onChange={(e) => setSelectedThemeName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 >
                   {ALL_THEME_NAMES.map((name) => (
                     <option key={name} value={name}>{name}</option>
@@ -506,7 +506,7 @@ export const BannerManagerPage: React.FC = () => {
                   onChange={(e) => setThemeDesc(e.target.value)}
                   rows={3}
                   placeholder="Describe this travel style..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 

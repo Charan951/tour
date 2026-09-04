@@ -22,13 +22,14 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _floatAnimation;
   late Animation<double> _dotPulseAnimation;
   Timer? _initialTimer;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 1000),
     );
 
     _fadeAnimation = TweenSequence<double>([
@@ -80,19 +81,25 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _checkInitialState() async {
     final startTime = DateTime.now();
 
-    // Start auth initialization immediately in parallel with splash display
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.initAuth();
 
-    // Keep the splash visible long enough for the brand name to be read clearly
     final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-    const minSplashDuration = 2000;
+    const minSplashDuration = 1000;
     if (elapsed < minSplashDuration) {
       await Future.delayed(Duration(milliseconds: minSplashDuration - elapsed));
     }
 
     if (!mounted) return;
+    _navigateNext();
+  }
 
+  void _navigateNext() {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+    _initialTimer?.cancel();
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isLoggedIn) {
       Navigator.pushReplacement(
         context,
@@ -118,8 +125,11 @@ class _SplashScreenState extends State<SplashScreen>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
-        return Scaffold(
-          body: Stack(
+        return GestureDetector(
+          onTap: _navigateNext,
+          behavior: HitTestBehavior.opaque,
+          child: Scaffold(
+            body: Stack(
             children: [
               // Background Gradient Layer
               Container(
@@ -285,9 +295,10 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
   }
 }
 

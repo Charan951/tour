@@ -87,7 +87,7 @@ export const MobileThemeDetailPage: React.FC = () => {
               name: t.name || existing.name,
               imageUrl: (t.imageUrl && !t.imageUrl.includes('placeholder')) ? t.imageUrl : existing.imageUrl,
               description: t.description || existing.description,
-              rating: t.rating || existing.rating,
+              blurb: t.blurb || existing.blurb,
             });
           } else {
             mapThemes.set(tSlug, t);
@@ -120,7 +120,7 @@ export const MobileThemeDetailPage: React.FC = () => {
           found = {
             name: capitalizedName,
             imageUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?q=80&w=1200&auto=format&fit=crop',
-            rating: '4.9 ★ (348 Reviews)',
+            blurb: 'Curated collection',
             description: THEME_DESCRIPTIONS[capitalizedName] || THEME_DESCRIPTIONS['Honeymoon Tour']
           };
         }
@@ -184,7 +184,7 @@ export const MobileThemeDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-4 border-[#0A6FB5] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-ocean-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -200,7 +200,7 @@ export const MobileThemeDetailPage: React.FC = () => {
     ? theme.imageUrl 
     : (theme?.image || fallbackObj.imageUrl);
   const imgUrl = formatImageUrl(rawImg, fallbackObj.imageUrl);
-  const rating = theme?.rating || fallbackObj.rating || '4.9 ★ (348 Reviews)';
+  const rating = theme?.blurb || fallbackObj.blurb || '';
   const description = theme?.description || THEME_DESCRIPTIONS[themeName] || fallbackObj.description;
   const highlights = THEME_HIGHLIGHTS[themeName] || THEME_HIGHLIGHTS['Honeymoon Tour'] || ['Couple stay', 'Private cab', 'Sunset dinner', 'Luxury room'];
 
@@ -229,18 +229,16 @@ export const MobileThemeDetailPage: React.FC = () => {
 
           {/* Details Body */}
           <div className="p-5 space-y-3">
-            <span className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+            <span className="text-[0.6875rem] font-bold tracking-widest text-slate-500 uppercase">
               THEME
             </span>
-            <h1 className="font-extrabold text-3xl text-slate-900 leading-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <h1 className="font-extrabold text-3xl text-slate-900 leading-tight">
               {themeName}
             </h1>
 
-            {/* Star Rating Row */}
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              <span>{rating}</span>
-            </div>
+            {rating && (
+              <p className="text-xs font-bold text-slate-600">{rating}</p>
+            )}
 
             {/* Description */}
             <p className="text-xs text-slate-500 leading-relaxed pt-1">
@@ -249,12 +247,12 @@ export const MobileThemeDetailPage: React.FC = () => {
 
             {/* Highlights Chips */}
             <div className="pt-2">
-              <h3 className="font-bold text-sm text-slate-900 mb-2" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              <h3 className="font-bold text-sm text-slate-900 mb-2">
                 Highlights
               </h3>
               <div className="flex flex-wrap gap-2">
                 {highlights.map((tag: string, i: number) => (
-                  <span key={i} className="px-3 py-1.5 rounded-full bg-[#0A6FB5]/10 text-[#0A6FB5] text-xs font-bold">
+                  <span key={i} className="px-3 py-1.5 rounded-full bg-ocean-600/10 text-ocean-600 text-xs font-bold">
                     {tag}
                   </span>
                 ))}
@@ -266,16 +264,16 @@ export const MobileThemeDetailPage: React.FC = () => {
         {/* ── THEME PACKAGES SECTION ── */}
         <div className="pt-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <h2 className="font-bold text-lg text-slate-900">
               {themeName} Packages
             </h2>
-            <span className="px-2.5 py-1 rounded-xl bg-[#0A6FB5]/10 text-[#0A6FB5] text-xs font-bold">
+            <span className="px-2.5 py-1 rounded-xl bg-ocean-600/10 text-ocean-600 text-xs font-bold">
               {packages.length} {packages.length === 1 ? 'Package' : 'Packages'}
             </span>
           </div>
 
           {packages.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs">
+            <div className="bg-white rounded-2xl p-8 text-center text-slate-500 text-xs">
               No packages available for this theme right now.
             </div>
           ) : (

@@ -78,16 +78,7 @@ export const login = async (req: Request, res: Response) => {
       data: {
         token: accessToken,
         accessToken,
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          mobile: user.mobile,
-          role: roleName,
-          department: user.department,
-          avatar: user.avatar
-        }
+        user: { ...shapeUser(user, roleName), department: user.department },
       }
     });
   } catch (error: any) {
@@ -97,10 +88,10 @@ export const login = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, mobile, password } = req.body;
+    const { firstName, lastName = '', email, mobile, password } = req.body;
 
-    if (!firstName || !lastName || !email || !mobile || !password) {
-      return res.status(400).json({ success: false, message: 'All required fields must be provided' });
+    if (!firstName || !email || !mobile || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, mobile and password are required' });
     }
 
     const existingUser = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
@@ -148,14 +139,7 @@ export const register = async (req: Request, res: Response) => {
       data: {
         token: accessToken,
         accessToken,
-        user: {
-          id: newUser._id,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          email: newUser.email,
-          mobile: newUser.mobile,
-          role: 'Customer'
-        }
+        user: shapeUser(newUser, 'Customer'),
       }
     });
   } catch (error: any) {
@@ -183,6 +167,88 @@ export const forgotPassword = async (req: Request, res: Response) => {
       success: true,
       message: 'If an account exists with this email, a password reset link has been dispatched.'
     });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const shapeUser = (user: any, roleName?: string) => ({
+  id: user._id,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  email: user.email,
+  mobile: user.mobile,
+  city: user.city || '',
+  avatar: user.avatar || null,
+  role: roleName || (typeof user.role === 'object' && user.role !== null ? (user.role as any).name : user.role),
+  preferences: {
+    language: user.preferences?.language || 'English',
+    currency: user.preferences?.currency || 'INR',
+  },
+});
+
+// PATCH /auth/me — the signed-in user edits their own profile.
+export const updateMe = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthenticated' });
+    }
+    const user = await User.findById(req.user.id).populate('role');
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const { firstName, lastName, mobile, city, avatar, language, currency } = req.body;
+    if (typeof firstName === 'string' && firstName.trim()) user.firstName = firstName.trim();
+    if (typeof lastName === 'string') user.lastName = lastName.trim();
+    if (typeof mobile === 'string' && mobile.trim()) user.mobile = mobile.trim();
+    if (typeof city === 'string') user.city = city.trim();
+    if (typeof avatar === 'string') user.avatar = avatar;
+    if (!user.preferences) user.preferences = { language: 'English', currency: 'INR' };
+    if (typeof language === 'string' && language.trim()) user.preferences.language = language.trim();
+    if (typeof currency === 'string' && currency.trim()) user.preferences.currency = currency.trim();
+
+    await user.save();
+
+    const roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Customer';
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated',
+      data: { user: shapeUser(user, roleName) },
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// POST /auth/change-password — verify the current password, set a new one.
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthenticated' });
+    }
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current and new password are required' });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const ok = await user.comparePassword(currentPassword);
+    if (!ok) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

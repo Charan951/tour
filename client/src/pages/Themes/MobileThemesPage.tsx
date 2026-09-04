@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Star } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 
 /* ─────────────────────────────────────────
@@ -43,68 +43,67 @@ export const MobileThemesPage: React.FC = () => {
 
   return (
     <>
-      {/* No AppBar — themes is a tab, content starts directly */}
-      <div className="overflow-y-auto pb-24 px-4 pt-3" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* AppBar */}
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center gap-2.5">
+        <Link
+          to="/"
+          aria-label="Back to home"
+          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <h1 className="font-display font-black text-lg text-white">Themes</h1>
+      </div>
 
-        {/* Header row: "Themes" + Live badge — matches Flutter Row at top of ThemeScreen */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="font-extrabold text-2xl text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            Themes
-          </h1>
-          {/* Live badge — matches Flutter successColor circle + "Live" text */}
-          <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-500/12">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span className="text-xs font-bold text-emerald-600">Live</span>
-          </div>
-        </div>
+      <div className="overflow-y-auto pb-24 px-4 pt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
 
         {loading ? (
-          <div className="text-center py-16 text-slate-400">Loading themes...</div>
+          <div className="text-center py-16 text-slate-500">Loading themes...</div>
         ) : themes.length === 0 ? (
-          <div className="text-center py-10 text-slate-400">No themes available right now</div>
+          <div className="text-center py-10 text-slate-500">No themes available right now</div>
         ) : (
           /* 2-column grid: crossAxisSpacing: 14, mainAxisSpacing: 14, childAspectRatio: 0.82 */
           <div className="grid grid-cols-2 gap-3.5">
             {themes.map((theme: any, i: number) => {
-              const themeName = theme?.name || theme?.title || 'Theme';
-              const themeSlug = theme?.slug || themeName.toLowerCase().replace(/\s+/g, '-');
-              const rawImg = theme?.imageUrl || theme?.image || theme?.defaultBanner;
-              const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600');
-              const rating = theme?.rating || 'Top pick';
+              const themeName =
+                theme?.themeName || theme?.name || theme?.title || 'Theme';
+              const themeSlug =
+                theme?.slug || String(themeName).toLowerCase().replace(/\s+/g, '-');
+              const rawImg =
+                theme?.imageUrl || theme?.image || theme?.banner || theme?.defaultBanner;
+              const imgUrl = formatImageUrl(
+                rawImg,
+                'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600'
+              );
+              const blurb = theme?.blurb || theme?.description || '';
 
               return (
                 <Link
                   key={theme?._id || i}
                   to={`/theme/${encodeURIComponent(themeSlug)}`}
-                  className="bg-white rounded-[18px] overflow-hidden shadow-sm active:scale-95 transition-transform"
-                  style={{ aspectRatio: '1 / 1.22' }} /* 1/0.82 ≈ 1.22 */
+                  className="relative flex flex-col rounded-2xl2 overflow-hidden shadow-card active:scale-95 transition-transform"
+                  style={{ aspectRatio: '1 / 1.18' }}
                 >
-                  {/* Top image — aspectRatio: 1.6 means width/height = 1.6 → height = width/1.6 */}
-                  <div style={{ aspectRatio: '1.6 / 1' }} className="w-full overflow-hidden">
-                    <img
-                      src={imgUrl}
-                      alt={themeName}
-                      className="w-full h-full object-cover"
-                      onError={e => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400';
-                      }}
-                    />
-                  </div>
+                  <img
+                    src={imgUrl}
+                    alt={themeName}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src =
+                        'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/25 to-transparent" />
 
-                  {/* Content below image */}
-                  <div className="px-3 pt-3 pb-2.5 flex flex-col justify-between flex-1">
-                    <p
-                      className="font-bold text-slate-900 text-sm line-clamp-2 leading-snug"
-                      style={{ fontFamily: 'Outfit, sans-serif', fontSize: 15 }}
-                    >
+                  <div className="relative mt-auto p-3 text-white">
+                    <p className="font-display font-black text-sm leading-snug line-clamp-2">
                       {themeName}
                     </p>
-                    {/* Star + rating row */}
-                    <div className="flex items-center gap-1 mt-2">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                      <span className="text-[11px] text-slate-500 line-clamp-1">{rating}</span>
-                    </div>
+                    {blurb && (
+                      <p className="text-[0.6875rem] text-white/80 line-clamp-1 mt-0.5">{blurb}</p>
+                    )}
                   </div>
                 </Link>
               );

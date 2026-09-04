@@ -89,7 +89,7 @@ export const DestinationsLandingPage: React.FC = () => {
 
       <div className="pt-18 sm:pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-10">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1.5 rounded-full inline-block">
+          <span className="text-xs font-bold uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1.5 rounded-full inline-block">
             {selectedCategory === 'Domestic' ? 'India Domestic' : selectedCategory === 'International' ? 'International World' : 'World Directory'}
           </span>
           <h1 className="font-poppins font-bold text-3xl sm:text-4xl text-slate-900">
@@ -104,7 +104,7 @@ export const DestinationsLandingPage: React.FC = () => {
             <div className="flex items-center justify-center gap-3 pt-2">
               <Link
                 to="/destinations"
-                className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-[#0A6FB5] text-white shadow-md transition-all"
+                className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-ocean-600 text-white shadow-md transition-all"
               >
                 All Destinations ({destinations.length})
               </Link>
@@ -133,7 +133,7 @@ export const DestinationsLandingPage: React.FC = () => {
             ))}
           </div>
         ) : filteredDestinations.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 text-sm bg-white rounded-3xl border border-slate-200 max-w-lg mx-auto">
+          <div className="text-center py-12 text-slate-500 text-sm bg-white rounded-3xl border border-slate-200 max-w-lg mx-auto">
             No destinations found for this selection.
           </div>
         ) : (

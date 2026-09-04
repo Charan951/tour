@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Sparkles, MapPin, Calendar, ShieldCheck, Headphones, Award, Heart, ChevronLeft, ChevronRight, MessageSquare, Phone, ArrowRight, Star, Users, ThumbsUp, Compass } from 'lucide-react';
+import { Search, Sparkles, MapPin, Calendar, ShieldCheck, Headphones, Award, Heart, ChevronLeft, ChevronRight, MessageSquare, Phone, ArrowRight, Star, Users, ThumbsUp, Compass, Play, Pause } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { apiClient } from '../../api/apiClient';
 import { PackageCard } from '../../components/cards/PackageCard';
+import { formatImageUrl, formatSrcSet } from '../../utils/imageUrl';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { SEO } from '../../components/common/SEO';
+import CoverflowCarousel from '../../components/common/CoverflowCarousel';
 import { MobileHomePage } from './MobileHomePage';
 import { FALLBACK_PACKAGES, FALLBACK_DESTINATIONS, FALLBACK_THEMES } from '../../utils/mobileDataFallback';
 import { isPackageMatchingTheme } from '../../utils/themeMatcher';
@@ -21,14 +23,14 @@ function useIsMobile() {
 }
 
 const SPECIALIZATION_THEMES = [
-  { name: 'Honeymoon Tour', rating: '4.9 ★ (348 Reviews)', defaultBanner: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Honeymoon+Tour' },
-  { name: 'Leisure', rating: '4.8 ★ (162 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Leisure' },
-  { name: 'Hill Station', rating: '4.9 ★ (81 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Hill+Station' },
-  { name: 'Trekking', rating: '5.0 ★ (55 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Trekking' },
-  { name: 'Adventure', rating: '4.9 ★ (141 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Adventure' },
-  { name: 'Religious', rating: '5.0 ★ (41 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Religious' },
-  { name: 'Family Tour', rating: '4.8 ★ (210 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Family+Tour' },
-  { name: 'Wildlife Safari', rating: '4.9 ★ (35 Packages)', defaultBanner: 'https://images.unsplash.com/photo-1534177616072-ef7dc120449d?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Wildlife+Safari' }
+  { name: 'Honeymoon Tour', blurb: 'Private, unhurried, romantic', defaultBanner: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Honeymoon+Tour' },
+  { name: 'Leisure', blurb: 'Slow days, easy pace', defaultBanner: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Leisure' },
+  { name: 'Hill Station', blurb: 'Cool air and long views', defaultBanner: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Hill+Station' },
+  { name: 'Trekking', blurb: 'Guided routes, real trails', defaultBanner: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Trekking' },
+  { name: 'Adventure', blurb: 'Water, air and adrenaline', defaultBanner: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Adventure' },
+  { name: 'Religious', blurb: 'Pilgrimage circuits, planned well', defaultBanner: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Religious' },
+  { name: 'Family Tour', blurb: 'Comfortable for every age', defaultBanner: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Family+Tour' },
+  { name: 'Wildlife Safari', blurb: 'Parks, lodges and early starts', defaultBanner: 'https://images.unsplash.com/photo-1534177616072-ef7dc120449d?q=80&w=800&auto=format&fit=crop', link: '/packages?theme=Wildlife+Safari' }
 ];
 
 const DEFAULT_SIDE_BANNERS = [
@@ -80,6 +82,10 @@ export const HomePage: React.FC = () => {
   const [themeBanners, setThemeBanners] = useState<any[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [heroSlide, setHeroSlide] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const [searchInputText, setSearchInputText] = useState('');
   const [selectedSearchDestination, setSelectedSearchDestination] = useState('');
   const [selectedSearchTheme, setSelectedSearchTheme] = useState('All Themes');
@@ -156,11 +162,14 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    // Live updates are event-driven: apiClient dispatches `hc_data_updated` after any
+    // mutation (and the socket layer forwards remote changes to it). The interval is
+    // only a slow safety net for a tab left open for a long time.
     const handleDataUpdate = () => fetchDataSilently();
     window.addEventListener('hc_data_updated', handleDataUpdate);
     const interval = setInterval(() => {
-      fetchDataSilently();
-    }, 800);
+      if (!document.hidden) fetchDataSilently();
+    }, 120000);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
       clearInterval(interval);
@@ -227,25 +236,28 @@ export const HomePage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (effectiveHeroBanners.length <= 1) return;
+    if (prefersReducedMotion || heroPaused || effectiveHeroBanners.length <= 1) return;
     const interval = setInterval(() => {
+      if (document.hidden) return;
       setHeroSlide((prev) => (prev + 1) % effectiveHeroBanners.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(interval);
-  }, [effectiveHeroBanners.length]);
+  }, [effectiveHeroBanners.length, prefersReducedMotion, heroPaused]);
 
   useEffect(() => {
-    if (banners.length === 0) return;
+    if (prefersReducedMotion || banners.length === 0) return;
     const interval = setInterval(() => {
+      if (document.hidden) return;
       setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 4000);
+    }, 4500);
     return () => clearInterval(interval);
-  }, [banners]);
+  }, [banners, prefersReducedMotion]);
 
   // Auto-scroll Domestic Destinations Carousel
   useEffect(() => {
-    if (domesticDestinations.length <= 4) return;
+    if (prefersReducedMotion || domesticDestinations.length <= 4) return;
     const interval = setInterval(() => {
+      if (document.hidden) return;
       if (domesticScrollRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = domesticScrollRef.current;
         const maxScroll = scrollWidth - clientWidth;
@@ -260,12 +272,13 @@ export const HomePage: React.FC = () => {
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [domesticDestinations.length]);
+  }, [domesticDestinations.length, prefersReducedMotion]);
 
   // Auto-scroll International Destinations Carousel
   useEffect(() => {
-    if (intlDestinations.length <= 4) return;
+    if (prefersReducedMotion || intlDestinations.length <= 4) return;
     const interval = setInterval(() => {
+      if (document.hidden) return;
       if (intlScrollRef.current) {
         const { scrollLeft, scrollWidth, clientWidth } = intlScrollRef.current;
         const maxScroll = scrollWidth - clientWidth;
@@ -280,7 +293,7 @@ export const HomePage: React.FC = () => {
     }, 3800);
 
     return () => clearInterval(interval);
-  }, [intlDestinations.length]);
+  }, [intlDestinations.length, prefersReducedMotion]);
 
   const fetchData = async () => {
     try {
@@ -362,16 +375,9 @@ export const HomePage: React.FC = () => {
         description="Book domestic & international tour packages with HolidayCity. Explore Kerala, Bali, Kashmir, Dubai, Maldives, Vietnam and more."
       />
 
-      {/* Floating Vertical "Enquiry Now" Side Tab */}
-      <motion.button
-        whileHover={{ scale: 1.1, x: 3 }}
-        onClick={() => handleOpenEnquire()}
-        className="fixed left-0 top-[58%] -translate-y-1/2 z-40 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-black text-xs px-2 py-3.5 rounded-r-2xl shadow-2xl transition-all flex items-center gap-2 cursor-pointer border-0 overflow-hidden group backdrop-blur-sm"
-        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-      >
-        <Sparkles className="w-3.5 h-3.5 animate-spin-slow rotate-90" />
-        <span className="tracking-widest uppercase text-[10.5px]">Enquiry Now</span>
-      </motion.button>
+      <h1 className="sr-only">
+        HolidayCity — custom domestic and international holiday packages, planned with a personal travel consultant
+      </h1>
 
       {/* Dynamic Hero Banner Carousel Section */}
       <section className="relative w-full overflow-hidden pt-0">
@@ -395,9 +401,14 @@ export const HomePage: React.FC = () => {
               >
                 <Link to={targetUrl} className="block w-full h-full cursor-pointer group">
                   <img
-                    src={imgUrl}
-                    alt={slide.title || 'HolidayCity Hero Banner'}
+                    src={formatImageUrl(imgUrl, undefined, 2000)}
+                    srcSet={formatSrcSet(imgUrl, [768, 1280, 1920, 2400])}
+                    sizes="100vw"
+                    alt={slide.title || 'HolidayCity holiday destination'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    decoding="async"
                   />
                 </Link>
               </div>
@@ -423,7 +434,7 @@ export const HomePage: React.FC = () => {
                 <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform text-white" />
               </button>
 
-              {/* Slide Indicator Dots */}
+              {/* Slide Indicator Dots + pause toggle */}
               <div className="absolute bottom-4 left-0 right-0 z-20 flex items-center justify-center gap-2">
                 {effectiveHeroBanners.map((_, idx) => {
                   const isActive = (heroSlide % effectiveHeroBanners.length) === idx;
@@ -431,13 +442,22 @@ export const HomePage: React.FC = () => {
                     <button
                       key={idx}
                       onClick={() => setHeroSlide(idx)}
-                      aria-label={`Switch to hero background ${idx + 1}`}
-                      className={`h-2 sm:h-2.5 rounded-full transition-all duration-500 cursor-pointer ${
-                        isActive ? 'w-7 sm:w-8 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] shadow-lg shadow-[#57D0C9]/40' : 'w-2 sm:w-2.5 bg-white/60 hover:bg-white'
+                      aria-label={`Go to hero slide ${idx + 1}`}
+                      className={`relative h-2.5 rounded-full transition-all duration-500 cursor-pointer after:absolute after:-inset-2 after:content-[''] ${
+                        isActive ? 'w-8 bg-white' : 'w-2.5 bg-white/60 hover:bg-white'
                       }`}
                     />
                   );
                 })}
+                {!prefersReducedMotion && (
+                  <button
+                    onClick={() => setHeroPaused((p) => !p)}
+                    aria-label={heroPaused ? 'Resume slideshow' : 'Pause slideshow'}
+                    className="ml-2 w-8 h-8 rounded-full bg-slate-900/50 hover:bg-slate-900/80 text-white backdrop-blur-md flex items-center justify-center border border-white/20 cursor-pointer"
+                  >
+                    {heroPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -450,14 +470,14 @@ export const HomePage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card rounded-[28px] p-4 sm:p-5 shadow-2xl border border-white/80 text-slate-800 text-left relative"
+          className="glass-card rounded-3xl2 p-4 sm:p-5 shadow-2xl border border-white/80 text-slate-800 text-left relative"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             {/* 1. Keyword Search Input */}
             <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
-              <Search className="w-5 h-5 text-[#0A6FB5] shrink-0" />
+              <Search className="w-5 h-5 text-ocean-600 shrink-0" />
               <div className="w-full">
-                <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Search Keyword</label>
+                <label className="block text-[0.6875rem] uppercase font-black text-slate-500 tracking-wider">Search Keyword</label>
                 <input
                   type="text"
                   value={searchInputText}
@@ -470,9 +490,9 @@ export const HomePage: React.FC = () => {
 
             {/* 2. Destination Dropdown Filter */}
             <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
-              <MapPin className="w-5 h-5 text-[#0A6FB5] shrink-0" />
+              <MapPin className="w-5 h-5 text-ocean-600 shrink-0" />
               <div className="w-full">
-                <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Destination</label>
+                <label className="block text-[0.6875rem] uppercase font-black text-slate-500 tracking-wider">Destination</label>
                 <select
                   value={selectedSearchDestination}
                   onChange={(e) => setSelectedSearchDestination(e.target.value)}
@@ -490,9 +510,9 @@ export const HomePage: React.FC = () => {
 
             {/* 3. Theme Dropdown Filter */}
             <div className="lg:col-span-3 p-3.5 rounded-2xl bg-slate-50/90 flex items-center gap-3 border border-slate-200/80 shadow-inner">
-              <Sparkles className="w-5 h-5 text-[#0A6FB5] shrink-0" />
+              <Sparkles className="w-5 h-5 text-ocean-600 shrink-0" />
               <div className="w-full">
-                <label className="block text-[10px] uppercase font-black text-slate-400 tracking-wider">Travel Theme</label>
+                <label className="block text-[0.6875rem] uppercase font-black text-slate-500 tracking-wider">Travel Theme</label>
                 <select
                   value={selectedSearchTheme}
                   onChange={(e) => setSelectedSearchTheme(e.target.value)}
@@ -515,7 +535,7 @@ export const HomePage: React.FC = () => {
             <div className="lg:col-span-3">
               <Link
                 to={buildSearchUrl()}
-                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white font-extrabold text-xs lg:text-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer border-0 overflow-hidden whitespace-nowrap shimmer-sheen"
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 hover:from-ocean-700 hover:to-cyan-600 text-white font-extrabold text-xs lg:text-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer border-0 overflow-hidden whitespace-nowrap shimmer-sheen"
               >
                 <Search className="w-4 h-4 shrink-0" />
                 <span>Search Packages</span>
@@ -527,12 +547,12 @@ export const HomePage: React.FC = () => {
           {(searchInputText.trim() || selectedSearchDestination || (selectedSearchTheme && selectedSearchTheme !== 'All Themes')) && (
             <div className="mt-4 pt-4 border-t border-slate-200/80 space-y-3 animate-fade-up">
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-black text-[#0A6FB5] flex items-center gap-1.5 bg-[#0A6FB5]/10 px-3 py-1 rounded-full">
+                <span className="text-xs font-black text-ocean-600 flex items-center gap-1.5 bg-ocean-600/10 px-3 py-1 rounded-full">
                   <Sparkles className="w-3.5 h-3.5" /> Realtime Matches ({realtimeMatchingPackages.length} Packages Found)
                 </span>
                 <Link
                   to={buildSearchUrl()}
-                  className="text-xs font-bold text-[#0A6FB5] hover:underline flex items-center gap-1"
+                  className="text-xs font-bold text-ocean-600 hover:underline flex items-center gap-1"
                 >
                   <span>Explore All {realtimeMatchingPackages.length} Packages</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -557,11 +577,11 @@ export const HomePage: React.FC = () => {
                         className="w-14 h-14 rounded-xl object-cover group-hover:scale-105 transition-transform"
                       />
                       <div className="overflow-hidden flex-1">
-                        <span className="text-[9px] font-black uppercase text-[#0A6FB5]">{pkg.packageCode}</span>
-                        <h4 className="text-xs font-extrabold text-slate-900 truncate group-hover:text-[#0A6FB5] transition-colors">{pkg.title}</h4>
-                        <div className="flex items-center justify-between text-[11px] mt-0.5">
+                        <span className="text-[0.6875rem] font-black uppercase text-ocean-600">{pkg.packageCode}</span>
+                        <h4 className="text-xs font-extrabold text-slate-900 truncate group-hover:text-ocean-600 transition-colors">{pkg.title}</h4>
+                        <div className="flex items-center justify-between text-[0.6875rem] mt-0.5">
                           <span className="text-slate-500 font-medium">{pkg.duration?.nights || 5}N / {pkg.duration?.days || 6}D</span>
-                          <span className="font-black text-[#063B6D]">₹{(pkg.startingPrice || 0).toLocaleString()}/-</span>
+                          <span className="font-black text-ocean-800">₹{(pkg.startingPrice || 0).toLocaleString()}/-</span>
                         </div>
                       </div>
                     </Link>
@@ -581,76 +601,29 @@ export const HomePage: React.FC = () => {
         transition={{ duration: 0.6 }}
         className="py-12 px-4 max-w-7xl mx-auto"
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-          <div>
-            <span className="text-xs font-black uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1 rounded-full border border-[#0A6FB5]/20 inline-block mb-1.5">
-              Incredible India
-            </span>
-            <h2 className="font-poppins font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
-              Experience India's Magic, HolidayCity Style
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium">
-              Where every journey becomes an unforgettable memory.
-            </p>
-          </div>
-
-          {/* Side Scroller Arrow Controls (Left & Right) */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => scrollSide(domesticScrollRef, 'left')}
-              className="w-10 h-10 rounded-full bg-white text-slate-800 hover:bg-[#0A6FB5] hover:text-white border border-slate-200 shadow-md flex items-center justify-center transition-all cursor-pointer active:scale-95"
-              aria-label="Scroll Destinations Left"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => scrollSide(domesticScrollRef, 'right')}
-              className="w-10 h-10 rounded-full bg-white text-slate-800 hover:bg-[#0A6FB5] hover:text-white border border-slate-200 shadow-md flex items-center justify-center transition-all cursor-pointer active:scale-95"
-              aria-label="Scroll Destinations Right"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="mb-10 text-center max-w-2xl mx-auto">
+          <span className="block font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-800 -mb-1">
+            Top Destination
+          </span>
+          <h2 className="font-poppins font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
+            Experience India's Magic, HolidayCity Style
+          </h2>
         </div>
 
-        {/* 4 Cards Per View Side Scroller Row */}
-        <div
-          ref={domesticScrollRef}
-          className="flex items-center gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-4 pt-1 px-1 -mx-1"
-          style={{ scrollSnapType: 'x mandatory' }}
-        >
-          {domesticDestinations.map((dest, i) => (
-            <motion.div
-              key={dest._id || i}
-              whileHover={{ y: -8, scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="w-[82vw] sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)] shrink-0 group relative h-64 sm:h-72 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 bg-slate-100 flex flex-col justify-between p-3 border border-slate-200/70"
-              style={{ scrollSnapAlign: 'start' }}
-            >
-              <Link to={`/destination/${dest.slug}`} className="block w-full h-full relative">
-                <img
-                  src={dest.banner}
-                  alt={dest.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  loading="lazy"
-                />
-
-                {/* Subtle bottom shadow overlay to keep the photo 100% bright & clear */}
-                <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                {/* Top Glassmorphic Title Badge */}
-                <div className="relative z-10 p-3 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-                  <h3 className="font-poppins font-black text-sm uppercase tracking-wider text-white group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
-                    {dest.name}
-                  </h3>
-                  <span className="text-[11px] text-slate-200 font-extrabold block mt-0.5">
-                    {dest.packageCount !== undefined ? dest.packageCount : 0} Tour Packages
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {/* Fanned coverflow carousel of India destinations */}
+        <CoverflowCarousel
+          ctaLabel="Contact Us"
+          items={domesticDestinations.slice(0, 9).map((dest, i) => ({
+            id: dest._id || String(i),
+            image: dest.banner || dest.image || dest.imageUrl,
+            title: dest.name,
+            subtitle:
+              dest.packageCount !== undefined
+                ? `${dest.packageCount} tour package${dest.packageCount === 1 ? '' : 's'}`
+                : (dest.state || dest.country || ''),
+            href: `/destination/${dest.slug}`,
+          }))}
+        />
       </motion.section>
 
       {/* SECTION 2: INTERNATIONAL DESTINATIONS - 4 CARDS PER VIEW WITH HORIZONTAL SIDE SCROLLER */}
@@ -661,76 +634,29 @@ export const HomePage: React.FC = () => {
         transition={{ duration: 0.6 }}
         className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-          <div>
-            <span className="text-xs font-black uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1 rounded-full border border-[#0A6FB5]/20 inline-block mb-1.5">
-              Global Getaways
-            </span>
-            <h2 className="font-poppins font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
-              Explore the World, With Us
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium">
-              Where your dream international holiday takes flight.
-            </p>
-          </div>
-
-          {/* Side Scroller Arrow Controls (Left & Right) */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => scrollSide(intlScrollRef, 'left')}
-              className="w-10 h-10 rounded-full bg-white text-slate-800 hover:bg-[#0A6FB5] hover:text-white border border-slate-200 shadow-md flex items-center justify-center transition-all cursor-pointer active:scale-95"
-              aria-label="Scroll International Left"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => scrollSide(intlScrollRef, 'right')}
-              className="w-10 h-10 rounded-full bg-white text-slate-800 hover:bg-[#0A6FB5] hover:text-white border border-slate-200 shadow-md flex items-center justify-center transition-all cursor-pointer active:scale-95"
-              aria-label="Scroll International Right"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="mb-10 text-center max-w-2xl mx-auto">
+          <span className="block font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-800 -mb-1">
+            Top Destination
+          </span>
+          <h2 className="font-poppins font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
+            Explore the World, With Us
+          </h2>
         </div>
 
-        {/* 4 Cards Per View Side Scroller Row */}
-        <div
-          ref={intlScrollRef}
-          className="flex items-center gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-4 pt-1 px-1 -mx-1"
-          style={{ scrollSnapType: 'x mandatory' }}
-        >
-          {intlDestinations.map((dest, i) => (
-            <motion.div
-              key={dest._id || i}
-              whileHover={{ y: -8, scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="w-[82vw] sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)] shrink-0 group relative h-64 sm:h-72 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 bg-slate-100 flex flex-col justify-between p-3 border border-slate-200/70"
-              style={{ scrollSnapAlign: 'start' }}
-            >
-              <Link to={`/destination/${dest.slug}`} className="block w-full h-full relative">
-                <img
-                  src={dest.banner}
-                  alt={dest.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                  loading="lazy"
-                />
-
-                {/* Subtle bottom shadow overlay to keep the photo 100% bright & clear */}
-                <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                {/* Top Glassmorphic Title Badge */}
-                <div className="relative z-10 p-3 bg-slate-950/70 backdrop-blur-md rounded-2xl border border-white/20 text-center shadow-lg">
-                  <h3 className="font-poppins font-black text-sm uppercase tracking-wider text-white group-hover:text-[#57D0C9] transition-colors leading-tight line-clamp-1">
-                    {dest.name}
-                  </h3>
-                  <span className="text-[11px] text-slate-200 font-extrabold block mt-0.5">
-                    {dest.packageCount !== undefined ? dest.packageCount : 0} Tour Packages
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {/* Fanned coverflow carousel of international destinations */}
+        <CoverflowCarousel
+          ctaLabel="Contact Us"
+          items={intlDestinations.slice(0, 9).map((dest, i) => ({
+            id: dest._id || String(i),
+            image: dest.banner || dest.image || dest.imageUrl,
+            title: dest.name,
+            subtitle:
+              dest.packageCount !== undefined
+                ? `${dest.packageCount} tour package${dest.packageCount === 1 ? '' : 's'}`
+                : (dest.state || dest.country || ''),
+            href: `/destination/${dest.slug}`,
+          }))}
+        />
       </motion.section>
 
       {/* SECTION 3: OUR TRAVEL SPECIALIZATION - INCREASED SIZE & GRAND THEMING */}
@@ -742,7 +668,7 @@ export const HomePage: React.FC = () => {
         className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
       >
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-          <span className="text-xs font-black uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-4 py-1.5 rounded-full border border-[#0A6FB5]/20 inline-block">
+          <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-4 py-1.5 rounded-full border border-ocean-600/20 inline-block">
             Specialized Collections
           </span>
           <h2 className="font-poppins font-black text-3xl sm:text-4xl text-slate-900">
@@ -768,7 +694,7 @@ export const HomePage: React.FC = () => {
                 >
                   <Link
                     to={theme.link}
-                    className="group relative h-40 sm:h-44 rounded-[18px] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 block border border-slate-200/50"
+                    className="group relative h-40 sm:h-44 rounded-2xl2 overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 block border border-slate-200/50"
                   >
                     <img
                       src={bannerImg}
@@ -779,11 +705,11 @@ export const HomePage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
 
                     <div className="absolute inset-0 p-3.5 flex flex-col justify-end text-white z-10">
-                      <h3 className="font-poppins font-extrabold text-sm sm:text-base group-hover:text-[#57D0C9] transition-colors leading-snug drop-shadow-md">
+                      <h3 className="font-display font-black text-sm sm:text-base group-hover:text-aqua-300 transition-colors leading-snug drop-shadow-md">
                         {theme.name}
                       </h3>
-                      <span className="text-[10px] font-bold text-slate-300 opacity-90 mt-0.5 block">
-                        {theme.rating}
+                      <span className="text-[0.6875rem] font-semibold text-white/85 mt-0.5 block">
+                        {theme.blurb}
                       </span>
                     </div>
                   </Link>
@@ -795,7 +721,7 @@ export const HomePage: React.FC = () => {
           {/* Right Side: Special Banner Slider with Carousel Controls (Exact 1080:967 Aspect Ratio) */}
           <div className="lg:col-span-4 w-full">
             <div
-              className="special-banner rounded-[18px] overflow-hidden shadow-xl border border-slate-200/60 group relative w-full select-none"
+              className="special-banner rounded-2xl2 overflow-hidden shadow-xl border border-slate-200/60 group relative w-full select-none"
               style={{ aspectRatio: '1080 / 967' }}
             >
               {effectiveSideBanners.length > 0 ? (
@@ -807,7 +733,7 @@ export const HomePage: React.FC = () => {
                     <img
                       src={effectiveSideBanners[currentSlide % effectiveSideBanners.length]?.imageUrl}
                       alt={effectiveSideBanners[currentSlide % effectiveSideBanners.length]?.title || 'Specialization Banner'}
-                      className="w-full h-full rounded-[18px] block object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full rounded-2xl2 block object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </Link>
 
@@ -865,7 +791,7 @@ export const HomePage: React.FC = () => {
                   <img
                     src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop"
                     alt="Specialization Banner"
-                    className="w-full h-full rounded-[18px] block object-cover"
+                    className="w-full h-full rounded-2xl2 block object-cover"
                   />
                 </Link>
               )}
@@ -883,7 +809,7 @@ export const HomePage: React.FC = () => {
         className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
       >
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-1.5">
-          <span className="text-xs font-black uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1 rounded-full border border-[#0A6FB5]/20 inline-block">
+          <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1 rounded-full border border-ocean-600/20 inline-block">
             Limited-Time Deals
           </span>
           <h2 className="font-poppins font-black text-3xl text-slate-900">
@@ -921,6 +847,104 @@ export const HomePage: React.FC = () => {
         </div>
       </motion.section>
 
+      {/* Why HolidayCity — value section above the packages */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
+      >
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Photo collage */}
+          <div className="relative">
+            <div className="flex gap-3 sm:gap-4">
+              <div className="w-1/2 rounded-[2.25rem] overflow-hidden shadow-raised" style={{ aspectRatio: '3 / 4.4' }}>
+                <img
+                  src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?q=80&w=800&auto=format&fit=crop"
+                  alt="Traveler looking out over a mountain range"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="w-1/2 flex flex-col gap-3 sm:gap-4">
+                <div className="rounded-3xl overflow-hidden shadow-card" style={{ aspectRatio: '4 / 3' }}>
+                  <img
+                    src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?q=80&w=700&auto=format&fit=crop"
+                    alt="Kayaking on a still mountain lake"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="rounded-3xl overflow-hidden shadow-card flex-1 min-h-[180px]">
+                  <img
+                    src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?q=80&w=700&auto=format&fit=crop"
+                    alt="Friends taking a photo together while travelling"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute left-[calc(50%-6px)] top-[46%] -translate-x-1/2 w-14 h-14 rounded-full bg-white shadow-raised grid place-items-center">
+              <Compass className="w-6 h-6 text-ocean-600" />
+            </div>
+
+            <div className="absolute -bottom-5 left-[38%] bg-white rounded-2xl shadow-card px-4 py-2.5 flex items-center gap-3">
+              <span className="w-9 h-9 rounded-full bg-ocean-600/10 grid place-items-center shrink-0">
+                <Heart className="w-4 h-4 text-ocean-600" />
+              </span>
+              <span className="leading-tight">
+                <span className="block text-[0.6875rem] font-bold text-slate-500">Every trip</span>
+                <span className="block text-sm font-black text-slate-900">Human-planned</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Copy */}
+          <div>
+            <span className="font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-600">Let's plan it together</span>
+            <h2 className="font-poppins font-black text-3xl sm:text-4xl lg:text-[2.6rem] leading-[1.12] text-slate-900 mt-2">
+              Your trip deserves more than <span className="text-ocean-600">just a booking</span>
+            </h2>
+            <div className="w-16 h-1 rounded-full bg-ocean-600/30 my-6" />
+            <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-lg">
+              Choosing the right travel partner isn&rsquo;t about tickets &mdash; it&rsquo;s about confidence,
+              comfort, and a real person who knows the destination. That&rsquo;s what HolidayCity is built to give you.
+            </p>
+
+            <div className="mt-8 space-y-4 max-w-xl">
+              {[
+                { icon: Users, title: 'One consultant, end to end', body: 'A named travel expert owns your trip from the first call to the last day.' },
+                { icon: Sparkles, title: 'Built around you', body: 'No cookie-cutter packages — a plan shaped to your dates, budget and pace, with support the whole way.' },
+              ].map((f) => (
+                <div key={f.title} className="glass-card-solid rounded-3xl p-5 flex items-start gap-4">
+                  <span className="w-12 h-12 rounded-2xl2 bg-ocean-600 text-white grid place-items-center shrink-0">
+                    <f.icon className="w-5 h-5" />
+                  </span>
+                  <div className="flex-1">
+                    <h3 className="font-poppins font-black text-base text-slate-900">{f.title}</h3>
+                    <p className="text-slate-500 text-sm mt-1 leading-relaxed">{f.body}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-300 shrink-0 mt-1" />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Link
+                to="/about"
+                className="px-7 py-3.5 rounded-2xl2 bg-ocean-600 hover:bg-ocean-700 text-white font-black text-xs uppercase tracking-wider shadow-card hover:shadow-raised transition flex items-center gap-2"
+              >
+                About us <ArrowRight className="w-4 h-4" />
+              </Link>
+              <span className="font-script text-xl text-ocean-600/80">Know our story</span>
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
       {/* Featured Tour Packages Section */}
       <motion.section
         initial={{ opacity: 0, y: 30 }}
@@ -931,7 +955,7 @@ export const HomePage: React.FC = () => {
       >
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-[#0A6FB5] bg-[#0A6FB5]/10 px-3.5 py-1 rounded-full border border-[#0A6FB5]/20 inline-block mb-1.5">
+            <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1 rounded-full border border-ocean-600/20 inline-block mb-1.5">
               Handpicked Vacation Deals
             </span>
             <h2 className="font-poppins font-black text-3xl text-slate-900">Featured Tour Packages</h2>
@@ -939,7 +963,7 @@ export const HomePage: React.FC = () => {
           </div>
           <Link
             to="/packages"
-            className="px-6 py-3 rounded-2xl bg-[#063B6D] hover:bg-[#0A6FB5] text-white font-extrabold text-xs shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2 cursor-pointer border border-white/20"
+            className="px-6 py-3 rounded-2xl bg-ocean-800 hover:bg-ocean-600 text-white font-extrabold text-xs shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2 cursor-pointer border border-white/20"
           >
             <span>View All Packages</span>
             <ArrowRight className="w-4 h-4" />
@@ -957,30 +981,23 @@ export const HomePage: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* Trust & Satisfaction Metrics Section */}
+      {/* How working with HolidayCity actually goes */}
       <section className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60">
-        <div className="bg-gradient-to-r from-[#063B6D] via-[#0A6FB5] to-[#063B6D] rounded-3xl p-8 sm:p-12 text-white shadow-2xl border border-white/20 relative overflow-hidden">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="space-y-2 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-              <Users className="w-7 h-7 text-[#57D0C9] mx-auto" />
-              <p className="font-poppins font-black text-3xl text-white">25k+</p>
-              <p className="text-xs font-bold text-slate-200">Happy Travelers</p>
-            </div>
-            <div className="space-y-2 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-              <Award className="w-7 h-7 text-[#57D0C9] mx-auto" />
-              <p className="font-poppins font-black text-3xl text-white">45k+</p>
-              <p className="text-xs font-bold text-slate-200">Tours Completed</p>
-            </div>
-            <div className="space-y-2 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-              <ThumbsUp className="w-7 h-7 text-[#57D0C9] mx-auto" />
-              <p className="font-poppins font-black text-3xl text-white">30k+</p>
-              <p className="text-xs font-bold text-slate-200">5-Star Reviews</p>
-            </div>
-            <div className="space-y-2 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-              <Star className="w-7 h-7 text-[#F6C65B] fill-current mx-auto" />
-              <p className="font-poppins font-black text-3xl text-white">4.9 / 5.0</p>
-              <p className="text-xs font-bold text-slate-200">Trust Score</p>
-            </div>
+        <div className="bg-gradient-to-r from-ocean-800 via-ocean-600 to-ocean-800 rounded-3xl p-8 sm:p-12 text-white shadow-glass border border-white/20 relative overflow-hidden">
+          <h2 className="font-display font-black text-2xl sm:text-3xl text-center">How it works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center mt-8">
+            {[
+              { icon: Compass, t: 'Tell us the trip', d: 'Dates, group, rough budget, the kind of holiday you want.' },
+              { icon: Users, t: 'A consultant takes it', d: 'One named person owns your trip from first call to last day.' },
+              { icon: Award, t: 'You get a real quote', d: 'A firm, itemised itinerary and price — usually the same day.' },
+              { icon: ThumbsUp, t: 'Pay when it is right', d: 'Nothing changes hands until the plan is confirmed by you.' },
+            ].map(({ icon: Icon, t, d }) => (
+              <div key={t} className="space-y-2 p-5 rounded-2xl bg-white/10 border border-white/10">
+                <Icon className="w-7 h-7 text-aqua-300 mx-auto" />
+                <p className="font-display font-black text-base text-white">{t}</p>
+                <p className="text-xs font-medium text-white/80 leading-relaxed">{d}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

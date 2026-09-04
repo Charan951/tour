@@ -3,7 +3,7 @@ import io, { Socket } from 'socket.io-client';
 import { clientCache } from '../utils/cache';
 
 const getSocketURL = (): string => {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = (import.meta as any).env?.VITE_API_URL as string | undefined;
   
   if (apiUrl) {
     // Remove /api/v1 from the URL
@@ -68,6 +68,7 @@ const getSocket = (): Socket => {
 interface UseRealtimeUpdatesOptions {
   onPackageUpdate?: (data: any) => void;
   onDestinationUpdate?: (data: any) => void;
+  onBannerUpdate?: (data: any) => void;
   onBlogUpdate?: (data: any) => void;
   onThemeUpdate?: (data: any) => void;
   onEnquiryUpdate?: (data: any) => void;

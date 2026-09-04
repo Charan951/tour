@@ -60,6 +60,31 @@ class AuthService {
     return response['success'] == true;
   }
 
+  /// PATCH /auth/me — update the signed-in user's own profile.
+  Future<UserModel> updateProfile(Map<String, dynamic> changes) async {
+    final response = await ApiService.patch(ApiConfig.updateProfile, changes);
+    if (response['success'] == true && response['data'] != null) {
+      final rawData = response['data'];
+      final userData = (rawData is Map && rawData.containsKey('user')) ? rawData['user'] : rawData;
+      final user = UserModel.fromJson(userData);
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(tokenKey) ?? '';
+      await saveSession(token, user);
+      return user;
+    }
+    throw Exception(response['message'] ?? 'Could not update profile');
+  }
+
+  /// POST /auth/change-password
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    final response = await ApiService.post(ApiConfig.changePassword, {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+    if (response['success'] == true) return true;
+    throw Exception(response['message'] ?? 'Could not change password');
+  }
+
   Future<UserModel?> fetchCurrentUser() async {
     try {
       final response = await ApiService.get(ApiConfig.me);
@@ -84,6 +109,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(tokenKey, token);
     await prefs.setString(userKey, jsonEncode(user.toJson()));
+    ApiService.setToken(token);
   }
 
   Future<UserModel?> getSavedUser() async {
@@ -108,5 +134,6 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
     await prefs.remove(userKey);
+    ApiService.setToken(null);
   }
 }

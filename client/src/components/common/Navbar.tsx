@@ -27,25 +27,36 @@ export const Navbar: React.FC = () => {
   // Hide Navbar on unauthenticated login screen
   const isAuthPath = ['/my-bookings', '/profile', '/dashboard', '/my-enquiries', '/login'].some(p => location.pathname.startsWith(p));
 
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   useEffect(() => {
     loadUser();
 
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > 40) {
         setIsScrolled(true);
+        if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 6) {
+          setIsVisible(false); // Hide header when scrolling down
+        } else if (lastScrollY - currentScrollY > 6) {
+          setIsVisible(true); // Show header when scrolling up
+        }
       } else {
         setIsScrolled(false);
+        setIsVisible(true);
       }
+      setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('hc_user_updated', loadUser);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('hc_user_updated', loadUser);
     };
-  }, []);
+  }, [lastScrollY]);
 
   if (isAuthPath && !currentUser) {
     return null;
@@ -72,7 +83,7 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       {/* Main Sleek Compact Header */}
       <div
         className={`transition-all duration-200 ${
@@ -109,13 +120,13 @@ export const Navbar: React.FC = () => {
                     to={link.path}
                     className={`whitespace-nowrap transition-all duration-200 relative group py-1 ${
                       isActive
-                        ? 'text-[#0A6FB5] font-black bg-[#0A6FB5]/10 px-3 py-1 rounded-full border border-[#0A6FB5]/20 shadow-2xs scale-105'
-                        : 'text-slate-900 hover:text-[#0A6FB5] px-2 font-extrabold'
+                        ? 'text-ocean-600 font-black bg-ocean-600/10 px-3 py-1 rounded-full border border-ocean-600/20 shadow-2xs scale-105'
+                        : 'text-slate-900 hover:text-ocean-600 px-2 font-extrabold'
                     }`}
                   >
                     <span>{link.label}</span>
                     {!isActive && (
-                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#0A6FB5] rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out origin-left" />
+                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-ocean-600 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out origin-left" />
                     )}
                   </Link>
                 );
@@ -125,7 +136,7 @@ export const Navbar: React.FC = () => {
               {!currentUser ? (
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-full bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] hover:from-[#085a94] hover:to-[#4bb8b1] text-white text-xs xl:text-sm font-extrabold shadow-md shadow-[#0A6FB5]/20 hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 ml-3 lg:ml-4 shrink-0 whitespace-nowrap overflow-hidden border-0"
+                  className="px-4 py-2 rounded-full bg-gradient-to-r from-ocean-600 to-cyan-600 hover:from-ocean-700 hover:to-cyan-600 text-white text-xs xl:text-sm font-extrabold shadow-md shadow-ocean-600/20 hover:shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 ml-3 lg:ml-4 shrink-0 whitespace-nowrap overflow-hidden border-0"
                 >
                   <LogIn className="w-4 h-4 shrink-0" />
                   <span>Sign In</span>
@@ -135,17 +146,17 @@ export const Navbar: React.FC = () => {
                   {(currentUser.email?.toLowerCase().startsWith('admin@') || currentUser.email?.toLowerCase() === 'admin@holidaycity.com') ? (
                     <Link
                       to="/admin/dashboard"
-                      className="px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs xl:text-sm font-extrabold transition-all flex items-center gap-1.5 shadow-md border border-amber-400 whitespace-nowrap overflow-hidden"
+                      className="px-4 py-2 rounded-full bg-ocean-800 hover:bg-ocean-900 text-white text-xs xl:text-sm font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-card whitespace-nowrap overflow-hidden"
                     >
-                      <User className="w-4 h-4 text-slate-950 shrink-0" />
+                      <User className="w-4 h-4 shrink-0" />
                       <span>Admin Panel</span>
                     </Link>
                   ) : (
                     <Link
                       to="/my-bookings"
-                      className="px-4 py-2 rounded-full bg-slate-100 text-[#0A6FB5] hover:bg-slate-200 text-xs xl:text-sm font-extrabold transition-all flex items-center gap-1.5 border border-slate-200 whitespace-nowrap overflow-hidden"
+                      className="px-4 py-2 rounded-full bg-slate-100 text-ocean-600 hover:bg-slate-200 text-xs xl:text-sm font-extrabold transition-all flex items-center gap-1.5 border border-slate-200 whitespace-nowrap overflow-hidden"
                     >
-                      <User className="w-4 h-4 text-[#0A6FB5] shrink-0" />
+                      <User className="w-4 h-4 text-ocean-600 shrink-0" />
                       <span className="max-w-[110px] truncate">{currentUser.fullName?.split(' ')[0] || currentUser.name || 'My Profile'}</span>
                     </Link>
                   )}
@@ -181,7 +192,7 @@ export const Navbar: React.FC = () => {
                   key={link.label}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-[#0A6FB5] transition-colors"
+                  className="py-2.5 px-3 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-ocean-600 transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -191,7 +202,7 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-3 bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 mt-2"
+                  className="w-full py-3 bg-gradient-to-r from-ocean-600 to-cyan-600 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 mt-2"
                 >
                   <LogIn className="w-4 h-4" /> Sign In / Register
                 </Link>

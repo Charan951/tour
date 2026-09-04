@@ -107,7 +107,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                 onClick={onClose} // Auto-close sidebar on item click!
                 className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-gradient-to-r from-[#0A6FB5] to-[#085a94] text-white shadow-md shadow-[#0A6FB5]/20 scale-[1.01]'
+                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-700 text-white shadow-md shadow-ocean-600/20 scale-[1.01]'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >

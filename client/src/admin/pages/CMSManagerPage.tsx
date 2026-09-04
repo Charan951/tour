@@ -356,7 +356,7 @@ export const CMSManagerPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleOpenCreateBlog}
-            className="px-4 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
+            className="px-4 py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold text-sm shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
           >
             <Plus className="w-4 h-4" /> Add Blog Article
           </button>
@@ -381,7 +381,7 @@ export const CMSManagerPage: React.FC = () => {
         <section className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 className="font-['Outfit'] font-bold text-lg text-slate-900 flex items-center gap-2">
-              <SettingsIcon className="w-5 h-5 text-[#0A6FB5]" /> Company Settings & Contact Information
+              <SettingsIcon className="w-5 h-5 text-ocean-600" /> Company Settings & Contact Information
             </h2>
             <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
               Live DB Sync
@@ -397,13 +397,13 @@ export const CMSManagerPage: React.FC = () => {
                 onChange={(e) => setCompanyName(e.target.value)}
                 required
                 placeholder="HolidayCity"
-                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
               />
             </div>
 
             <div>
               <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5 text-[#0A6FB5]" /> Primary Phone Number
+                <Phone className="w-3.5 h-3.5 text-ocean-600" /> Primary Phone Number
               </label>
               <input
                 type="text"
@@ -411,7 +411,7 @@ export const CMSManagerPage: React.FC = () => {
                 onChange={(e) => setPhone(e.target.value)}
                 required
                 placeholder="+91 98765 43210"
-                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
               />
             </div>
 
@@ -425,13 +425,13 @@ export const CMSManagerPage: React.FC = () => {
                 onChange={(e) => setWhatsapp(e.target.value)}
                 required
                 placeholder="+91 98765 43210"
-                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
               />
             </div>
 
             <div>
               <label className="block text-slate-700 font-bold mb-1 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-[#0A6FB5]" /> Official Email Address
+                <Mail className="w-3.5 h-3.5 text-ocean-600" /> Official Email Address
               </label>
               <input
                 type="email"
@@ -439,7 +439,7 @@ export const CMSManagerPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="info@holidaycity.com"
-                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
               />
             </div>
 
@@ -453,14 +453,14 @@ export const CMSManagerPage: React.FC = () => {
                 onChange={(e) => setAddress(e.target.value)}
                 required
                 placeholder="Kochi & Bangalore, India"
-                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
               />
             </div>
 
             <div className="sm:col-span-2 flex justify-end pt-2">
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all"
+                className="px-6 py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all"
               >
                 <Save className="w-4 h-4" /> Save Contact Details Live
               </button>
@@ -472,11 +472,11 @@ export const CMSManagerPage: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-['Outfit'] font-bold text-lg text-slate-900 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#0A6FB5]" /> Published Blog Articles ({blogs.length})
+              <FileText className="w-5 h-5 text-ocean-600" /> Published Blog Articles ({blogs.length})
             </h2>
             <button
               onClick={handleOpenCreateBlog}
-              className="text-[#0A6FB5] font-bold text-xs hover:underline flex items-center gap-1"
+              className="text-ocean-600 font-bold text-xs hover:underline flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" /> New Article
             </button>
@@ -494,7 +494,7 @@ export const CMSManagerPage: React.FC = () => {
                     <div className="h-36 rounded-2xl overflow-hidden bg-slate-100">
                       <img src={b.banner || b.bannerImage} alt={b.title} className="w-full h-full object-cover" />
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-[#0A6FB5]">
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-ocean-600">
                       {b.category || 'Travel Tips'}
                     </span>
                     <h3 className="font-['Outfit'] font-bold text-sm text-slate-900 line-clamp-2">{b.title}</h3>
@@ -504,7 +504,7 @@ export const CMSManagerPage: React.FC = () => {
                   <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
                     <button
                       onClick={() => handleOpenEditBlog(b)}
-                      className="p-1.5 rounded-lg bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white transition-colors"
                       title="Edit Article"
                     >
                       <Edit className="w-4 h-4" />
@@ -558,7 +558,7 @@ export const CMSManagerPage: React.FC = () => {
                   <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
                     <button
                       onClick={() => handleOpenEditTestimonial(t)}
-                      className="p-1.5 rounded-lg bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white transition-colors"
                       title="Edit Testimonial"
                     >
                       <Edit className="w-4 h-4" />
@@ -609,7 +609,7 @@ export const CMSManagerPage: React.FC = () => {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={() => handleOpenEditFAQ(f)}
-                      className="p-1.5 rounded-lg bg-blue-50 text-[#0A6FB5] hover:bg-[#0A6FB5] hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg bg-blue-50 text-ocean-600 hover:bg-ocean-600 hover:text-white transition-colors"
                       title="Edit FAQ"
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -650,7 +650,7 @@ export const CMSManagerPage: React.FC = () => {
                   onChange={(e) => setBlogTitle(e.target.value)}
                   required
                   placeholder="e.g. Top 10 Things to Do in Goa Beaches"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -659,7 +659,7 @@ export const CMSManagerPage: React.FC = () => {
                 <select
                   value={blogCategory}
                   onChange={(e) => setBlogCategory(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 >
                   <option value="Travel Tips">Travel Tips</option>
                   <option value="Destination Guide">Destination Guide</option>
@@ -682,7 +682,7 @@ export const CMSManagerPage: React.FC = () => {
                   onChange={(e) => setBlogBanner(e.target.value)}
                   required
                   placeholder="https://res.cloudinary.com/..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -694,12 +694,12 @@ export const CMSManagerPage: React.FC = () => {
                   required
                   rows={5}
                   placeholder="Write full article story..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
               <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-[#0A6FB5] hover:bg-[#085a94] font-bold text-white shadow-md cursor-pointer">
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
                   {editingBlogId ? 'Update Article' : 'Publish Article'}
                 </button>
                 <button type="button" onClick={() => setBlogModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold cursor-pointer">
@@ -731,7 +731,7 @@ export const CMSManagerPage: React.FC = () => {
                   onChange={(e) => setCustomerName(e.target.value)}
                   required
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -740,7 +740,7 @@ export const CMSManagerPage: React.FC = () => {
                 <select
                   value={rating}
                   onChange={(e) => setRating(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 >
                   <option value={5}>5 Stars ★★★★★</option>
                   <option value={4}>4 Stars ★★★★</option>
@@ -758,7 +758,7 @@ export const CMSManagerPage: React.FC = () => {
                   required
                   rows={3}
                   placeholder="Enter testimonial text..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -792,7 +792,7 @@ export const CMSManagerPage: React.FC = () => {
                 <select
                   value={faqCategory}
                   onChange={(e) => setFaqCategory(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 >
                   <option value="General">General</option>
                   <option value="Booking">Booking</option>
@@ -810,7 +810,7 @@ export const CMSManagerPage: React.FC = () => {
                   onChange={(e) => setFaqQuestion(e.target.value)}
                   required
                   placeholder="e.g. What documents are required for Visa?"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 
@@ -822,7 +822,7 @@ export const CMSManagerPage: React.FC = () => {
                   required
                   rows={3}
                   placeholder="Enter detailed answer..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-[#0A6FB5]"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
                 />
               </div>
 

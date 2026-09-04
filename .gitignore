@@ -22,6 +22,10 @@ yarn-error.log*
 logs/
 *.log
 
+# Personal local Claude notes / settings
+CLAUDE.local.md
+.claude/settings.local.json
+
 # OS & Editor files
 .DS_Store
 Thumbs.db

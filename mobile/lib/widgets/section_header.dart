@@ -5,12 +5,14 @@ import '../config/theme.dart';
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
+  final String? eyebrow;
   final VoidCallback? onSeeAll;
 
   const SectionHeader({
     super.key,
     required this.title,
     this.subtitle,
+    this.eyebrow,
     this.onSeeAll,
   });
 
@@ -24,6 +26,18 @@ class SectionHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (eyebrow != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 1),
+                  child: Text(
+                    eyebrow!,
+                    style: GoogleFonts.parisienne(
+                      fontSize: 22,
+                      height: 1,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
               Text(
                 title,
                 style: GoogleFonts.outfit(

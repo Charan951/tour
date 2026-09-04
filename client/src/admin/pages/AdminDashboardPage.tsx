@@ -148,11 +148,11 @@ export const AdminDashboardPage: React.FC = () => {
           {/* Total Enquiries */}
           <Link
             to="/admin/leads"
-            className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-[#0A6FB5]/50 group block relative overflow-hidden"
+            className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-ocean-600/50 group block relative overflow-hidden"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Enquiries</span>
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0A6FB5] flex items-center justify-center group-hover:bg-[#0A6FB5] group-hover:text-white transition-colors">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-ocean-600 flex items-center justify-center group-hover:bg-ocean-600 group-hover:text-white transition-colors">
                 <Users className="w-5 h-5" />
               </div>
             </div>
@@ -164,7 +164,7 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
             <p className="text-xs text-slate-400 mt-2 flex items-center justify-between">
               <span>View Customer Leads</span>
-              <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-[#0A6FB5]" />
+              <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-ocean-600" />
             </p>
           </Link>
 
@@ -233,7 +233,7 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Action Banner */}
-        <div className="bg-gradient-to-r from-[#0A6FB5] to-[#57D0C9] rounded-3xl p-5 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6">
+        <div className="bg-gradient-to-r from-ocean-600 to-aqua-500 rounded-3xl p-5 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6">
           <div className="space-y-1">
             <h3 className="font-['Outfit'] font-bold text-xl sm:text-2xl flex items-center gap-2">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300 shrink-0" /> Quick Package & Destination Actions
@@ -245,7 +245,7 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <Link
               to="/admin/packages"
-              className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-white text-[#0A6FB5] font-bold text-xs sm:text-sm shadow-md hover:bg-slate-50 transition-all cursor-pointer text-center"
+              className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-white text-ocean-600 font-bold text-xs sm:text-sm shadow-md hover:bg-slate-50 transition-all cursor-pointer text-center"
             >
               + Create New Package
             </Link>
@@ -268,7 +268,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <h3 className="font-poppins font-bold text-2xl text-slate-900">Recent Customer Leads</h3>
                 <p className="text-base text-slate-500">Latest travel enquiries submitted by users</p>
               </div>
-              <Link to="/admin/leads" className="text-sm font-bold text-[#0A6FB5] hover:underline flex items-center gap-1">
+              <Link to="/admin/leads" className="text-sm font-bold text-ocean-600 hover:underline flex items-center gap-1">
                 View All <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -297,7 +297,7 @@ export const AdminDashboardPage: React.FC = () => {
                             <div className="font-bold text-slate-900">{enq.fullName || 'Anonymous User'}</div>
                             <div className="text-[11px] text-slate-400">{enq.email || enq.mobile || 'No contact info'}</div>
                           </td>
-                          <td className="p-3 font-semibold text-[#0A6FB5]">{destName}</td>
+                          <td className="p-3 font-semibold text-ocean-600">{destName}</td>
                           <td className="p-3 text-slate-500">
                             {enq.travelDate ? new Date(enq.travelDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Flexible'}
                           </td>
@@ -318,7 +318,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <h3 className="font-poppins font-bold text-2xl text-slate-900">Featured Packages</h3>
                 <p className="text-base text-slate-500">Active tour itineraries ({recentPackages.length})</p>
               </div>
-              <Link to="/admin/packages" className="text-sm font-bold text-[#0A6FB5] hover:underline">
+              <Link to="/admin/packages" className="text-sm font-bold text-ocean-600 hover:underline">
                 Manage All
               </Link>
             </div>
@@ -345,7 +345,7 @@ export const AdminDashboardPage: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <Link to="/admin/packages" className="p-1.5 rounded-lg text-slate-400 hover:text-[#0A6FB5]">
+                      <Link to="/admin/packages" className="p-1.5 rounded-lg text-slate-400 hover:text-ocean-600">
                         <Eye className="w-4 h-4" />
                       </Link>
                     </div>
@@ -361,11 +361,11 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-poppins font-bold text-2xl text-slate-900 flex items-center gap-2">
-                <MapPin className="w-6 h-6 text-[#0A6FB5]" /> Destinations Overview ({destinationsList.length})
+                <MapPin className="w-6 h-6 text-ocean-600" /> Destinations Overview ({destinationsList.length})
               </h3>
               <p className="text-base text-slate-500">Domestic & International destination hubs active on the portal</p>
             </div>
-            <Link to="/admin/destinations" className="text-sm font-bold text-[#0A6FB5] hover:underline flex items-center gap-1">
+            <Link to="/admin/destinations" className="text-sm font-bold text-ocean-600 hover:underline flex items-center gap-1">
               Manage Locations <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -403,11 +403,11 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-poppins font-bold text-2xl text-slate-900 flex items-center gap-2">
-                <Compass className="w-6 h-6 text-[#57D0C9]" /> Curated Travel Themes ({themesList.length})
+                <Compass className="w-6 h-6 text-aqua-500" /> Curated Travel Themes ({themesList.length})
               </h3>
               <p className="text-base text-slate-500">Experiential categories listed across the website & mobile app</p>
             </div>
-            <Link to="/admin/cms" className="text-sm font-bold text-[#0A6FB5] hover:underline flex items-center gap-1">
+            <Link to="/admin/cms" className="text-sm font-bold text-ocean-600 hover:underline flex items-center gap-1">
               CMS Settings <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -416,7 +416,7 @@ export const AdminDashboardPage: React.FC = () => {
             {themesList.map((theme) => {
               const themeNameStr = typeof theme.name === 'string' ? theme.name : (theme.name?.name || 'Theme');
               return (
-                <div key={theme._id || theme.slug} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-[#0A6FB5]/40 hover:bg-slate-100/60 transition-all flex items-center gap-3">
+                <div key={theme._id || theme.slug} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-ocean-600/40 hover:bg-slate-100/60 transition-all flex items-center gap-3">
                   <img
                     src={theme.imageUrl}
                     alt={themeNameStr}

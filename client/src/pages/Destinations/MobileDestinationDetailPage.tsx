@@ -86,7 +86,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-4 border-[#0A6FB5] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-ocean-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#F3F3F3] p-6 text-center">
         <h2 className="text-lg font-bold text-slate-800">Destination Not Found</h2>
-        <button onClick={handleBack} className="mt-4 px-4 py-2 bg-[#0A6FB5] text-white rounded-xl text-xs font-bold">
+        <button onClick={handleBack} className="mt-4 px-4 py-2 bg-ocean-600 text-white rounded-xl text-xs font-bold">
           Go Back
         </button>
       </div>
@@ -148,18 +148,18 @@ export const MobileDestinationDetailPage: React.FC = () => {
           <div className="p-5 space-y-3">
             {/* Globe + Location */}
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-              <Globe className="w-4 h-4 text-[#0A6FB5]" />
+              <Globe className="w-4 h-4 text-ocean-600" />
               <span>, {locationText}</span>
             </div>
 
             {/* Destination Name (Upper Case Big Bold) */}
-            <h1 className="font-extrabold text-2xl text-slate-900 tracking-tight uppercase" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <h1 className="font-extrabold text-2xl text-slate-900 tracking-tight uppercase">
               {dest.name}
             </h1>
 
             {/* About Destination Section */}
             <div className="pt-1">
-              <h2 className="font-bold text-base text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              <h2 className="font-bold text-base text-slate-900">
                 About Destination
               </h2>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -169,9 +169,9 @@ export const MobileDestinationDetailPage: React.FC = () => {
 
             {/* Best Time Row */}
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-              <Calendar className="w-4 h-4 text-[#57D0C9] shrink-0" />
+              <Calendar className="w-4 h-4 text-aqua-500 shrink-0" />
               <span className="font-bold text-slate-900">Best Time:</span>
-              <span className="font-bold text-[#0A6FB5]">{bestTime}</span>
+              <span className="font-bold text-ocean-600">{bestTime}</span>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
         {/* ── TRAVEL THEMES SECTION ── Matches Image 3 horizontal cards */}
         {themes.length > 0 && (
           <div className="pt-2">
-            <h2 className="font-bold text-base text-slate-900 mb-3" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <h2 className="font-bold text-base text-slate-900 mb-3">
               Travel Themes in {destNameShort}
             </h2>
             <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
@@ -192,14 +192,14 @@ export const MobileDestinationDetailPage: React.FC = () => {
                     key={themeItem._id || idx}
                     onClick={() => setSelectedTheme(themeItem.name)}
                     className={`shrink-0 relative rounded-2xl overflow-hidden shadow-sm border-2 transition-all ${
-                      isSelected ? 'border-[#0A6FB5] scale-105' : 'border-transparent'
+                      isSelected ? 'border-ocean-600 scale-105' : 'border-transparent'
                     }`}
                     style={{ width: 130, height: 95 }}
                   >
                     <img src={imgUrl} alt={themeItem.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-2 left-2 right-2 text-left">
-                      <p className="text-white font-bold text-xs line-clamp-2 leading-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      <p className="text-white font-bold text-xs line-clamp-2 leading-tight">
                         {themeItem.name}
                       </p>
                     </div>
@@ -213,16 +213,16 @@ export const MobileDestinationDetailPage: React.FC = () => {
         {/* ── TOUR PACKAGES SECTION ── Matches Image 3 list */}
         <div className="pt-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base text-slate-900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <h2 className="font-bold text-base text-slate-900">
               {selectedTheme === 'All Packages' ? `Tour Packages in ${destNameShort}` : `${selectedTheme} Packages`}
             </h2>
-            <span className="px-2.5 py-1 rounded-xl bg-[#0A6FB5]/10 text-[#0A6FB5] text-xs font-bold">
+            <span className="px-2.5 py-1 rounded-xl bg-ocean-600/10 text-ocean-600 text-xs font-bold">
               {displayedPackages.length} {displayedPackages.length === 1 ? 'Package' : 'Packages'}
             </span>
           </div>
 
           {displayedPackages.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs">
+            <div className="bg-white rounded-2xl p-8 text-center text-slate-500 text-xs">
               No packages available for {selectedTheme} at {destNameShort} right now.
             </div>
           ) : (
@@ -241,7 +241,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-30">
         <button
           onClick={() => setEnquiryOpen(true)}
-          className="w-full py-3.5 bg-[#0A6FB5] text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-transform"
+          className="w-full py-3.5 bg-ocean-600 text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-transform"
         >
           Enquire for {destNameShort} Tour
         </button>

@@ -481,7 +481,8 @@ const seed = async () => {
 
     // SEED 7 CUSTOMER ENQUIRIES (LEADS)
     await Enquiry.deleteMany({});
-    await Enquiry.create([
+    const VALID_ENQUIRY_STATUS = ['New', 'Contacted', 'FollowupPending', 'QuotationSent', 'Negotiation', 'Confirmed', 'Cancelled', 'Lost', 'Completed'];
+    const enquirySeeds = [
       {
         fullName: 'Ramesh Kumar',
         email: 'ramesh.kumar@gmail.com',
@@ -573,7 +574,14 @@ const seed = async () => {
         priority: 'Medium',
         message: 'Ubud jungle resort + Seminyak beach club pass.'
       }
-    ]);
+    ];
+    await Enquiry.create(
+      enquirySeeds.map((e, i) => ({
+        ...e,
+        enquiryId: `HC-2026-${1001 + i}`,
+        status: VALID_ENQUIRY_STATUS.includes(e.status) ? e.status : 'Contacted',
+      }))
+    );
 
     console.log('[Seed] Database seeded with packages for ALL destinations including Telangana!');
     process.exit(0);

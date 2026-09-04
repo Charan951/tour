@@ -8,9 +8,15 @@ import 'providers/banner_provider.dart';
 import 'providers/specialization_theme_provider.dart';
 import 'providers/theme_provider.dart';
 import 'views/splash/splash_screen.dart';
+import 'services/connectivity.dart';
+import 'services/offline_queue.dart';
+import 'widgets/offline_banner.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  ConnectivityStatus.instance.start();
+  // Send anything left in the outbox from a previous offline session.
+  OfflineQueue.instance.flush();
   runApp(const HolidayCityApp());
 }
 
@@ -36,6 +42,20 @@ class HolidayCityApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             themeMode: themeProvider.themeMode,
             home: const SplashScreen(),
+            builder: (context, child) {
+              // Clamp system text scaling so very large fonts stay usable,
+              // and show the app-wide offline bar on every screen.
+              final mq = MediaQuery.of(context);
+              return MediaQuery(
+                data: mq.copyWith(
+                  textScaler: mq.textScaler.clamp(
+                    minScaleFactor: 0.9,
+                    maxScaleFactor: 1.3,
+                  ),
+                ),
+                child: OfflineOverlay(child: child ?? const SizedBox()),
+              );
+            },
           );
         },
       ),

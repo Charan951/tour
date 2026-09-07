@@ -19,6 +19,8 @@ class ActivityModel {
   final String location;
   final bool isFeatured;
 
+  double get startingPrice => price;
+
   ActivityModel({
     required this.id,
     required this.activityCode,

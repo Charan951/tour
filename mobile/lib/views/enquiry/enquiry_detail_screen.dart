@@ -139,6 +139,26 @@ class EnquiryDetailScreen extends StatelessWidget {
                             color: statusColor,
                           ),
                         ),
+                        if (enquiry.formattedCreatedDateTime.isNotEmpty && enquiry.formattedCreatedDateTime != 'N/A') ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time, size: 12, color: AppTheme.textSecondary),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  enquiry.formattedCreatedDateTime,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -320,7 +340,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   _buildInfoRow(
                     label: 'Submitted On',
-                    value: enquiry.createdAt.split('T')[0],
+                    value: enquiry.formattedCreatedDateTime.isNotEmpty ? enquiry.formattedCreatedDateTime : (enquiry.createdAt.isNotEmpty ? enquiry.createdAt : 'N/A'),
                   ),
                   const SizedBox(height: 10),
                   _buildInfoRow(

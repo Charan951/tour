@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../config/theme.dart';
 import '../../models/package_model.dart';
+import '../../models/activity_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/booking_service.dart';
+import '../../services/activity_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -26,16 +28,18 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
   final _phoneController = TextEditingController();
   final _specialController = TextEditingController();
 
-  // Address Controllers
+  // Address Controller
   final _streetController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _pincodeController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   int _adults = 2;
   int _children = 0;
   String _selectedTier = 'Standard';
+
+  // Location Activity Add-Ons
+  List<ActivityModel> _availableAddOns = [];
+  final Set<String> _selectedAddOnIds = {};
+  bool _isLoadingAddOns = true;
 
   bool _isSubmitting = false;
 
@@ -48,6 +52,24 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
       _emailController.text = user.email;
       _phoneController.text = user.mobile;
     }
+    _loadDestinationAddOns();
+  }
+
+  Future<void> _loadDestinationAddOns() async {
+    try {
+      final service = ActivityService();
+      final acts = await service.fetchActivities(destination: widget.package.destination);
+      if (mounted) {
+        setState(() {
+          _availableAddOns = acts;
+          _isLoadingAddOns = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingAddOns = false);
+      }
+    }
   }
 
   @override
@@ -57,9 +79,6 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
     _phoneController.dispose();
     _specialController.dispose();
     _streetController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _pincodeController.dispose();
     super.dispose();
   }
 
@@ -74,7 +93,12 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
     return widget.package.price;
   }
 
-  double get _totalPrice => (_unitPrice * _adults) + (_unitPrice * 0.5 * _children);
+  double get _addOnsTotal {
+    final selectedActs = _availableAddOns.where((a) => _selectedAddOnIds.contains(a.id));
+    return selectedActs.fold(0.0, (sum, a) => sum + (a.startingPrice * _adults));
+  }
+
+  double get _totalPrice => (_unitPrice * _adults) + (_unitPrice * 0.5 * _children) + _addOnsTotal;
 
   Future<void> _pickTravelDate() async {
     final picked = await showDatePicker(
@@ -92,6 +116,13 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 
+      final selectedAddOnModels = _availableAddOns.where((a) => _selectedAddOnIds.contains(a.id)).toList();
+      final addOnNotes = selectedAddOnModels.isNotEmpty
+          ? '\nAdd-ons Selected: ${selectedAddOnModels.map((a) => "${a.title} (+₹${NumberFormat('#,##,###').format(a.startingPrice)}/person)").join(', ')}'
+          : '';
+
+      final fullSpecialRequests = '${_specialController.text.trim()}$addOnNotes'.trim();
+
       final bookingData = {
         'package': widget.package.id,
         'packageName': widget.package.title,
@@ -102,26 +133,23 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
         'mobile': _phoneController.text.trim(),
         'address': {
           'street': _streetController.text.trim(),
-          'city': _cityController.text.trim(),
-          'state': _stateController.text.trim(),
-          'pincode': _pincodeController.text.trim(),
-          'fullAddress': [
-            _streetController.text.trim(),
-            _cityController.text.trim(),
-            _stateController.text.trim(),
-            _pincodeController.text.trim()
-          ].where((e) => e.isNotEmpty).join(', '),
+          'fullAddress': _streetController.text.trim(),
         },
         'travelDate': _selectedDate.toIso8601String(),
         'adults': _adults,
         'children': _children,
         'pricingTier': _selectedTier,
+        'selectedAddOns': selectedAddOnModels.map((a) => {
+          'id': a.id,
+          'title': a.title,
+          'price': a.startingPrice,
+        }).toList(),
         'totalPrice': _totalPrice,
         'advanceAmount': 0,
         'advancePaid': false,
         'paymentStatus': 'Pending Advance',
         'status': 'Pending',
-        'specialRequests': _specialController.text.trim(),
+        'specialRequests': fullSpecialRequests,
       };
 
       try {
@@ -245,51 +273,91 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat('#,##,###');
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
         child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                // Top Inline Header (No Navbar)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        'BOOK PACKAGE REQUEST',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primaryColor,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: IconButton(
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.explore_outlined, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.package.title,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Destination: ${widget.package.destination} • Code: ${widget.package.packageCode.isNotEmpty ? widget.package.packageCode : 'HC-TOUR'}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                Text(
-                  'Book ${widget.package.title}',
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                Text(
-                  'Destination: ${widget.package.destination} • Code: ${widget.package.packageCode.isNotEmpty ? widget.package.packageCode : 'HC-TOUR'}',
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                ),
-                const SizedBox(height: 20),
 
                 // Customer Info
                 CustomTextField(
@@ -301,117 +369,194 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                 ),
                 const SizedBox(height: 12),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _emailController,
-                        label: 'Email Address *',
-                        hint: 'name@example.com',
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _phoneController,
-                        label: 'Mobile Number *',
-                        hint: '+91 9876543210',
-                        prefixIcon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        validator: (v) => v == null || v.isEmpty ? 'Mobile required' : null,
-                      ),
-                    ),
-                  ],
+                CustomTextField(
+                  controller: _emailController,
+                  label: 'Email Address *',
+                  hint: 'name@example.com',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
                 ),
                 const SizedBox(height: 12),
 
-                // Billing Address Section
+                CustomTextField(
+                  controller: _phoneController,
+                  label: 'Mobile Number *',
+                  hint: '+91 9876543210',
+                  prefixIcon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  validator: (v) => v == null || v.isEmpty ? 'Mobile required' : null,
+                ),
+                const SizedBox(height: 12),
+
+                // Billing Address
                 CustomTextField(
                   controller: _streetController,
                   label: 'Billing / House Address (Optional)',
-                  hint: 'e.g. 123 Beach Road, Flat 402',
+                  hint: 'e.g. 123 Beach Road, City & Pincode',
                   prefixIcon: Icons.home_outlined,
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _cityController,
-                        label: 'City',
-                        hint: 'e.g. Mumbai',
-                        prefixIcon: Icons.location_city_outlined,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _stateController,
-                        label: 'State',
-                        hint: 'e.g. Maharashtra',
-                        prefixIcon: Icons.map_outlined,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: CustomTextField(
-                        controller: _pincodeController,
-                        label: 'Pincode',
-                        hint: '400001',
-                        prefixIcon: Icons.pin_drop_outlined,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
                 // Date Picker Button
                 InkWell(
                   onTap: _pickTravelDate,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      border: Border.all(color: Colors.grey.shade300),
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, color: AppTheme.primaryColor, size: 20),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Travel Date: ${DateFormat('EEE, dd MMM yyyy').format(_selectedDate)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                          ],
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: AppTheme.primaryColor, size: 18),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Travel Date: ${DateFormat('EEE, dd MMM yyyy').format(_selectedDate)}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const Icon(Icons.edit, size: 16, color: Colors.grey),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
-                // Pricing Tier Selector (if tiers exist)
+                // Guests Selector (Adults & Children - Overflow Free)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('Adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
+                                  const Text('Age 12+', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: _adults > 1 ? () => setState(() => _adults--) : null,
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Icon(Icons.remove_circle_outline, size: 20, color: _adults > 1 ? AppTheme.primaryColor : Colors.grey.shade400),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  child: Text('$_adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                                ),
+                                InkWell(
+                                  onTap: () => setState(() => _adults++),
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(Icons.add_circle_outline, size: 20, color: AppTheme.primaryColor),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('Children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
+                                  const Text('Age 2-11', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: _children > 0 ? () => setState(() => _children--) : null,
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Icon(Icons.remove_circle_outline, size: 20, color: _children > 0 ? AppTheme.primaryColor : Colors.grey.shade400),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  child: Text('$_children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                                ),
+                                InkWell(
+                                  onTap: () => setState(() => _children++),
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4.0),
+                                    child: Icon(Icons.add_circle_outline, size: 20, color: AppTheme.primaryColor),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Pricing Tier Selector
                 if (widget.package.pricingTiers.isNotEmpty) ...[
                   const Text('Select Tier / Class:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 8),
                   Row(
-                    children: widget.package.pricingTiers.map((tier) {
+                    children: widget.package.pricingTiers.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final tier = entry.value;
+                      final isLast = idx == widget.package.pricingTiers.length - 1;
                       final isSelected = _selectedTier.toLowerCase() == tier.category.toLowerCase();
                       return Expanded(
                         child: GestureDetector(
                           onTap: () => setState(() => _selectedTier = tier.category),
                           child: Container(
-                            margin: const EdgeInsets.only(right: 6),
+                            margin: EdgeInsets.only(right: isLast ? 0 : 6),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelected ? AppTheme.primaryColor : Colors.grey.shade100,
@@ -442,109 +587,127 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                 ],
 
-                // Number of Adults & Children
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
+                // Location Activity Add-Ons Section
+                if (_isLoadingAddOns || _availableAddOns.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.15)),
+                    ),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Adults (12+ yrs)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        Text('Full Fare', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          tooltip: 'Remove adult',
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: _adults > 1 ? () => setState(() => _adults--) : null,
-                        ),
-                        Text('$_adults', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        IconButton(
-                          tooltip: 'Add adult',
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: () => setState(() => _adults++),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Children (5-11 yrs)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        Text('50% Fare', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          tooltip: 'Remove child',
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: _children > 0 ? () => setState(() => _children--) : null,
-                        ),
-                        Text('$_children', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        IconButton(
-                          tooltip: 'Add child',
-                          icon: const Icon(Icons.add_circle_outline),
-                          onPressed: () => setState(() => _children++),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Estimated Package Price Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.blue.shade100),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Estimated Package Price:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              '₹${currencyFormatter.format(_totalPrice)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.primaryColor),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.right,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.local_activity_outlined, color: AppTheme.primaryColor, size: 18),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Location Activity Add-Ons',
+                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      const Row(
-                        children: [
-                          Icon(Icons.info_outline, size: 14, color: Colors.blue),
-                          SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'No payment required now. Submit request & await admin approval.',
-                              style: TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'OPTIONAL',
+                                style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        if (_isLoadingAddOns)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text('Loading location activities...', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          )
+                        else
+                          Column(
+                            children: _availableAddOns.map((act) {
+                              final isSelected = _selectedAddOnIds.contains(act.id);
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedAddOnIds.remove(act.id);
+                                    } else {
+                                      _selectedAddOnIds.add(act.id);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? Colors.white : Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                                        color: isSelected ? AppTheme.primaryColor : Colors.grey,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              act.title,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, height: 1.3),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              act.duration.isNotEmpty ? act.duration : act.category,
+                                              style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '+₹${currencyFormatter.format(act.startingPrice)}',
+                                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryColor),
+                                          ),
+                                          const Text('/person', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 14),
+                ],
 
                 CustomTextField(
                   controller: _specialController,

@@ -41,6 +41,12 @@ export interface IPermission {
   description?: string;
 }
 
+export interface ISelectedAddOn {
+  id?: string;
+  title: string;
+  price: number;
+}
+
 export interface IEnquiryNote {
   _id?: string;
   note: string;
@@ -55,18 +61,76 @@ export interface IEnquiry extends IBaseAudit {
   mobile: string;
   destination?: string | IDestination;
   package?: string | IPackage;
+  activity?: string | any;
+  activityTitle?: string;
+  enquiryType?: 'package' | 'activity' | 'general' | 'custom_quote';
   travelDate?: string;
   adults: number;
   children: number;
   budget?: number;
   travelType?: 'Solo' | 'Couple' | 'Family' | 'Friends' | 'Corporate';
+  selectedAddOns?: ISelectedAddOn[];
   message?: string;
-  source: 'PackagePage' | 'DestinationPage' | 'ContactForm' | 'WhatsApp' | 'CallRequest' | 'PopupModal';
+  source: string;
   status: LeadStatus;
   assignedTo?: string | IUser;
   priority: LeadPriority;
   followupDate?: string;
   notes?: IEnquiryNote[];
+}
+
+export interface IBookingNote {
+  _id?: string;
+  note: string;
+  createdBy: string;
+  createdAt?: string;
+}
+
+export interface IBooking extends IBaseAudit {
+  bookingId: string;
+  bookingType: 'package' | 'activity';
+  user?: string | IUser;
+  package?: string | IPackage;
+  activity?: string | any;
+  destination?: string | IDestination;
+  packageName?: string;
+  packageCode?: string;
+  activityName?: string;
+  activityCode?: string;
+  destinationName?: string;
+  customerName: string;
+  email: string;
+  mobile: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    fullAddress?: string;
+  };
+  travelDate: string;
+  adults: number;
+  children: number;
+  pricingTier?: string;
+  selectedAddOns?: ISelectedAddOn[];
+  totalPrice: number;
+  advanceAmount: number;
+  advancePaid: boolean;
+  remainingBalance: number;
+  paymentStatus: 'Pending Advance' | 'Advance Paid' | 'Full Paid' | 'Refunded' | 'Failed';
+  paymentMethod?: string;
+  transactionId?: string;
+  paymentDetails?: {
+    upiId?: string;
+    cardLast4?: string;
+    cardHolder?: string;
+    cardExpiry?: string;
+    bankName?: string;
+  };
+  specialRequests?: string;
+  status: 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed';
+  notes?: IBookingNote[];
+  assignedTo?: string | IUser;
 }
 
 export interface ICustomer extends IBaseAudit {

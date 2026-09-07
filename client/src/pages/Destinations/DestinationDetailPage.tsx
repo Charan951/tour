@@ -18,6 +18,7 @@ export const DestinationDetailPage: React.FC = () => {
   const [notFound, setNotFound] = useState(false);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [enquiryInitialMode, setEnquiryInitialMode] = useState<'enquiry' | 'booking'>('enquiry');
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) {
@@ -376,7 +377,7 @@ export const DestinationDetailPage: React.FC = () => {
               <h3 className="font-bold text-slate-800">No Packages Currently Found</h3>
               <p className="text-xs text-slate-500">Contact our travel consultants to get a custom quote for {dest.name}.</p>
               <button
-                onClick={() => { setSelectedPackage(null); setEnquiryModalOpen(true); }}
+                onClick={() => { setSelectedPackage(null); setEnquiryInitialMode('enquiry'); setEnquiryModalOpen(true); }}
                 className="px-5 py-2.5 rounded-xl bg-ocean-600 text-white font-bold text-xs shadow-md cursor-pointer"
               >
                 Request Custom Quote
@@ -390,6 +391,7 @@ export const DestinationDetailPage: React.FC = () => {
                   pkg={pkg}
                   onEnquire={(p, mode) => {
                     setSelectedPackage(p);
+                    if (mode) setEnquiryInitialMode(mode);
                     setEnquiryModalOpen(true);
                   }}
                 />
@@ -403,6 +405,7 @@ export const DestinationDetailPage: React.FC = () => {
         isOpen={enquiryModalOpen}
         onClose={() => setEnquiryModalOpen(false)}
         selectedPackage={selectedPackage}
+        initialMode={enquiryInitialMode}
       />
     </>
   );

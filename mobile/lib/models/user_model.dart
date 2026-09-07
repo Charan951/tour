@@ -23,7 +23,19 @@ class UserModel {
     this.currency = 'INR',
   });
 
-  String get fullName => '$firstName $lastName';
+  String get fullName => '$firstName $lastName'.trim();
+
+  String get displayName {
+    final name = fullName;
+    if (name.isNotEmpty) return name;
+    if (email.isNotEmpty && email.contains('@')) {
+      final username = email.split('@').first.trim();
+      if (username.isNotEmpty) {
+        return username[0].toUpperCase() + username.substring(1);
+      }
+    }
+    return 'Traveler';
+  }
 
   UserModel copyWith({
     String? firstName,
@@ -50,17 +62,28 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final prefs = json['preferences'];
+    String fName = (json['firstName'] ?? '').toString().trim();
+    String lName = (json['lastName'] ?? '').toString().trim();
+    if (fName.isEmpty && lName.isEmpty) {
+      final raw = (json['fullName'] ?? json['name'] ?? '').toString().trim();
+      if (raw.isNotEmpty) {
+        final parts = raw.split(RegExp(r'\s+'));
+        fName = parts.isNotEmpty ? parts.first : '';
+        lName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      }
+    }
+
     return UserModel(
       id: json['id'] ?? json['_id'] ?? '',
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
+      firstName: fName,
+      lastName: lName,
       email: json['email'] ?? '',
-      mobile: json['mobile'] ?? '',
+      mobile: json['mobile'] ?? json['phone'] ?? '',
       role: json['role'] is String
           ? json['role']
           : (json['role']?['name'] ?? 'Customer'),
       avatar: json['avatar'],
-      city: json['city'] ?? '',
+      city: json['city'] ?? json['address'] ?? '',
       language: (prefs is Map ? prefs['language'] : null) ?? 'English',
       currency: (prefs is Map ? prefs['currency'] : null) ?? 'INR',
     );
@@ -80,3 +103,4 @@ class UserModel {
     };
   }
 }
+

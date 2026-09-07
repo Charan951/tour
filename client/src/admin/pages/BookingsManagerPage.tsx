@@ -4,6 +4,35 @@ import { apiClient } from '../../api/apiClient';
 import { AdminLayout } from '../components/AdminLayout';
 import toast from 'react-hot-toast';
 
+const getFormattedDateTime = (item: any): { dateStr: string; timeStr: string; fullStr: string } => {
+  let dateObj: Date | null = null;
+  if (item?.createdAt) {
+    dateObj = new Date(item.createdAt);
+  } else if (item?.timestamp) {
+    dateObj = new Date(item.timestamp);
+  } else if (item?.date) {
+    dateObj = new Date(item.date);
+  } else if (item?._id && typeof item._id === 'string' && item._id.length === 24) {
+    const timestamp = parseInt(item._id.substring(0, 8), 16) * 1000;
+    if (!isNaN(timestamp)) {
+      dateObj = new Date(timestamp);
+    }
+  }
+
+  if (!dateObj || isNaN(dateObj.getTime())) {
+    dateObj = new Date();
+  }
+
+  const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  return {
+    dateStr,
+    timeStr,
+    fullStr: `${dateStr} • ${timeStr}`
+  };
+};
+
 export const BookingsManagerPage: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,60 +212,60 @@ export const BookingsManagerPage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-400 block">Total Bookings</span>
-              <span className="text-2xl font-bold text-slate-900">{totalBookingsCount}</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Total Bookings</span>
+              <span className="font-['Outfit'] font-bold text-3xl text-slate-900 mt-1 block">{totalBookingsCount}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-ocean-600 flex items-center justify-center font-bold">
-              <ShoppingBag className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-ocean-50 text-ocean-600 flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-400 block">Advance Collected</span>
-              <span className="text-2xl font-bold text-emerald-600">₹{totalAdvanceCollected.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Advance Collected</span>
+              <span className="font-['Outfit'] font-bold text-3xl text-emerald-600 mt-1 block">₹{totalAdvanceCollected.toLocaleString()}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <CreditCard className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CreditCard className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-400 block">Remaining Pending</span>
-              <span className="text-2xl font-bold text-amber-600">₹{totalRemainingPending.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Remaining Balance</span>
+              <span className="font-['Outfit'] font-bold text-3xl text-amber-600 mt-1 block">₹{totalRemainingPending.toLocaleString()}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <DollarSign className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <DollarSign className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-400 block">Confirmed Orders</span>
-              <span className="text-2xl font-bold text-ocean-600">{confirmedCount}</span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Confirmed Orders</span>
+              <span className="font-['Outfit'] font-bold text-3xl text-ocean-600 mt-1 block">{confirmedCount}</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-              <CheckCircle className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
             </div>
           </div>
         </div>
 
         {/* Header Controls & Filter Tabs */}
-        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {['All', 'Packages', 'Activities', 'Pending Advance', 'Advance Paid', 'Confirmed', 'Completed'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === tab
-                      ? 'bg-ocean-600 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-ocean-600 text-white shadow-xs'
+                      : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/70'
                   }`}
                 >
                   {tab}
@@ -250,11 +279,11 @@ export const BookingsManagerPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search ID, customer, phone, package..."
-                className="w-full sm:w-64 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:border-ocean-600"
+                className="w-full sm:w-64 px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:border-ocean-600"
               />
               <button
                 onClick={() => fetchBookings()}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-ocean-600 hover:text-white text-slate-600 transition-all cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-ocean-600 hover:text-white text-slate-600 transition-all cursor-pointer shrink-0"
                 title="Refresh Bookings"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -265,17 +294,17 @@ export const BookingsManagerPage: React.FC = () => {
 
         {/* Bookings Table */}
         {loading ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Loading package bookings...</div>
+          <div className="text-center py-12 text-slate-400 text-xs">Loading package bookings...</div>
         ) : filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 border border-slate-200">
+          <div className="bg-white rounded-2xl p-12 text-center text-slate-400 border border-slate-200/80">
             No package bookings found for the selected filter.
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+                  <tr className="bg-slate-50/80 text-slate-500 uppercase tracking-wider font-bold text-[10px] border-b border-slate-100">
                     <th className="p-4">Booking ID</th>
                     <th className="p-4">Customer Info</th>
                     <th className="p-4">Package & Travel</th>
@@ -287,12 +316,15 @@ export const BookingsManagerPage: React.FC = () => {
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filteredBookings.map((b) => {
                     const isAdvPaid = b.advancePaid || b.paymentStatus === 'Advance Paid' || b.paymentStatus === 'Full Paid';
+                    const { dateStr, timeStr } = getFormattedDateTime(b);
                     return (
                       <tr key={b._id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="p-4">
+                        <td className="p-3.5">
                           <div className="font-bold text-ocean-600 text-sm">{b.bookingId}</div>
-                          <div className="text-[11px] text-slate-400">
-                            {new Date(b.createdAt).toLocaleDateString()}
+                          <div className="flex items-center gap-1 mt-1 text-[11px]">
+                            <Clock className="w-3 h-3 text-ocean-600 shrink-0" />
+                            <span className="font-bold text-slate-800">{timeStr}</span>
+                            <span className="text-slate-400 font-medium">({dateStr})</span>
                           </div>
                         </td>
                         <td className="p-4 space-y-1">
@@ -411,19 +443,34 @@ export const BookingsManagerPage: React.FC = () => {
         )}
       </div>
 
-      {/* Edit Booking & Advance Modal */}
+      {/* Edit Booking & Advance Full Screen Modal */}
       {editBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 sm:px-10 py-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-ocean-50 text-ocean-600 flex items-center justify-center font-bold">
+                <ShoppingBag className="w-5 h-5" />
+              </div>
               <div>
-                <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
+                <h3 className="font-['Outfit'] font-bold text-lg sm:text-xl text-slate-900">
                   Manage Booking ({editBooking.bookingId})
                 </h3>
-                <p className="text-xs text-slate-400">Update advance amount, payment status, and customer details</p>
+                <p className="text-xs text-slate-500">Update advance amount, payment status, and customer details</p>
               </div>
-              <button onClick={() => setEditBooking(null)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
+            <button
+              type="button"
+              onClick={() => setEditBooking(null)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
@@ -576,23 +623,39 @@ export const BookingsManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* View Full Booking Details Modal */}
+      {/* View Full Booking Details Full Screen Modal */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-xl text-slate-800 space-y-4 border border-slate-200 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 sm:px-10 py-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-ocean-50 text-ocean-600 flex items-center justify-center font-bold">
+                <Eye className="w-5 h-5" />
+              </div>
               <div>
-                <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
+                <h3 className="font-['Outfit'] font-bold text-lg sm:text-xl text-slate-900">
                   Booking Details ({selectedBooking.bookingId})
                 </h3>
-                <span className="text-xs text-slate-400">Created: {new Date(selectedBooking.createdAt).toLocaleString()}</span>
+                <p className="text-xs text-slate-500">Created: {new Date(selectedBooking.createdAt).toLocaleString()}</p>
               </div>
-              <button onClick={() => setSelectedBooking(null)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
+            <button
+              type="button"
+              onClick={() => setSelectedBooking(null)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <div className="space-y-3 text-xs">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
@@ -669,6 +732,7 @@ export const BookingsManagerPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       )}
     </AdminLayout>
   );

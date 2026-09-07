@@ -26,6 +26,26 @@ interface NotificationContextType {
 const STORAGE_KEY = 'hc_web_notifications_v1';
 const ENQUIRY_STATE_KEY = 'hc_web_known_enquiries_v1';
 const BOOKING_STATE_KEY = 'hc_web_known_bookings_v1';
+const DELETED_KEY = 'hc_web_deleted_notifications_v1';
+
+const getDeletedNotificationIds = (): string[] => {
+  try {
+    const saved = localStorage.getItem(DELETED_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveDeletedNotificationId = (id?: string, refId?: string) => {
+  try {
+    const current = getDeletedNotificationIds();
+    const set = new Set(current);
+    if (id) set.add(id);
+    if (refId) set.add(refId);
+    localStorage.setItem(DELETED_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+};
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
@@ -33,7 +53,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notifications, setNotifications] = useState<WebNotification[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const rawList: WebNotification[] = JSON.parse(saved);
+      const deletedSet = new Set(getDeletedNotificationIds());
+      return rawList.filter(
+        (n) => !deletedSet.has(n.id) && (!n.referenceId || !deletedSet.has(n.referenceId))
+      );
     } catch {
       return [];
     }
@@ -71,13 +96,20 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const addNotification = useCallback((item: WebNotification) => {
+    const deletedSet = new Set(getDeletedNotificationIds());
+    if (deletedSet.has(item.id) || (item.referenceId && deletedSet.has(item.referenceId))) {
+      return;
+    }
+
     updateNotifications((prev) => {
       // Avoid duplicates within 5 seconds
       const exists = prev.some(
         (n) =>
-          n.title === item.title &&
-          n.message === item.message &&
-          Math.abs(new Date(n.timestamp).getTime() - new Date(item.timestamp).getTime()) < 5000
+          n.id === item.id ||
+          (n.referenceId && item.referenceId && n.referenceId === item.referenceId) ||
+          (n.title === item.title &&
+            n.message === item.message &&
+            Math.abs(new Date(n.timestamp).getTime() - new Date(item.timestamp).getTime()) < 5000)
       );
       if (exists) return prev;
 
@@ -124,12 +156,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!token && !userStr) return;
 
     let userEmail = '';
+    let isAdmin = window.location.pathname.startsWith('/admin');
     try {
       if (userStr) {
         const u = JSON.parse(userStr);
         userEmail = u.email || '';
+        if (u.role === 'admin' || u.isAdmin) isAdmin = true;
       }
     } catch {}
+
+    // Skip customer-side status change notifications when in admin mode
+    if (isAdmin) return;
+
+    const deletedSet = new Set(getDeletedNotificationIds());
 
     // 1. Check Enquiries
     try {
@@ -143,7 +182,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       for (const eq of enquiries) {
         const id = eq.id || eq._id;
-        if (!id) continue;
+        if (!id || deletedSet.has(id)) continue;
 
         const currentStatus = (eq.status || 'Pending').toString().trim();
         const destinationName =
@@ -197,7 +236,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       for (const bk of bookings) {
         const id = (bk._id || bk.id || '').toString();
-        if (!id) continue;
+        if (!id || deletedSet.has(id)) continue;
 
         const currentStatus = (bk.status || 'Pending').toString();
         const currentPayment = (bk.paymentStatus || 'Pending').toString();
@@ -292,18 +331,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     updateNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
+    apiClient.patch(`/admin/notifications/${id}/read`).catch(() => {});
   };
 
   const markAllAsRead = () => {
     updateNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    apiClient.patch('/admin/notifications/read-all').catch(() => {});
   };
 
   const clearAll = () => {
+    notifications.forEach((n) => saveDeletedNotificationId(n.id, n.referenceId));
     updateNotifications(() => []);
+    apiClient.delete('/admin/notifications/clear-all').catch(() => {});
   };
 
   const removeNotification = (id: string) => {
-    updateNotifications((prev) => prev.filter((n) => n.id !== id));
+    const target = notifications.find((n) => n.id === id);
+    saveDeletedNotificationId(id, target?.referenceId);
+    updateNotifications((prev) =>
+      prev.filter((n) => n.id !== id && (!target?.referenceId || n.referenceId !== target.referenceId))
+    );
+    apiClient.delete(`/admin/notifications/${id}`).catch(() => {});
+    if (target?.referenceId) {
+      apiClient.delete(`/admin/notifications/${target.referenceId}`).catch(() => {});
+    }
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;

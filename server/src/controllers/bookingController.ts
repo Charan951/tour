@@ -11,6 +11,7 @@ import {
   sendBookingStatusUpdateEmail,
   sendPaymentReceiptEmail
 } from '../services/emailService.js';
+import { createNotification } from '../services/notificationService.js';
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
@@ -33,6 +34,7 @@ export const createBooking = async (req: Request, res: Response) => {
       children,
       travelers,
       pricingTier,
+      selectedAddOns,
       totalPrice,
       advanceAmount,
       advancePaid,
@@ -138,6 +140,12 @@ export const createBooking = async (req: Request, res: Response) => {
     const isAdvPaid = Boolean(advancePaid);
     const remaining = Math.max(0, numTotal - (isAdvPaid ? numAdvance : 0));
 
+    const formattedAddOns = Array.isArray(selectedAddOns) ? selectedAddOns.map((addon: any) => ({
+      id: isValidObjectId(addon.id || addon._id) ? addon.id || addon._id : null,
+      title: addon.title || 'Add-on Activity',
+      price: Number(addon.price || 0)
+    })) : [];
+
     const booking = await Booking.create({
       bookingId,
       bookingType: resolvedBookingType,
@@ -158,6 +166,7 @@ export const createBooking = async (req: Request, res: Response) => {
       adults: Number(adults || (travelers && typeof travelers === 'object' ? travelers.adults : travelers) || 1),
       children: Number(children || (travelers && typeof travelers === 'object' ? travelers.children : 0) || 0),
       pricingTier: pricingTier || 'Standard',
+      selectedAddOns: formattedAddOns,
       totalPrice: numTotal,
       advanceAmount: numAdvance,
       advancePaid: isAdvPaid,
@@ -178,6 +187,23 @@ export const createBooking = async (req: Request, res: Response) => {
 
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
     emitCreate('Booking', populatedBooking, 'general_updates');
+
+    const exactPackageName =
+      (populatedBooking?.package as any)?.title ||
+      resolvedPackageName ||
+      (populatedBooking?.activity as any)?.title ||
+      resolvedActivityName ||
+      (populatedBooking?.destination as any)?.name ||
+      resolvedDestinationName ||
+      'Tour Package';
+
+    createNotification({
+      type: 'booking',
+      title: '🎉 New Tour Booking!',
+      message: `${resolvedName} booked "${exactPackageName}" (${bookingId})`,
+      entityId: booking._id.toString(),
+      link: '/admin/bookings'
+    });
 
     // Trigger instant email notification to customer
     sendBookingConfirmationEmail(populatedBooking).catch(err =>
@@ -322,7 +348,18 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       booking.remainingBalance = Math.max(0, booking.totalPrice - (isPaid ? booking.advanceAmount : 0));
     }
 
-    booking.updatedBy = req.user?.id as any;
+    if (booking.updatedBy && !mongoose.Types.ObjectId.isValid(booking.updatedBy.toString())) {
+      booking.updatedBy = null as any;
+    }
+    if (booking.assignedTo && !mongoose.Types.ObjectId.isValid(booking.assignedTo.toString())) {
+      booking.assignedTo = null as any;
+    }
+
+    if (req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id)) {
+      booking.updatedBy = req.user.id as any;
+    } else {
+      booking.updatedBy = null;
+    }
     await booking.save();
 
     const populatedBooking = await Booking.findById(booking._id)
@@ -332,6 +369,28 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
 
     emitDataUpdate('Booking', populatedBooking, 'general_updates');
     emitUpdate('Booking', populatedBooking, 'general_updates');
+
+    // User-scoped notification: attach the booking owner's email so the mobile app can fetch it
+    if (booking.email && booking.email.toString().trim().length > 0) {
+      const exactPackageName =
+        (populatedBooking?.package as any)?.title ||
+        populatedBooking?.packageName ||
+        (populatedBooking?.activity as any)?.title ||
+        populatedBooking?.activityName ||
+        (populatedBooking?.destination as any)?.name ||
+        populatedBooking?.destinationName ||
+        'Tour Package';
+
+      createNotification({
+        type: 'booking',
+        title: 'Booking Status Update',
+        message: `Booking #${booking.bookingId} ("${exactPackageName}") status is now "${booking.status}".`,
+        entityId: booking._id.toString(),
+        status: booking.status,
+        link: '/admin/bookings',
+        userEmail: booking.email.toString().trim().toLowerCase()
+      });
+    }
 
     // Trigger email notification to customer on status / payment update
     sendBookingStatusUpdateEmail(populatedBooking).catch(err =>

@@ -73,6 +73,8 @@ interface UseRealtimeUpdatesOptions {
   onBlogUpdate?: (data: any) => void;
   onThemeUpdate?: (data: any) => void;
   onEnquiryUpdate?: (data: any) => void;
+  onBookingUpdate?: (data: any) => void;
+  onNotificationUpdate?: (data: any) => void;
   onDataUpdate?: (type: string, data: any) => void;
   room?: string;
 }
@@ -94,6 +96,8 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     onBlogUpdate, 
     onThemeUpdate,
     onEnquiryUpdate,
+    onBookingUpdate,
+    onNotificationUpdate,
     onDataUpdate,
     room = 'general_updates' 
   } = options;
@@ -110,6 +114,8 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     onBlogUpdate,
     onThemeUpdate,
     onEnquiryUpdate,
+    onBookingUpdate,
+    onNotificationUpdate,
     onDataUpdate
   });
 
@@ -122,9 +128,11 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       onBlogUpdate,
       onThemeUpdate,
       onEnquiryUpdate,
+      onBookingUpdate,
+      onNotificationUpdate,
       onDataUpdate
     };
-  }, [onPackageUpdate, onActivityUpdate, onDestinationUpdate, onBannerUpdate, onBlogUpdate, onThemeUpdate, onEnquiryUpdate, onDataUpdate]);
+  }, [onPackageUpdate, onActivityUpdate, onDestinationUpdate, onBannerUpdate, onBlogUpdate, onThemeUpdate, onEnquiryUpdate, onBookingUpdate, onNotificationUpdate, onDataUpdate]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -227,7 +235,28 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       callbacksRef.current.onEnquiryUpdate?.({ id: payload.id, deleted: true });
     };
 
+    const handleBookingCreated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onBookingUpdate?.(payload.data);
+    };
+    const handleBookingUpdated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onBookingUpdate?.(payload.data);
+    };
+    const handleBookingDeleted = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onBookingUpdate?.({ id: payload.id, deleted: true });
+    };
+
+    const handleNotificationCreated = (payload: any) => {
+      notifyDataChanged();
+      callbacksRef.current.onNotificationUpdate?.(payload);
+    };
+
     socket.on('data_updated', handleDataUpdated);
+    socket.on('notification_created', handleNotificationCreated);
+    socket.on('notification_updated', handleNotificationCreated);
+    socket.on('notification_deleted', handleNotificationCreated);
 
     socket.on('package:created', handlePackageCreated);
     socket.on('package:updated', handlePackageUpdated);
@@ -257,12 +286,19 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     socket.on('enquiry:updated', handleEnquiryUpdated);
     socket.on('enquiry:deleted', handleEnquiryDeleted);
 
+    socket.on('booking:created', handleBookingCreated);
+    socket.on('booking:updated', handleBookingUpdated);
+    socket.on('booking:deleted', handleBookingDeleted);
+
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
 
       socket.off('data_updated', handleDataUpdated);
+      socket.off('notification_created', handleNotificationCreated);
+      socket.off('notification_updated', handleNotificationCreated);
+      socket.off('notification_deleted', handleNotificationCreated);
 
       socket.off('package:created', handlePackageCreated);
       socket.off('package:updated', handlePackageUpdated);
@@ -287,6 +323,10 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       socket.off('enquiry:created', handleEnquiryCreated);
       socket.off('enquiry:updated', handleEnquiryUpdated);
       socket.off('enquiry:deleted', handleEnquiryDeleted);
+
+      socket.off('booking:created', handleBookingCreated);
+      socket.off('booking:updated', handleBookingUpdated);
+      socket.off('booking:deleted', handleBookingDeleted);
     };
   }, [room]);
 

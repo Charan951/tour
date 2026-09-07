@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Plus, Trash2, Edit, MessageSquare, HelpCircle, Star, Phone, Mail, MapPin, Settings as SettingsIcon, Save } from 'lucide-react';
+import { FileText, Plus, Trash2, Edit, MessageSquare, HelpCircle, Star, Phone, Mail, MapPin, Settings as SettingsIcon, Save, Menu } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
-import { AdminLayout } from '../components/AdminLayout';
+import { AdminLayout, useAdminSidebar } from '../components/AdminLayout';
 import toast from 'react-hot-toast';
 
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 
 export const CMSManagerPage: React.FC = () => {
+  const { toggleSidebar } = useAdminSidebar();
   const [blogs, setBlogs] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -630,16 +631,42 @@ export const CMSManagerPage: React.FC = () => {
 
       </div>
 
-      {/* Add/Edit Blog Modal */}
+      {/* Add/Edit Blog Full Screen Modal */}
       {blogModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 w-full max-w-xl border border-slate-200 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
-                {editingBlogId ? 'Edit Blog Article' : 'Add New Blog Article'}
-              </h3>
-              <button onClick={() => setBlogModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 py-3 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs active:scale-95 shrink-0"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-9 h-9 rounded-xl bg-ocean-50 text-ocean-600 border border-ocean-200/60 flex items-center justify-center font-bold shrink-0">
+                <FileText className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="font-['Outfit'] font-bold text-base text-slate-900 leading-tight">
+                  {editingBlogId ? 'Edit Blog Article' : 'Add New Blog Article'}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">Publish travel guides, tips, and blog content live on website</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setBlogModalOpen(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <form onSubmit={handleSaveBlog} className="space-y-4 text-xs">
               <div>
@@ -707,20 +734,47 @@ export const CMSManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add/Edit Testimonial Modal */}
+      {/* Add/Edit Testimonial Full Screen Modal */}
       {testModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 w-full max-w-lg border border-slate-200 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
-                {editingTestId ? 'Edit Customer Review' : 'Add Customer Review'}
-              </h3>
-              <button onClick={() => setTestModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 sm:px-10 py-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200 shadow-2xs mr-1 active:scale-95"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-['Outfit'] font-bold text-lg sm:text-xl text-slate-900">
+                  {editingTestId ? 'Edit Customer Review' : 'Add Customer Review'}
+                </h3>
+                <p className="text-xs text-slate-500">Add or edit customer feedback and star ratings</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setTestModalOpen(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-3xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <form onSubmit={handleSaveTestimonial} className="space-y-4 text-xs">
               <div>
@@ -771,20 +825,47 @@ export const CMSManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add/Edit FAQ Modal */}
+      {/* Add/Edit FAQ Full Screen Modal */}
       {faqModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 w-full max-w-lg border border-slate-200 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
-                {editingFaqId ? 'Edit FAQ' : 'Add FAQ'}
-              </h3>
-              <button onClick={() => setFaqModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 sm:px-10 py-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200 shadow-2xs mr-1 active:scale-95"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-['Outfit'] font-bold text-lg sm:text-xl text-slate-900">
+                  {editingFaqId ? 'Edit FAQ' : 'Add FAQ'}
+                </h3>
+                <p className="text-xs text-slate-500">Configure frequently asked question and answer</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setFaqModalOpen(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-3xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <form onSubmit={handleSaveFAQ} className="space-y-4 text-xs">
               <div>
@@ -835,6 +916,7 @@ export const CMSManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

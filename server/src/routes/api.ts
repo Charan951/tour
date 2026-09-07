@@ -18,6 +18,7 @@ import { getThemeBanners, upsertThemeBanner, deleteThemeBanner } from '../contro
 import { getSitemapXML } from '../controllers/sitemapController.js';
 import { createBooking, getAdminBookings, getUserBookings, updateBookingStatus, deleteBooking, payRemainingBalance } from '../controllers/bookingController.js';
 import { sendChatMessage, getTopicMessages, getAdminConversations, markTopicAsRead } from '../controllers/chatController.js';
+import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, clearAllNotifications, getUserNotifications, markUserNotificationRead, markAllUserNotificationsRead, deleteUserNotification } from '../controllers/notificationController.js';
 import uploadRoutes from './uploadRoutes.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { authRateLimiter, enquiryRateLimiter, contactRateLimiter } from '../middleware/security.js';
@@ -180,5 +181,28 @@ router.patch('/admin/faqs/:id', requireRole(['Super Admin', 'Admin', 'Content Ma
 router.delete('/admin/faqs/:id', requireRole(['Super Admin', 'Admin', 'Content Manager', 'Sales Executive']), deleteFAQ);
 
 router.patch('/admin/settings', requireRole(['Super Admin', 'Admin']), updateSettings);
+
+// Admin Notification Routes
+router.get('/notifications', getNotifications);
+router.get('/admin/notifications', getNotifications);
+
+// User-Scoped Notification Routes (for mobile app - must be BEFORE /:id wildcard routes)
+router.get('/notifications/my', getUserNotifications);
+router.patch('/notifications/my/read-all', markAllUserNotificationsRead);
+router.patch('/notifications/my/:id/read', markUserNotificationRead);
+router.delete('/notifications/my/:id', deleteUserNotification);
+
+router.patch('/notifications/read-all', markAllNotificationsRead);
+router.patch('/admin/notifications/read-all', markAllNotificationsRead);
+
+router.patch('/notifications/:id/read', markNotificationRead);
+router.patch('/admin/notifications/:id/read', markNotificationRead);
+
+router.delete('/notifications/clear-all', clearAllNotifications);
+router.delete('/admin/notifications/clear-all', clearAllNotifications);
+
+router.delete('/notifications/:id', deleteNotification);
+router.delete('/admin/notifications/:id', deleteNotification);
+
 
 export default router;

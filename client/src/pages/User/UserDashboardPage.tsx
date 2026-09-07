@@ -230,13 +230,15 @@ export const UserDashboardPage: React.FC = () => {
       localStorage.setItem('hc_user', JSON.stringify(loggedInUser));
       localStorage.setItem('hc_user_email', loggedInUser.email);
       localStorage.setItem('hc_token', sessionToken);
-      localStorage.setItem('hc_access_token', sessionToken);
+
+      const isUserAdmin = isAdminRole(loggedInUser.role, loggedInUser.email);
+      if (isUserAdmin) {
+        localStorage.setItem('hc_access_token', sessionToken);
+      }
 
       window.dispatchEvent(new Event('hc_user_updated'));
       setCurrentUser(loggedInUser);
       setAuthLoading(false);
-
-      const isUserAdmin = isAdminRole(loggedInUser.role, loggedInUser.email);
 
       if (isUserAdmin) {
         setAuthSuccess('Admin credentials verified! Redirecting to Admin Panel...');
@@ -317,7 +319,6 @@ export const UserDashboardPage: React.FC = () => {
     localStorage.setItem('hc_user', JSON.stringify(user));
     localStorage.setItem('hc_user_email', user.email);
     localStorage.setItem('hc_token', sessionToken);
-    localStorage.setItem('hc_access_token', sessionToken);
     window.dispatchEvent(new Event('hc_user_updated'));
     setCurrentUser(user);
     setAuthLoading(false);
@@ -362,7 +363,11 @@ export const UserDashboardPage: React.FC = () => {
       localStorage.setItem('hc_user', JSON.stringify(registeredUser));
       localStorage.setItem('hc_user_email', registeredUser.email);
       localStorage.setItem('hc_token', sessionToken);
-      localStorage.setItem('hc_access_token', sessionToken);
+
+      const isUserAdmin = isAdminRole(registeredUser.role, registeredUser.email);
+      if (isUserAdmin) {
+        localStorage.setItem('hc_access_token', sessionToken);
+      }
 
       window.dispatchEvent(new Event('hc_user_updated'));
       setCurrentUser(registeredUser);

@@ -55,17 +55,30 @@ class NotificationModel {
   }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    final id = (json['_id'] ?? json['id'] ?? '').toString();
+    final title = (json['title'] ?? 'Notification').toString();
+    final message = (json['message'] ?? '').toString();
+    final type = (json['type'] ?? 'general').toString();
+    final isRead = json['isRead'] == true;
+    final status = json['status']?.toString();
+    final refId = (json['entityId'] ?? json['referenceId'])?.toString();
+
+    DateTime ts = DateTime.now();
+    if (json['createdAt'] != null) {
+      ts = DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now();
+    } else if (json['timestamp'] != null) {
+      ts = DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now();
+    }
+
     return NotificationModel(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      message: json['message'] as String? ?? '',
-      type: json['type'] as String? ?? 'general',
-      timestamp: json['timestamp'] != null
-          ? DateTime.tryParse(json['timestamp'] as String) ?? DateTime.now()
-          : DateTime.now(),
-      isRead: json['isRead'] as bool? ?? false,
-      status: json['status'] as String?,
-      referenceId: json['referenceId'] as String?,
+      id: id,
+      title: title,
+      message: message,
+      type: type,
+      timestamp: ts,
+      isRead: isRead,
+      status: status,
+      referenceId: refId,
     );
   }
 }

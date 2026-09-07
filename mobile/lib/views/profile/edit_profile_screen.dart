@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/api_service.dart';
 
-/// Edit Profile — matches the web mobile redesign (UserDashboardPage.tsx
-/// `screen === 'editProfile'`) and the reference mockup: photo, personal
-/// information, security (change password), preferences, save / cancel.
+/// Edit Profile — personal information, security (change password), preferences, save / cancel.
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -38,7 +34,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final u = Provider.of<AuthProvider>(context, listen: false).user;
-    _name = TextEditingController(text: (u?.fullName ?? '').trim());
+    _name = TextEditingController(text: (u?.displayName ?? u?.fullName ?? '').trim());
     _phone = TextEditingController(text: u?.mobile ?? '');
     _city = TextEditingController(text: u?.city ?? '');
     _language = _languages.contains(u?.language) ? u!.language : 'English';
@@ -71,278 +67,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: ok ? AppTheme.successColor : AppTheme.errorColor,
     ));
     if (ok) Navigator.pop(context);
-  }
-
-  Future<void> _changePhoto() async {
-    final currentAvatar = Provider.of<AuthProvider>(context, listen: false).user?.avatar ?? '';
-    final ImagePicker picker = ImagePicker();
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (bottomSheetCtx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Profile Photo',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Upload a photo from your device or paste an image link',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.photo_library_outlined, color: AppTheme.primaryColor),
-                  ),
-                  title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: const Text('Upload photo from device gallery', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                  onTap: () async {
-                    Navigator.pop(bottomSheetCtx);
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    if (!mounted) return;
-
-                    try {
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.gallery,
-                        imageQuality: 85,
-                      );
-                      if (image != null && mounted) {
-                        await _processImageUpload(image);
-                      }
-                    } catch (e) {
-                      debugPrint('Gallery pick error: $e');
-                      if (!mounted) return;
-                      _showUrlInputDialog(
-                        currentAvatar,
-                        errorMsg: 'Device gallery unavailable. You can paste an image link below.',
-                      );
-                    }
-                  },
-                ),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.camera_alt_outlined, color: AppTheme.primaryColor),
-                  ),
-                  title: const Text('Take a Photo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: const Text('Capture photo with camera', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                  onTap: () async {
-                    Navigator.pop(bottomSheetCtx);
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    if (!mounted) return;
-
-                    try {
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.camera,
-                        imageQuality: 85,
-                      );
-                      if (image != null && mounted) {
-                        await _processImageUpload(image);
-                      }
-                    } catch (e) {
-                      debugPrint('Camera pick error: $e');
-                      if (!mounted) return;
-                      _showUrlInputDialog(
-                        currentAvatar,
-                        errorMsg: 'Camera unavailable. You can paste an image link below.',
-                      );
-                    }
-                  },
-                ),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.link_outlined, color: AppTheme.primaryColor),
-                  ),
-                  title: const Text('Enter Image URL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: const Text('Paste a public image link (JPG / PNG)', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                  onTap: () async {
-                    Navigator.pop(bottomSheetCtx);
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    if (mounted) {
-                      _showUrlInputDialog(currentAvatar);
-                    }
-                  },
-                ),
-                if (currentAvatar.isNotEmpty) ...[
-                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.errorColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
-                    ),
-                    title: const Text('Remove Photo', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.errorColor)),
-                    onTap: () async {
-                      Navigator.pop(bottomSheetCtx);
-                      await _updateAvatar('');
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _processImageUpload(XFile file) async {
-    if (!mounted) return;
-
-    try {
-      final rawBytes = await file.readAsBytes();
-      if (!mounted) return;
-
-      // Show Crop & Frame Dialog before uploading
-      final croppedBytes = await showDialog<Uint8List>(
-        context: context,
-        builder: (_) => ImageCropDialog(imageBytes: rawBytes),
-      );
-
-      if (croppedBytes == null || !mounted) return;
-
-      // Show modal progress dialog while uploading
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogCtx) => PopScope(
-          canPop: false,
-          child: Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 20),
-                  Text('Uploading photo...', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final uploadedUrl = await ApiService.uploadImageBytes(croppedBytes, filename: file.name);
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop(); // Dismiss loading dialog
-
-      await _updateAvatar(uploadedUrl);
-    } catch (e) {
-      debugPrint('Upload error: $e');
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).maybePop();
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Upload error: ${e.toString().replaceAll('Exception: ', '')}'),
-        backgroundColor: AppTheme.errorColor,
-      ));
-    }
-  }
-
-  Future<void> _showUrlInputDialog(String currentAvatar, {String? errorMsg}) async {
-    final ctrl = TextEditingController(text: currentAvatar);
-    final url = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Profile Photo Link'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (errorMsg != null) ...[
-              Container(
-                padding: const EdgeInsets.all(10),
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(errorMsg, style: const TextStyle(fontSize: 12, color: AppTheme.errorColor)),
-              ),
-            ],
-            const Text('Paste a public image URL (JPG / PNG).',
-                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: ctrl,
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'https://...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, ctrl.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    if (url != null && mounted) {
-      await _updateAvatar(url);
-    }
-  }
-
-  Future<void> _updateAvatar(String url) async {
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final ok = await auth.updateProfile({'avatar': url});
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'Photo updated successfully' : (auth.errorMessage ?? 'Could not update photo')),
-      backgroundColor: ok ? AppTheme.successColor : AppTheme.errorColor,
-    ));
   }
 
   Future<void> _changePassword() async {
@@ -459,193 +183,153 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
             ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Photo
-                    Row(
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            CircleAvatar(
-                              radius: 32,
-                              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.12),
-                              backgroundImage: ApiService.getAvatarImageProvider(user?.avatar),
-                              child: (user?.avatar == null || user!.avatar!.isEmpty)
-                                  ? const Icon(Icons.person, color: AppTheme.primaryColor, size: 32)
-                                  : null,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Profile Avatar Initial Display
+                      Center(
+                        child: CircleAvatar(
+                          radius: 36,
+                          backgroundColor: AppTheme.primaryColor,
+                          child: Text(
+                            (user?.displayName ?? user?.fullName ?? '').trim().isNotEmpty
+                                ? (user?.displayName ?? user?.fullName ?? '').trim()[0].toUpperCase()
+                                : 'U',
+                            style: GoogleFonts.outfit(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
                             ),
-                            Positioned(
-                              bottom: -2,
-                              right: -2,
-                              child: GestureDetector(
-                                onTap: _changePhoto,
-                                child: Container(
-                                  width: 26,
-                                  height: 26,
-                                  decoration: const BoxDecoration(
-                                      color: AppTheme.textPrimary, shape: BoxShape.circle),
-                                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Profile Photo',
-                                  style: GoogleFonts.outfit(
-                                      fontSize: 14, fontWeight: FontWeight.w800)),
-                              const Text('JPG, PNG up to 5MB',
-                                  style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                              const SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: _changePhoto,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryColor,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                ),
-                                child: const Text('Change Photo', style: TextStyle(fontSize: 12)),
-                              ),
-                            ],
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    _sectionTitle('Personal Information'),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'Full Name',
-                      child: TextFormField(
-                        controller: _name,
-                        decoration: _bare(),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'Email',
-                      filled: true,
-                      trailing: _verifiedPill(),
-                      child: Text(user?.email ?? '—',
-                          style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
-                    ),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'Phone Number',
-                      child: TextFormField(
-                        controller: _phone,
-                        keyboardType: TextInputType.phone,
-                        decoration: _bare(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'City',
-                      child: TextFormField(
-                        controller: _city,
-                        decoration: _bare(hint: 'Enter your city'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                    _sectionTitle('Security'),
-                    const SizedBox(height: 12),
-                    _rowCard(
-                      icon: Icons.lock_outline,
-                      title: 'Change Password',
-                      subtitle: 'Update your account password',
-                      onTap: _changePassword,
-                    ),
-                    const SizedBox(height: 24),
-
-                    _sectionTitle('Preferences'),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'Preferred Language',
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _language,
-                          isExpanded: true,
-                          items: _languages
-                              .map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 14))))
-                              .toList(),
-                          onChanged: (v) => setState(() => _language = v ?? 'English'),
+                      _sectionTitle('Personal Information'),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'Full Name',
+                        child: TextFormField(
+                          controller: _name,
+                          decoration: _bare(),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _fieldCard(
-                      label: 'Currency',
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _currency,
-                          isExpanded: true,
-                          items: _currencies.entries
-                              .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 14))))
-                              .toList(),
-                          onChanged: (v) => setState(() => _currency = v ?? 'INR'),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'Email',
+                        filled: true,
+                        trailing: _verifiedPill(),
+                        child: Text(user?.email ?? '—',
+                            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+                      ),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'Phone Number',
+                        child: TextFormField(
+                          controller: _phone,
+                          keyboardType: TextInputType.phone,
+                          decoration: _bare(),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'City',
+                        child: TextFormField(
+                          controller: _city,
+                          decoration: _bare(hint: 'Enter your city'),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: auth.isLoading ? null : _save,
-                        icon: auth.isLoading
-                            ? const SizedBox(
-                                width: 16, height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Icon(Icons.check, size: 18),
-                        label: const Text('Save Changes'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      _sectionTitle('Security'),
+                      const SizedBox(height: 12),
+                      _rowCard(
+                        icon: Icons.lock_outline,
+                        title: 'Change Password',
+                        subtitle: 'Update your account password',
+                        onTap: _changePassword,
+                      ),
+                      const SizedBox(height: 24),
+
+                      _sectionTitle('Preferences'),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'Preferred Language',
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _language,
+                            isExpanded: true,
+                            items: _languages
+                                .map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 14))))
+                                .toList(),
+                            onChanged: (v) => setState(() => _language = v ?? 'English'),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.primaryColor,
-                          side: const BorderSide(color: AppTheme.borderLight),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      const SizedBox(height: 12),
+                      _fieldCard(
+                        label: 'Currency',
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _currency,
+                            isExpanded: true,
+                            items: _currencies.entries
+                                .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 14))))
+                                .toList(),
+                            onChanged: (v) => setState(() => _currency = v ?? 'INR'),
+                          ),
                         ),
-                        child: const Text('Cancel'),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 28),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: auth.isLoading ? null : _save,
+                          icon: auth.isLoading
+                              ? const SizedBox(
+                                  width: 16, height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.check, size: 18),
+                          label: const Text('Save Changes'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.primaryColor,
+                            side: const BorderSide(color: AppTheme.borderLight),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   InputDecoration _bare({String? hint}) => InputDecoration(
         isDense: true,
@@ -660,16 +344,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _verifiedPill() => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: const Color(0xFFECFDF5),
+          color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.verified_user, size: 12, color: Color(0xFF047857)),
+            Icon(Icons.verified_user, size: 12, color: Color(0xFF475569)),
             SizedBox(width: 4),
             Text('VERIFIED',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF047857))),
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF475569))),
           ],
         ),
       );
@@ -715,12 +400,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.borderLight),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
@@ -742,164 +426,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-/// Interactive Crop & Frame Dialog for profile photos.
-class ImageCropDialog extends StatefulWidget {
-  final Uint8List imageBytes;
-  const ImageCropDialog({super.key, required this.imageBytes});
-
-  @override
-  State<ImageCropDialog> createState() => _ImageCropDialogState();
-}
-
-class _ImageCropDialogState extends State<ImageCropDialog> {
-  final TransformationController _transformationController = TransformationController();
-  int _turns = 0;
-
-  @override
-  void dispose() {
-    _transformationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.grey.shade900,
-      insetPadding: const EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Crop Profile Photo',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(context, null),
-                ),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Drag or pinch to position your photo within the circular frame.',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: 260,
-            height: 260,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                ClipOval(
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    color: Colors.black,
-                    child: InteractiveViewer(
-                      transformationController: _transformationController,
-                      minScale: 0.8,
-                      maxScale: 4.0,
-                      child: RotatedBox(
-                        quarterTurns: _turns,
-                        child: Image.memory(
-                          widget.imageBytes,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                IgnorePointer(
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.primaryColor, width: 3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => setState(() => _turns = (_turns + 1) % 4),
-                icon: const Icon(Icons.rotate_right, color: Colors.white, size: 16),
-                label: const Text('Rotate 90°', style: TextStyle(color: Colors.white, fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white38),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  _transformationController.value = Matrix4.identity();
-                  setState(() => _turns = 0);
-                },
-                icon: const Icon(Icons.refresh, color: Colors.white, size: 16),
-                label: const Text('Reset', style: TextStyle(color: Colors.white, fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white38),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context, widget.imageBytes),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white38),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Use Original'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, widget.imageBytes),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Crop & Save'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

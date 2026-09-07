@@ -1,5 +1,11 @@
 import { Schema, model } from 'mongoose';
 
+const bookingAddOnSchema = new Schema({
+  id: { type: Schema.Types.ObjectId, ref: 'Activity', default: null },
+  title: { type: String, required: true },
+  price: { type: Number, required: true, default: 0 }
+});
+
 const bookingNoteSchema = new Schema({
   note: { type: String, required: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -37,6 +43,7 @@ const bookingSchema = new Schema(
     adults: { type: Number, default: 1 },
     children: { type: Number, default: 0 },
     pricingTier: { type: String, default: 'Standard' },
+    selectedAddOns: [bookingAddOnSchema],
 
     totalPrice: { type: Number, required: true },
     advanceAmount: { type: Number, required: true, default: 0 },

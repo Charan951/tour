@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class EnquiryModel {
   final String? id;
   final String name;
@@ -13,6 +15,7 @@ class EnquiryModel {
   final int travelers;
   final String travelDate;
   final String message;
+  final List<Map<String, dynamic>> selectedAddOns;
   final String status;
   final String? adminResponse;
   final String createdAt;
@@ -31,11 +34,19 @@ class EnquiryModel {
     this.children = 0,
     this.travelers = 1,
     required this.travelDate,
+    this.selectedAddOns = const [],
     this.message = '',
     this.status = 'New',
     this.adminResponse,
     this.createdAt = '',
   });
+
+  String get formattedCreatedDateTime {
+    if (createdAt.isEmpty) return 'N/A';
+    final dt = DateTime.tryParse(createdAt)?.toLocal();
+    if (dt == null) return createdAt;
+    return DateFormat('MMM d, yyyy • h:mm a').format(dt);
+  }
 
   factory EnquiryModel.fromJson(Map<String, dynamic> json) {
     String destName = '';
@@ -86,6 +97,13 @@ class EnquiryModel {
       c = int.tryParse(json['travelers']['children'].toString()) ?? 0;
     }
 
+    List<Map<String, dynamic>> addOnsList = [];
+    if (json['selectedAddOns'] is List) {
+      addOnsList = (json['selectedAddOns'] as List)
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+    }
+
     return EnquiryModel(
       id: json['_id'] ?? json['id'] ?? json['enquiryId'],
       name: json['fullName'] ?? json['name'] ?? 'Traveler',
@@ -100,10 +118,11 @@ class EnquiryModel {
       children: c,
       travelers: a + c,
       travelDate: json['travelDate'] != null ? json['travelDate'].toString().split('T').first : '',
+      selectedAddOns: addOnsList,
       message: json['message'] ?? '',
       status: json['status'] ?? 'New',
       adminResponse: json['adminResponse'] ?? json['response'] ?? json['adminNotes'],
-      createdAt: json['createdAt'] != null ? json['createdAt'].toString().split('T').first : '',
+      createdAt: json['createdAt'] != null ? json['createdAt'].toString() : '',
     );
   }
 
@@ -119,6 +138,7 @@ class EnquiryModel {
       'children': children,
       'travelers': travelers,
       'travelDate': travelDate,
+      'selectedAddOns': selectedAddOns,
       'message': message,
       'source': 'ContactForm',
       'enquiryType': enquiryType,

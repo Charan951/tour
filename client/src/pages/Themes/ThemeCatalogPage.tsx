@@ -68,8 +68,11 @@ export const ThemeCatalogPage: React.FC = () => {
     }, 100);
   };
 
-  const handleOpenEnquire = (pkg: any) => {
+  const [enquiryInitialMode, setEnquiryInitialMode] = useState<'enquiry' | 'booking'>('enquiry');
+
+  const handleOpenEnquire = (pkg: any, initialMode: 'enquiry' | 'booking' = 'enquiry') => {
     setSelectedPackage(pkg);
+    setEnquiryInitialMode(initialMode);
     setEnquiryModalOpen(true);
   };
 
@@ -198,6 +201,7 @@ export const ThemeCatalogPage: React.FC = () => {
       <PackageEnquiryModal
         isOpen={enquiryModalOpen}
         selectedPackage={selectedPackage}
+        initialMode={enquiryInitialMode}
         onClose={() => setEnquiryModalOpen(false)}
       />
     </>

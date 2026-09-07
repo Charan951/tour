@@ -11,6 +11,7 @@ import {
   sendEnquiryStatusUpdateEmail,
   sendAdminEnquiryNotificationEmail
 } from '../services/emailService.js';
+import { createNotification } from '../services/notificationService.js';
 
 export const createEnquiry = async (req: Request, res: Response) => {
   try {
@@ -31,6 +32,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
       children, 
       budget, 
       travelType, 
+      selectedAddOns,
       message, 
       source 
     } = req.body;
@@ -95,6 +97,12 @@ export const createEnquiry = async (req: Request, res: Response) => {
     const count = await Enquiry.countDocuments();
     const enquiryId = `HC-2026-${(count + 1001).toString()}`;
 
+    const formattedAddOns = Array.isArray(selectedAddOns) ? selectedAddOns.map((addon: any) => ({
+      id: mongoose.Types.ObjectId.isValid(addon.id || addon._id) ? addon.id || addon._id : null,
+      title: addon.title || 'Add-on Activity',
+      price: Number(addon.price || 0)
+    })) : [];
+
     const enquiry = await Enquiry.create({
       enquiryId,
       fullName: resolvedFullName,
@@ -110,6 +118,7 @@ export const createEnquiry = async (req: Request, res: Response) => {
       children: children || 0,
       budget: budget || null,
       travelType: travelType || 'Family',
+      selectedAddOns: formattedAddOns,
       message: appendedMessage,
       source: source || (resolvedActivity ? 'ActivityPage' : 'PackagePage'),
       status: 'New',
@@ -122,8 +131,20 @@ export const createEnquiry = async (req: Request, res: Response) => {
       .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .lean();
 
-    emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
-    emitCreate('Enquiry', populatedEnquiry, 'general_updates');
+    const exactPackageName =
+      (populatedEnquiry?.package as any)?.title ||
+      (populatedEnquiry?.activity as any)?.title ||
+      (populatedEnquiry as any)?.activityTitle ||
+      (populatedEnquiry?.destination as any)?.name ||
+      'Tour Package';
+
+    createNotification({
+      type: 'enquiry',
+      title: '📩 New Customer Enquiry',
+      message: `${resolvedFullName} submitted enquiry for "${exactPackageName}" (${enquiryId})`,
+      entityId: enquiry._id.toString(),
+      link: '/admin/leads'
+    });
 
     // Trigger instant email notification to user & admin
     sendEnquiryConfirmationEmail(populatedEnquiry).catch(err =>
@@ -220,7 +241,21 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
     if (travelType !== undefined) enquiry.travelType = travelType;
     if (message !== undefined) enquiry.message = message;
 
-    enquiry.updatedBy = req.user?.id as any;
+    if (enquiry.updatedBy && !mongoose.Types.ObjectId.isValid(enquiry.updatedBy.toString())) {
+      enquiry.updatedBy = null as any;
+    }
+    if (enquiry.createdBy && !mongoose.Types.ObjectId.isValid(enquiry.createdBy.toString())) {
+      enquiry.createdBy = null as any;
+    }
+    if (enquiry.assignedTo && !mongoose.Types.ObjectId.isValid(enquiry.assignedTo.toString())) {
+      enquiry.assignedTo = null as any;
+    }
+
+    if (req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id)) {
+      enquiry.updatedBy = req.user.id as any;
+    } else {
+      enquiry.updatedBy = null;
+    }
 
     await enquiry.save();
 
@@ -230,8 +265,32 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
       .populate('activity', 'title slug activityCode startingPrice duration category location coverImage')
       .populate('assignedTo', 'firstName lastName email');
 
+    if (!populatedEnquiry) {
+      return res.status(404).json({ success: false, message: 'Enquiry not found after update' });
+    }
+
     emitDataUpdate('Enquiry', populatedEnquiry, 'general_updates');
     emitUpdate('Enquiry', populatedEnquiry, 'general_updates');
+
+    const exactPackageName =
+      (populatedEnquiry.package as any)?.title ||
+      (populatedEnquiry.activity as any)?.title ||
+      (populatedEnquiry as any)?.activityTitle ||
+      (populatedEnquiry.destination as any)?.name ||
+      'Tour Package';
+
+    // User-scoped notification: attach the enquiry owner's email so the mobile app can fetch it
+    if (enquiry.email && enquiry.email.toString().trim().length > 0) {
+      createNotification({
+        type: 'enquiry',
+        title: 'Enquiry Status Update',
+        message: `Your enquiry for "${exactPackageName}" status has been updated to "${enquiry.status}".`,
+        entityId: enquiry._id.toString(),
+        status: enquiry.status,
+        link: '/admin/leads',
+        userEmail: enquiry.email.toString().trim().toLowerCase()
+      });
+    }
 
     // Trigger email update notification to user
     sendEnquiryStatusUpdateEmail(populatedEnquiry).catch(err =>
@@ -262,10 +321,11 @@ export const addEnquiryNote = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
     }
 
+    const noteAuthor = (req.user?.id && mongoose.Types.ObjectId.isValid(req.user.id)) ? req.user.id : null;
     enquiry.notes = enquiry.notes || [];
     enquiry.notes.push({
       note,
-      createdBy: req.user?.id as any,
+      createdBy: noteAuthor as any,
       createdAt: new Date()
     });
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Plus, Edit, Trash2, Sparkles, CheckCircle2, Layers, Search, Eye } from 'lucide-react';
+import { Tag, Plus, Edit, Trash2, Sparkles, CheckCircle2, Layers, Search, Eye, Menu } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
-import { AdminLayout } from '../components/AdminLayout';
+import { AdminLayout, useAdminSidebar } from '../components/AdminLayout';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
 import toast from 'react-hot-toast';
 
 export const CategoryManagerPage: React.FC = () => {
+  const { toggleSidebar } = useAdminSidebar();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -220,16 +221,42 @@ export const CategoryManagerPage: React.FC = () => {
         )}
       </div>
 
-      {/* Create / Edit Category Modal */}
+      {/* Create / Edit Category Full Screen Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">
-                {editingId ? 'Edit Category' : 'Create New Category'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 py-3 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs active:scale-95 shrink-0"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-9 h-9 rounded-xl bg-ocean-50 text-ocean-600 border border-ocean-200/60 flex items-center justify-center font-bold shrink-0">
+                <Tag className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="font-['Outfit'] font-bold text-base text-slate-900 leading-tight">
+                  {editingId ? 'Edit Category' : 'Create New Category'}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">Manage activity and tour package category definitions</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-3xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             <form onSubmit={handleSave} className="space-y-4 text-sm">
               <div className="grid grid-cols-3 gap-3">
@@ -320,6 +347,7 @@ export const CategoryManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

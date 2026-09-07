@@ -222,18 +222,39 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Row: Booking ID & Status Pill
+                // Top Row: Booking ID (+ Time) & Status Pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      bookingId,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            bookingId,
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (b['createdAt'] != null && b['createdAt'].toString().isNotEmpty)
+                            Builder(
+                              builder: (_) {
+                                final dt = DateTime.tryParse(b['createdAt'].toString())?.toLocal();
+                                final timeStr = dt != null ? DateFormat('MMM d, yyyy • h:mm a').format(dt) : b['createdAt'].toString().substring(0, 10);
+                                return Text(
+                                  timeStr,
+                                  style: const TextStyle(fontSize: 10.5, color: Colors.grey, fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                            ),
+                        ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(

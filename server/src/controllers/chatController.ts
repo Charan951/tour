@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ChatMessage } from '../models/ChatMessage.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { sendChatReplyNotificationEmail } from '../services/emailService.js';
+import { createNotification } from '../services/notificationService.js';
 
 export const sendChatMessage = async (req: Request, res: Response) => {
   try {
@@ -57,6 +58,16 @@ export const sendChatMessage = async (req: Request, res: Response) => {
     if (io) {
       io.to(`chat_${resolvedTopicId}`).emit('new_chat_message', newMsg);
       io.emit('chat_activity_update', { topicId: resolvedTopicId, newMsg });
+    }
+
+    if (resolvedSenderType === 'User') {
+      createNotification({
+        type: 'chat',
+        title: `💬 New Chat from ${resolvedSenderName}`,
+        message: resolvedMessage.length > 60 ? `${resolvedMessage.substring(0, 60)}...` : resolvedMessage,
+        entityId: resolvedTopicId,
+        link: normalizedTopicType === 'Booking' ? '/admin/bookings' : '/admin/leads'
+      });
     }
 
     // If Admin sent the message, trigger email notification to user

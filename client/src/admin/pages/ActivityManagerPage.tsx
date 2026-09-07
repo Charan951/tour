@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Plus, Trash2, Edit, CheckCircle, Clock, MapPin, Tag, Compass, Sparkles } from 'lucide-react';
+import { Zap, Plus, Trash2, Edit, CheckCircle, Clock, MapPin, Tag, Compass, Sparkles, Menu } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
-import { AdminLayout } from '../components/AdminLayout';
+import { AdminLayout, useAdminSidebar } from '../components/AdminLayout';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 import { FALLBACK_ACTIVITIES } from '../../utils/mobileDataFallback';
@@ -29,6 +29,7 @@ const DEFAULT_ACTIVITY_CATEGORIES = [
 ];
 
 export const ActivityManagerPage: React.FC = () => {
+  const { toggleSidebar } = useAdminSidebar();
   const [activities, setActivities] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>(DEFAULT_ACTIVITY_CATEGORIES);
@@ -324,7 +325,7 @@ export const ActivityManagerPage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Status bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600 gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-600 gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {isConnected ? (
@@ -374,13 +375,13 @@ export const ActivityManagerPage: React.FC = () => {
         </div>
 
         {/* Category Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           <button
             onClick={() => setCategoryFilter('All')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
               categoryFilter === 'All'
-                ? 'bg-ocean-600 text-white shadow-md'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-ocean-600 text-white shadow-xs'
+                : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'
             }`}
           >
             All Categories ({activities.length})
@@ -391,10 +392,10 @@ export const ActivityManagerPage: React.FC = () => {
               <button
                 key={cat.name}
                 onClick={() => setCategoryFilter(cat.name)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
                   categoryFilter === cat.name
-                    ? 'bg-ocean-600 border-ocean-600 text-white shadow-md'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    ? 'bg-ocean-600 border-ocean-600 text-white shadow-xs'
+                    : 'bg-white border-slate-200/80 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <span>{cat.icon}</span>
@@ -407,17 +408,17 @@ export const ActivityManagerPage: React.FC = () => {
 
         {/* Activities Table */}
         {loading ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Loading activities...</div>
+          <div className="text-center py-12 text-slate-400 text-xs">Loading activities...</div>
         ) : filteredActivities.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 border border-slate-200">
+          <div className="bg-white rounded-2xl p-12 text-center text-slate-400 border border-slate-200/80">
             No activities found matching your search or category filter.
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+                  <tr className="bg-slate-50/80 text-slate-500 uppercase tracking-wider font-bold text-[10px] border-b border-slate-100">
                     <th className="p-4">Code</th>
                     <th className="p-4">Activity Title</th>
                     <th className="p-4">Category</th>
@@ -487,104 +488,268 @@ export const ActivityManagerPage: React.FC = () => {
         )}
       </div>
 
-      {/* Create / Edit Activity Modal */}
+      {/* Create / Edit Activity Full Screen Executive Editor Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-xl text-slate-900">
-                {editingId ? 'Edit Activity Details' : 'Create New Activity'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Compact Header Bar */}
+          <div className="sticky top-0 z-40 bg-white border-b border-slate-200/90 px-6 py-3 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs active:scale-95 shrink-0"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                <Zap className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">
+                    {editingId ? 'Editor Mode' : 'New Activity'}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium">• Admin Portal</span>
+                </div>
+                <h3 className="font-['Outfit'] font-bold text-base text-slate-900 leading-tight mt-0.5">
+                  {editingId ? 'Edit Activity Specifications' : 'Create New Activity'}
+                </h3>
+              </div>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-5 text-xs">
-              {/* Category Selector */}
-              <div>
-                <label className="block text-slate-700 mb-1.5 font-bold">Select Activity Category *</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {categoriesList.map((cat) => {
-                    const isSelected = category === cat.name;
-                    return (
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer active:scale-95"
+              >
+                ✕ Discard
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  const form = document.getElementById('activity-form') as HTMLFormElement;
+                  if (form) form.requestSubmit();
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-ocean-600/15 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" />
+                {editingId ? 'Save Changes' : 'Publish Activity'}
+              </button>
+            </div>
+          </div>
+
+          {/* Full Screen Body Content - Clean Balanced Layout */}
+          <div className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            <form id="activity-form" onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs text-slate-800 items-start">
+              
+              {/* LEFT COLUMN: Main Form Details (2/3 width) */}
+              <div className="lg:col-span-2 space-y-5">
+                
+                {/* 1. Core Information Card */}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-ocean-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">General Activity Information</h4>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1 text-[11px]">Activity Title *</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        placeholder="e.g. Bungee Jumping Extreme"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold text-xs focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1 text-[11px] flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-rose-500" /> Location / Spot Name
+                      </label>
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. Mohan Chatti, Rishikesh"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-medium focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1 text-[11px]">Overview Description</label>
+                    <textarea
+                      value={overview}
+                      onChange={(e) => setOverview(e.target.value)}
+                      rows={2}
+                      placeholder="Write a concise overview description of the activity..."
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-medium focus:bg-white focus:border-ocean-600 transition-all leading-normal"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Media & Visual Assets Card */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">Cover Media Asset</h4>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                    <div>
+                      <CloudinaryImageUploader
+                        label="Upload Cover Image"
+                        currentUrl={coverImage}
+                        onUploadSuccess={(url) => setCoverImage(url)}
+                      />
+                      <div className="mt-2">
+                        <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Cover Image Direct URL *</label>
+                        <input
+                          type="text"
+                          value={coverImage}
+                          onChange={(e) => setCoverImage(e.target.value)}
+                          required
+                          placeholder="https://images.unsplash.com/photo-..."
+                          className="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[10px] focus:bg-white focus:border-ocean-600"
+                        />
+                      </div>
+                    </div>
+
+                    {coverImage ? (
+                      <div className="relative rounded-xl overflow-hidden border border-slate-200 h-28 bg-slate-950">
+                        <img src={coverImage} alt="Cover Preview" className="w-full h-28 object-cover opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2">
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/90 text-white font-bold text-[9px] uppercase">Live Preview</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-28 rounded-xl border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-[11px]">
+                        No image uploaded yet
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Inclusions, Exclusions & Highlights Card */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    <h4 className="font-bold text-slate-900 text-xs">Inclusions, Exclusions & Highlights</h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1 text-[11px]">Key Highlights (comma separated)</label>
+                    <input
+                      type="text"
+                      value={highlights}
+                      onChange={(e) => setHighlights(e.target.value)}
+                      placeholder="e.g. 83m Jump Height, Certified Instructors, GoPro Video"
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-medium focus:bg-white focus:border-ocean-600"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="bg-emerald-50/40 p-2.5 rounded-lg border border-emerald-200/60 space-y-1">
+                      <label className="block text-emerald-800 font-bold text-[11px]">Inclusions (comma separated)</label>
+                      <textarea
+                        value={inclusions}
+                        onChange={(e) => setInclusions(e.target.value)}
+                        rows={2}
+                        placeholder="e.g. Entry Pass, Safety Gear, Video Copy"
+                        className="w-full p-2 rounded bg-white border border-emerald-200 outline-none text-slate-900 text-[11px] font-medium"
+                      />
+                    </div>
+
+                    <div className="bg-rose-50/40 p-2.5 rounded-lg border border-rose-200/60 space-y-1">
+                      <label className="block text-rose-800 font-bold text-[11px]">Exclusions (comma separated)</label>
+                      <textarea
+                        value={exclusions}
+                        onChange={(e) => setExclusions(e.target.value)}
+                        rows={2}
+                        placeholder="e.g. Personal Transport, Food & Drinks"
+                        className="w-full p-2 rounded bg-white border border-rose-200 outline-none text-slate-900 text-[11px] font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN: Sidebar Settings & Controls (1/3 width) */}
+              <div className="space-y-3.5">
+
+                {/* 1. Categorization Selector Card */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2">
+                  <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                    Activity Category *
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {categoriesList.map((cat) => {
+                      const isSelected = category === cat.name;
+                      return (
+                        <button
+                          key={cat.name}
+                          type="button"
+                          onClick={() => setCategory(cat.name)}
+                          className={`p-1.5 rounded-lg border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-ocean-600 border-ocean-600 text-white shadow-2xs'
+                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>{cat.icon}</span>
+                          <span className="truncate">{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Destination Assignment Card */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                    <h4 className="font-bold text-slate-900 text-xs">Destination Location *</h4>
+                    <div className="flex gap-1">
                       <button
-                        key={cat.name}
                         type="button"
-                        onClick={() => setCategory(cat.name)}
-                        className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-ocean-600 border-ocean-600 text-white shadow-md'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                        }`}
+                        onClick={() => { setSelectedRegion('All'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'All' ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-600'}`}
                       >
-                        <span>{cat.icon}</span>
-                        <span>{cat.name}</span>
+                        All
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedRegion('Domestic'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'Domestic' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        🇮🇳 India
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedRegion('International'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'International' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        🌍 World
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Region Filter Buttons for Destination */}
-              <div>
-                <label className="block text-slate-700 mb-1.5 font-semibold">Filter Destination Region</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('All'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                      selectedRegion === 'All'
-                        ? 'bg-ocean-600 border-ocean-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    All ({destinations.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('Domestic'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                      selectedRegion === 'Domestic'
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    🇮🇳 India ({domesticDests.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('International'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                      selectedRegion === 'International'
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    🌍 World ({intlDests.length})
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Activity Title *</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    placeholder="e.g. Bungee Jumping & Flying Fox Extreme"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600 font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Which Destination is this Activity for? *</label>
                   <select
                     value={destinationId}
                     onChange={(e) => setDestinationId(e.target.value)}
                     required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600 font-bold"
+                    className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-bold focus:border-ocean-600 focus:bg-white"
                   >
-                    <option value="">-- Select Destination --</option>
+                    <option value="">-- Choose Destination --</option>
                     {selectedRegion === 'All' ? (
                       <>
                         <optgroup label="🇮🇳 India (Domestic)">
@@ -605,152 +770,117 @@ export const ActivityManagerPage: React.FC = () => {
                     )}
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Starting Price (₹) *</label>
-                  <input
-                    type="number"
-                    value={startingPrice}
-                    onChange={(e) => setStartingPrice(Number(e.target.value))}
-                    required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
-                  />
+                {/* 3. Pricing & Duration Card */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2.5">
+                  <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                    Pricing & Duration
+                  </h4>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-0.5 text-[10px]">Offer Price (₹) *</label>
+                      <input
+                        type="number"
+                        value={startingPrice}
+                        onChange={(e) => setStartingPrice(Number(e.target.value))}
+                        required
+                        className="w-full p-1.5 rounded-lg bg-emerald-50/50 border border-emerald-200 text-emerald-800 font-extrabold text-xs outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-0.5 text-[10px]">Original Price (₹)</label>
+                      <input
+                        type="number"
+                        value={discountPrice}
+                        onChange={(e) => setDiscountPrice(Number(e.target.value))}
+                        placeholder="e.g. 3000"
+                        className="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-0.5 text-[10px]">Duration *</label>
+                    <input
+                      type="text"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      required
+                      placeholder="e.g. 2 Hours / Full Day"
+                      className="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs outline-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Discount Price (₹)</label>
-                  <input
-                    type="number"
-                    value={discountPrice}
-                    onChange={(e) => setDiscountPrice(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
+
+                {/* 4. Visibility & Submit Button */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-2 bg-amber-50/80 p-2 rounded-lg border border-amber-200/80">
+                    <input
+                      type="checkbox"
+                      id="featuredAct"
+                      checked={featured}
+                      onChange={(e) => setFeatured(e.target.checked)}
+                      className="w-3.5 h-3.5 text-ocean-600 rounded cursor-pointer accent-ocean-600"
+                    />
+                    <label htmlFor="featuredAct" className="text-slate-800 font-bold text-[11px] cursor-pointer leading-tight">
+                      Feature on Home & App Highlights
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 font-extrabold text-white text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {editingId ? 'Save Changes' : 'Publish Activity'}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Duration *</label>
-                  <input
-                    type="text"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    required
-                    placeholder="e.g. 3 Hours / Full Day"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
+
               </div>
 
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Specific Location / Spot Name</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Mohan Chatti, Rishikesh / Grand Island, North Goa"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <CloudinaryImageUploader
-                label="Upload Cover Image to Cloudinary"
-                currentUrl={coverImage}
-                onUploadSuccess={(url) => setCoverImage(url)}
-              />
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Cover Image URL *</label>
-                <input
-                  type="text"
-                  value={coverImage}
-                  onChange={(e) => setCoverImage(e.target.value)}
-                  required
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-emerald-600 mb-1 font-bold">Activity Inclusions (comma separated)</label>
-                  <textarea
-                    value={inclusions}
-                    onChange={(e) => setInclusions(e.target.value)}
-                    rows={3}
-                    placeholder="e.g. Jump Entry Pass, Safety Harness, Instructor Briefing, GoPro Video"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-rose-600 mb-1 font-bold">Activity Exclusions (comma separated)</label>
-                  <textarea
-                    value={exclusions}
-                    onChange={(e) => setExclusions(e.target.value)}
-                    rows={3}
-                    placeholder="e.g. Transport to Spot, Personal Shopping, Food & Water"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-rose-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Activity Highlights (comma separated)</label>
-                <input
-                  type="text"
-                  value={highlights}
-                  onChange={(e) => setHighlights(e.target.value)}
-                  placeholder="e.g. 83m Jump Height, PADI Certified Instructors, Sunset Views"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Activity Overview & Description</label>
-                <textarea
-                  value={overview}
-                  onChange={(e) => setOverview(e.target.value)}
-                  rows={3}
-                  placeholder="Full narrative description of the activity experience..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 bg-amber-50 p-3 rounded-xl border border-amber-200">
-                <input
-                  type="checkbox"
-                  id="featuredAct"
-                  checked={featured}
-                  onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 text-ocean-600 rounded cursor-pointer"
-                />
-                <label htmlFor="featuredAct" className="text-slate-800 font-bold text-xs cursor-pointer">
-                  Feature this Activity on Home & App Landing Pages
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
-                  {editingId ? 'Update Activity Changes' : 'Publish New Activity'}
-                </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold cursor-pointer">
-                  Cancel
-                </button>
-              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Category Manager Modal embedded inside Activity Manager */}
+      {/* Category Manager Full Screen Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Tag className="w-5 h-5 text-purple-600" />
-                <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">Manage Activity Categories</h3>
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Header Bar */}
+          <div className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-6 sm:px-10 py-4 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200 shadow-2xs mr-1 active:scale-95"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                <Tag className="w-5 h-5" />
               </div>
-              <button onClick={() => setIsCategoryModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+              <div>
+                <h3 className="font-['Outfit'] font-bold text-lg sm:text-xl text-slate-900">
+                  Manage Activity Categories
+                </h3>
+                <p className="text-xs text-slate-500">Create & organize thrill categories live</p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              ✕ Close Window
+            </button>
+          </div>
+
+          {/* Full Screen Body Content */}
+          <div className="flex-1 w-full max-w-3xl mx-auto p-4 sm:p-8">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6 text-xs text-slate-800">
 
             {/* Existing Categories List */}
             <div className="space-y-2">
@@ -820,6 +950,7 @@ export const ActivityManagerPage: React.FC = () => {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}

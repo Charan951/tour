@@ -25,6 +25,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState('All Packages');
   const [loading, setLoading] = useState(true);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'enquiry' | 'booking'>('enquiry');
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) {
@@ -230,7 +231,10 @@ export const MobileDestinationDetailPage: React.FC = () => {
               <MobilePackageCard
                 key={pkg._id || i}
                 pkg={pkg}
-                onBookNow={() => setEnquiryOpen(true)}
+                onBookNow={() => {
+                  setModalMode('booking');
+                  setEnquiryOpen(true);
+                }}
               />
             ))
           )}
@@ -238,10 +242,13 @@ export const MobileDestinationDetailPage: React.FC = () => {
       </div>
 
       {/* ── STICKY BOTTOM BUTTON ── Matches Image 3 "Enquire for TELAGANA Tour" */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-30">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#ffffff]/80 backdrop-blur-md border-t border-slate-200 z-30">
         <button
-          onClick={() => setEnquiryOpen(true)}
-          className="w-full py-3.5 bg-ocean-600 text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-transform"
+          onClick={() => {
+            setModalMode('enquiry');
+            setEnquiryOpen(true);
+          }}
+          className="w-full py-3.5 bg-ocean-600 text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-transform cursor-pointer"
         >
           Enquire for {destNameShort} Tour
         </button>
@@ -251,6 +258,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
         isOpen={enquiryOpen}
         onClose={() => setEnquiryOpen(false)}
         selectedDestination={dest}
+        initialMode={modalMode}
       />
     </div>
   );

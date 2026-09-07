@@ -125,41 +125,66 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                bookingId,
-                                style: GoogleFonts.outfit(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    bookingId,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              IconButton(
-                                tooltip: 'Copy booking ID',
-                                icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: bookingId));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Booking ID copied to clipboard!')),
+                                const SizedBox(width: 6),
+                                IconButton(
+                                  tooltip: 'Copy booking ID',
+                                  icon: const Icon(Icons.copy, size: 16, color: Colors.grey),
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(text: bookingId));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Booking ID copied to clipboard!')),
+                                    );
+                                  },
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ],
+                            ),
+                            if (b['createdAt'] != null && b['createdAt'].toString().isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Builder(
+                                builder: (_) {
+                                  final dt = DateTime.tryParse(b['createdAt'].toString())?.toLocal();
+                                  final timeStr = dt != null
+                                      ? DateFormat('MMM d, yyyy • h:mm a').format(dt)
+                                      : b['createdAt'].toString().substring(0, 10);
+                                  return Row(
+                                    children: [
+                                      const Icon(Icons.access_time, size: 12, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          'Booked on $timeStr',
+                                          style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   );
                                 },
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
                               ),
                             ],
-                          ),
-                          if (b['createdAt'] != null)
-                            Text(
-                              'Booked on ${b['createdAt'].toString().substring(0, 10)}',
-                              style: const TextStyle(fontSize: 11, color: Colors.grey),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(

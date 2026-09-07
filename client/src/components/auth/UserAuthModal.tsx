@@ -72,11 +72,13 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
       localStorage.setItem('hc_user', JSON.stringify(loggedInUser));
       localStorage.setItem('hc_user_email', loggedInUser.email);
       localStorage.setItem('hc_token', sessionToken);
-      localStorage.setItem('hc_access_token', sessionToken);
-
-      window.dispatchEvent(new Event('hc_user_updated'));
 
       const isUserAdmin = isAdminRole(loggedInUser.role, loggedInUser.email);
+      if (isUserAdmin) {
+        localStorage.setItem('hc_access_token', sessionToken);
+      }
+
+      window.dispatchEvent(new Event('hc_user_updated'));
 
       if (isUserAdmin) {
         setSuccessMsg('Admin credentials verified! Redirecting to Admin Panel...');
@@ -144,11 +146,13 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
       localStorage.setItem('hc_user', JSON.stringify(registeredUser));
       localStorage.setItem('hc_user_email', registeredUser.email);
       localStorage.setItem('hc_token', sessionToken);
-      localStorage.setItem('hc_access_token', sessionToken);
-
-      window.dispatchEvent(new Event('hc_user_updated'));
 
       const isUserAdmin = isAdminRole(registeredUser.role, registeredUser.email);
+      if (isUserAdmin) {
+        localStorage.setItem('hc_access_token', sessionToken);
+      }
+
+      window.dispatchEvent(new Event('hc_user_updated'));
 
       setSuccessMsg('Account created successfully! Redirecting to your profile...');
       toast.success(`Account created! Welcome, ${registeredUser.firstName}!`);

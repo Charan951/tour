@@ -106,6 +106,13 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _homeActivities = results[4] as List<ActivityModel>;
       });
+
+      // Set the logged-in user's email on NotificationProvider
+      // so it can fetch user-specific notifications from the server
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+      final userEmail = authProvider.user?.email;
+      notifProvider.setUserEmail(userEmail);
     }
 
     if (mounted && bannerProvider.banners.isNotEmpty) {

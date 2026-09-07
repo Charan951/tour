@@ -21,7 +21,7 @@ export const PackageDetailPage: React.FC = () => {
     setEnquiryInitialMode(mode);
     setEnquiryModalOpen(true);
   };
-  const handleOpenEnquiry = () => openEnquiry('enquiry');
+  const handleOpenEnquiry = (p?: any, mode: 'enquiry' | 'booking' = 'enquiry') => openEnquiry(mode);
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) {

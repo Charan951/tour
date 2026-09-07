@@ -14,9 +14,17 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  // Try user token first (stored by UserAuthModal as 'hc_token')
-  // Then fall back to admin token ('hc_access_token')
-  const token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+  const isAdminRequest = (config.url && config.url.includes('/admin')) || window.location.pathname.startsWith('/admin');
+
+  let token = null;
+  if (isAdminRequest) {
+    // For admin endpoints & admin dashboard, prioritize hc_access_token
+    token = localStorage.getItem('hc_access_token') || localStorage.getItem('hc_token');
+  } else {
+    // For general customer endpoints, prioritize hc_token
+    token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+  }
+
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }

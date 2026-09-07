@@ -21,6 +21,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     navigate('/my-bookings');
   };
 
+  const user = JSON.parse(localStorage.getItem('hc_user') || '{}');
+
   const navItems = [
     {
       label: 'Executive Overview',
@@ -71,34 +73,34 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 shadow-2xl flex flex-col justify-between shrink-0 min-h-screen transition-transform duration-300 ease-in-out ${
+      className={`fixed inset-y-0 left-0 z-[70] w-64 bg-white text-slate-700 border-r border-slate-200 shadow-2xl flex flex-col justify-between shrink-0 min-h-screen transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
       <div>
         {/* Brand Header */}
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between min-h-[72px]">
+          <div className="flex items-center gap-2 min-w-0">
             <img
               src="/logo.png"
               alt="HolidayCity"
-              className="h-10 w-auto object-contain"
+              className="h-13 sm:h-14 w-auto max-w-[175px] object-contain drop-shadow-xs transition-all"
             />
           </div>
 
-          {/* Close Sidebar Icon Button */}
+          {/* Close Sidebar Button */}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
             title="Close Menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Menu Links */}
-        <nav className="p-4 space-y-1.5 mt-2">
-          <div className="px-3 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        {/* Navigation Menu */}
+        <nav className="p-3.5 space-y-1 mt-1 overflow-y-auto max-h-[calc(100vh-180px)]">
+          <div className="px-3 pb-2 pt-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             Main Management
           </div>
           {navItems.map((item) => {
@@ -109,10 +111,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={onClose} // Auto-close sidebar on item click!
-                className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all ${
+                onClick={onClose}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 active:scale-98 ${
                   isActive
-                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-700 text-white shadow-md shadow-ocean-600/20 scale-[1.01]'
+                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-700 text-white shadow-md shadow-ocean-600/20'
                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
@@ -120,20 +122,33 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                   <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                 </div>
-                {isActive && <ChevronRight className="w-4 h-4 text-white/80" />}
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/80" />}
               </Link>
             );
           })}
         </nav>
       </div>
 
-      {/* Logout Footer Button */}
-      <div className="p-4 border-t border-slate-100">
+      {/* Admin User Footer & Sign Out */}
+      <div className="p-3.5 border-t border-slate-100 bg-slate-50/50 space-y-2.5">
+        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+          <div className="w-8 h-8 rounded-full bg-ocean-600 text-white font-bold text-xs flex items-center justify-center shrink-0 border border-ocean-200/50 shadow-2xs">
+            {(user.firstName || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-slate-900 truncate">{user.firstName || 'Super Admin'}</div>
+            <div className="text-[10px] text-emerald-600 flex items-center gap-1 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Connected Live
+            </div>
+          </div>
+        </div>
+
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition-all active:scale-98 cursor-pointer border border-rose-200/60 shadow-2xs"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out Admin</span>
         </button>
       </div>

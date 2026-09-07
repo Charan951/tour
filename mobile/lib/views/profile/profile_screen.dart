@@ -16,7 +16,6 @@ import '../enquiry/my_enquiries_screen.dart';
 import '../chat/chat_bottom_sheet.dart';
 import '../notifications/notifications_screen.dart';
 import '../activities/activity_list_screen.dart';
-import '../../services/api_service.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -39,10 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isInitialLoadComplete = false;
 
   final ScrollController _scrollController = ScrollController();
-
-  // Signed-out state defaults to a plain menu; tapping "Log in" shows the
-  // real login form (LoginScreen embedded inline), matching the web
-  // UserDashboardPage.tsx menu -> auth-form flow.
   bool _showLoginForm = false;
 
   @override
@@ -86,7 +81,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             role: authUser?.role,
             email: authUser?.email,
           );
-          final bookings = await _bookingService.getUserBookings(email: authUser?.email);
+          final bookings =
+              await _bookingService.getUserBookings(email: authUser?.email);
           if (mounted) {
             setState(() {
               _userEnquiries = enquiries;
@@ -154,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Configure Backend Server'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -216,20 +213,22 @@ class _ProfileScreenState extends State<ProfileScreen>
     return _buildSignedInProfile(context, authProvider, user);
   }
 
-  /// Signed-out default: a plain white "menu" — Log in action + quick links.
-  /// Matches the web version's menu-first UX (no login form shown until the
-  /// user explicitly taps "Log in").
+  /// Signed-out view
   Widget _buildSignedOutMenu() {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Account'),
+        title: Text(
+          'Account',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimary),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -239,6 +238,13 @@ class _ProfileScreenState extends State<ProfileScreen>
               decoration: BoxDecoration(
                 gradient: AppTheme.headerGradient,
                 borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,51 +252,61 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Text(
                     'Plan trips. Track quotes.',
                     style: GoogleFonts.outfit(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     'Sign in to see your bookings, custom itineraries and consultant messages in one place.',
                     style: GoogleFonts.inter(
                       fontSize: 13,
+                      height: 1.4,
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 22),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () => setState(() => _showLoginForm = true),
-                      icon: const Icon(Icons.login, color: AppTheme.primaryDarkColor),
-                      label: const Text('Log in'),
+                      icon: const Icon(Icons.login_rounded,
+                          color: AppTheme.primaryDarkColor),
+                      label: const Text('Log in to Your Account'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppTheme.primaryDarkColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: GoogleFonts.outfit(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 4,
+                        shadowColor: Colors.black.withValues(alpha: 0.15),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             Text(
               'Explore HolidayCity',
               style: GoogleFonts.outfit(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
-            _quickLinkTile(Icons.support_agent, 'Contact us',
-                'Talk to a travel consultant', () {
+            const SizedBox(height: 14),
+            _quickLinkTile(
+                Icons.support_agent_rounded,
+                'Contact us',
+                'Talk to a travel consultant 24/7', () {
               ChatBottomSheet.show(
                 context,
                 topicId: 'GENERAL-SUPPORT',
@@ -300,68 +316,102 @@ class _ProfileScreenState extends State<ProfileScreen>
                 customerEmail: 'guest@holidaycity.com',
               );
             }),
-            _quickLinkTile(Icons.info_outline, 'About us',
-                'How we work', () {}),
-            _quickLinkTile(Icons.card_travel, 'Offers & Packages',
-                'Curated tour packages', () {}),
+            _quickLinkTile(Icons.info_outline_rounded, 'About us',
+                'Learn how we curate unforgettable trips', () {}),
+            _quickLinkTile(Icons.card_travel_rounded, 'Offers & Packages',
+                'Discover popular curated tour packages', () {}),
           ],
         ),
       ),
     );
   }
 
-  Widget _quickLinkTile(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _quickLinkTile(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
-          leading: Icon(icon, color: AppTheme.primaryColor),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppTheme.primaryColor, size: 22),
+          ),
+          title: Text(
+            title,
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded,
+              color: Color(0xFF94A3B8)),
           onTap: onTap,
         ),
       ),
     );
   }
 
-  /// Login form shown only after tapping "Log in" from the menu, with a way
-  /// back to the plain menu.
   Widget _buildInlineLoginForm() {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => setState(() => _showLoginForm = false),
         ),
-        title: const Text('Sign in'),
+        title: Text(
+          'Sign in',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
       ),
       body: const LoginScreen(),
     );
   }
 
-  Widget _buildSignedInProfile(BuildContext context, AuthProvider authProvider, dynamic user) {
-    final hasAvatar = user.avatar != null && (user.avatar as String).isNotEmpty;
-
+  /// Redesigned Signed-In Profile View matching user image layout with top modern aesthetics
+  Widget _buildSignedInProfile(
+      BuildContext context, AuthProvider authProvider, dynamic user) {
     void openEdit() => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const EditProfileScreen()),
         );
 
+    final userName = user.displayName;
+    final displayPhone =
+        user.mobile.isNotEmpty ? user.mobile : '9632508978';
+    final displayAddress =
+        user.city.isNotEmpty ? user.city : 'Add address';
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: RefreshIndicator(
         onRefresh: _loadUserData,
+        color: AppTheme.primaryColor,
         child: SingleChildScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
@@ -369,56 +419,78 @@ class _ProfileScreenState extends State<ProfileScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Gradient header — title + subtitle.
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 52, 16, 56),
-                decoration: const BoxDecoration(
-                  gradient: AppTheme.headerGradient,
-                  borderRadius: AppTheme.headerRadius,
-                ),
-                child: GestureDetector(
-                  onLongPress: _showServerConfigDialog,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'My Profile & Account',
-                        style: GoogleFonts.outfit(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
+              // Vibrant Top Header with subtle ambient circles backdrop
+              Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 52, 20, 52),
+                    decoration: const BoxDecoration(
+                      gradient: AppTheme.headerGradient,
+                      borderRadius: AppTheme.headerRadius,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onLongPress: _showServerConfigDialog,
+                          child: Text(
+                            'My Profile & Account',
+                            style: GoogleFonts.outfit(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Manage your account, bookings and preferences.',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.78),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Manage your account, bookings and preferences.',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.88),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+
+                  // Decorative glowing light overlay elements in header
+                  Positioned(
+                    top: -30,
+                    right: -20,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.06),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
+              // Overlapping Profile Identity Card
               Transform.translate(
-                offset: const Offset(0, -36),
+                offset: const Offset(0, -28),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   child: Column(
                     children: [
-                      // Identity card — matching design screenshot
+                      // User Identity Card Container
                       Container(
                         width: double.infinity,
                         clipBehavior: Clip.antiAlias,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0A6FB5).withValues(alpha: 0.08),
+                              color: const Color(0xFF0A6FB5)
+                                  .withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 6),
                             ),
@@ -426,10 +498,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         child: Column(
                           children: [
-                            // Top light blue gradient container
+                            // Top light-blue header area containing Profile Avatar, User info & Edit Profile
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.all(18),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 14),
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   begin: Alignment.topLeft,
@@ -437,62 +510,56 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   colors: [
                                     Color(0xFFEBF5FF),
                                     Color(0xFFF4F9FF),
-                                    Color(0xFFE3F0FC),
+                                    Color(0xFFE0F2FE),
                                   ],
                                 ),
                               ),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  GestureDetector(
-                                    onTap: openEdit,
-                                    child: Stack(
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 3),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.08),
-                                                blurRadius: 10,
-                                              ),
-                                            ],
-                                          ),
-                                          child: CircleAvatar(
-                                            radius: 34,
-                                            backgroundColor: const Color(0xFFD0E8FF),
-                                            backgroundImage: ApiService.getAvatarImageProvider(user.avatar),
-                                            child: hasAvatar
-                                                ? null
-                                                : const Icon(Icons.person_outline, color: Color(0xFF0A6FB5), size: 36),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          bottom: 0,
-                                          right: 0,
-                                          child: Container(
-                                            width: 22,
-                                            height: 22,
-                                            decoration: const BoxDecoration(
-                                              color: AppTheme.primaryColor,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
-                                          ),
+                                  // Profile Initial Avatar
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white, width: 2.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.primaryColor
+                                              .withValues(alpha: 0.25),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 3),
                                         ),
                                       ],
                                     ),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundColor: AppTheme.primaryColor,
+                                      child: Text(
+                                        userName.trim().isNotEmpty
+                                            ? userName.trim()[0].toUpperCase()
+                                            : 'U',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  const SizedBox(width: 14),
+                                  const SizedBox(width: 12),
+
+                                  // Name, Email & Verified Pill
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          user.fullName.trim().isEmpty ? 'Traveler' : user.fullName.trim(),
+                                          userName,
                                           style: GoogleFonts.outfit(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.w900,
                                             color: AppTheme.textPrimary,
                                             height: 1.1,
@@ -508,24 +575,33 @@ class _ProfileScreenState extends State<ProfileScreen>
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 6),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFDCFCE7),
-                                            borderRadius: BorderRadius.circular(999),
+                                            color: const Color(0xFFF1F5F9),
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                            border: Border.all(
+                                                color: const Color(0xFFE2E8F0)),
                                           ),
                                           child: const Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.check_circle, size: 14, color: Color(0xFF166534)),
-                                              SizedBox(width: 4),
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                size: 12,
+                                                color: Color(0xFF475569),
+                                              ),
+                                              SizedBox(width: 3),
                                               Text(
                                                 'VERIFIED',
                                                 style: TextStyle(
-                                                  fontSize: 10,
+                                                  fontSize: 9,
                                                   fontWeight: FontWeight.w900,
-                                                  color: Color(0xFF166534),
+                                                  letterSpacing: 0.5,
+                                                  color: Color(0xFF475569),
                                                 ),
                                               ),
                                             ],
@@ -534,19 +610,33 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       ],
                                     ),
                                   ),
+
+                                  // Edit Profile Button
                                   ElevatedButton.icon(
                                     onPressed: openEdit,
-                                    icon: const Icon(Icons.edit_outlined, size: 14, color: AppTheme.primaryColor),
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 13,
+                                      color: AppTheme.primaryColor,
+                                    ),
                                     label: const Text('Edit Profile'),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: AppTheme.primaryColor,
                                       elevation: 1,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
+                                      shadowColor: Colors.black
+                                          .withValues(alpha: 0.06),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      textStyle: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                        side: const BorderSide(
+                                            color: Color(0xFFCBD5E1)),
                                       ),
                                     ),
                                   ),
@@ -554,23 +644,33 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
 
-                            // Bottom Phone & Address rows
+                            // Phone & Address Row Tiles
                             Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
                               child: Column(
                                 children: [
                                   _detailRowTile(
-                                    Icons.phone_outlined,
-                                    'Phone Number',
-                                    user.mobile.isNotEmpty ? user.mobile : '9515694155',
-                                    openEdit,
+                                    icon: Icons.phone_android_rounded,
+                                    iconBgColor: const Color(0xFFEEF2FF),
+                                    iconColor: const Color(0xFF4F46E5),
+                                    label: 'Phone Number',
+                                    value: displayPhone,
+                                    onTap: openEdit,
                                   ),
-                                  const Divider(height: 16, color: Color(0xFFF1F5F9)),
+                                  const Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 2),
+                                    child: Divider(
+                                        height: 1, color: Color(0xFFF1F5F9)),
+                                  ),
                                   _detailRowTile(
-                                    Icons.location_on_outlined,
-                                    'Address',
-                                    user.city.isNotEmpty ? user.city : 'Add address',
-                                    openEdit,
+                                    icon: Icons.location_on_rounded,
+                                    iconBgColor: const Color(0xFFECFEFF),
+                                    iconColor: const Color(0xFF0891B2),
+                                    label: 'Address',
+                                    value: displayAddress,
+                                    onTap: openEdit,
                                   ),
                                 ],
                               ),
@@ -578,158 +678,204 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
 
-                      // Stat tiles with "View" links.
+                      // Compact Stat Cards Grid: ENQUIRIES & BOOKINGS
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: _buildStatCard(
-                              icon: Icons.chat_bubble_outline,
+                              icon: Icons.forum_rounded,
+                              iconBgColor: const Color(0xFFE0F2FE),
+                              iconColor: const Color(0xFF0284C7),
                               count: _userEnquiries.length.toString(),
-                              label: 'Enquiries',
+                              label: 'ENQUIRIES',
                               cta: 'View Enquiries',
-                              color: const Color(0xFF0A6FB5),
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const MyEnquiriesScreen())),
+                              ctaColor: AppTheme.primaryColor,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MyEnquiriesScreen(),
+                                ),
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: _buildStatCard(
-                              icon: Icons.shopping_bag_outlined,
+                              icon: Icons.shopping_bag_rounded,
+                              iconBgColor: const Color(0xFFEEF2FF),
+                              iconColor: const Color(0xFF4F46E5),
                               count: _userBookings.length.toString(),
-                              label: 'Bookings',
+                              label: 'BOOKINGS',
                               cta: 'View Bookings',
-                              color: const Color(0xFF10B981),
-                              onTap: () => Navigator.push(context,
-                                  MaterialPageRoute(builder: (_) => const MyBookingsScreen())),
+                              ctaColor: const Color(0xFF4F46E5),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MyBookingsScreen(),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'My travel activity',
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      // Section Header: My travel activity
+                      _buildSectionHeader('My travel activity'),
+                      const SizedBox(height: 8),
                       _buildGroupedCard([
                         _buildRow(
-                          icon: Icons.assignment_turned_in_outlined,
+                          icon: Icons.assignment_turned_in_rounded,
+                          iconBgColor: const Color(0xFFE0F2FE),
+                          iconColor: const Color(0xFF0284C7),
                           title: 'My Enquiries & Custom Quotes',
                           subtitle: 'Trip quotes, responses & status',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const MyEnquiriesScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyEnquiriesScreen(),
+                            ),
                           ),
                         ),
                         _buildRow(
-                          icon: Icons.shopping_bag_outlined,
+                          icon: Icons.shopping_bag_rounded,
+                          iconBgColor: const Color(0xFFEEF2FF),
+                          iconColor: const Color(0xFF4F46E5),
                           title: 'My Bookings & Payments',
                           subtitle: 'Active bookings, payment status & balance',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyBookingsScreen(),
+                            ),
                           ),
                         ),
                         _buildRow(
-                          icon: Icons.bolt,
+                          icon: Icons.bolt_rounded,
+                          iconBgColor: const Color(0xFFFFEDD5),
+                          iconColor: const Color(0xFFEA580C),
                           title: 'Thrill Activities & Sports',
                           subtitle: 'Bungee jumping, rafting, diving & booking',
-                          iconColor: const Color(0xFFFF6B00),
+                          badgeText: 'HOT',
+                          badgeColor: const Color(0xFFEA580C),
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const ActivityListScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const ActivityListScreen(),
+                            ),
                           ),
                         ),
                         _buildRow(
-                          icon: Icons.notifications_outlined,
+                          icon: Icons.notifications_active_rounded,
+                          iconBgColor: const Color(0xFFF3E8FF),
+                          iconColor: const Color(0xFF9333EA),
                           title: 'Notifications & Updates',
                           subtitle: 'Real-time booking and enquiry status alerts',
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsScreen(),
+                            ),
                           ),
                         ),
                       ]),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Account',
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      // Section Header: Account
+                      _buildSectionHeader('Account'),
+                      const SizedBox(height: 8),
                       _buildGroupedCard([
                         _buildRow(
-                          icon: Icons.support_agent,
+                          icon: Icons.support_agent_rounded,
+                          iconBgColor: const Color(0xFFDBEAFE),
+                          iconColor: const Color(0xFF2563EB),
                           title: 'Customer support',
                           subtitle: '24/7 Direct Admin Chat & Support',
+                          badgeText: 'LIVE 24/7',
+                          badgeColor: const Color(0xFF2563EB),
                           onTap: () {
                             ChatBottomSheet.show(
                               context,
                               topicId: 'GENERAL-SUPPORT',
                               topicType: 'General',
                               topicTitle: 'Customer Support',
-                              customerName: user.fullName,
+                              customerName: userName,
                               customerEmail: user.email,
                             );
                           },
                         ),
                         _buildRow(
-                          icon: Icons.privacy_tip_outlined,
+                          icon: Icons.shield_outlined,
+                          iconBgColor: const Color(0xFFF1F5F9),
+                          iconColor: const Color(0xFF475569),
                           title: 'Privacy Policy',
                           subtitle: 'How we handle your data',
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => LegalScreen.privacy()),
+                              builder: (_) => LegalScreen.privacy(),
+                            ),
                           ),
                         ),
                         _buildRow(
                           icon: Icons.description_outlined,
+                          iconBgColor: const Color(0xFFF1F5F9),
+                          iconColor: const Color(0xFF475569),
                           title: 'Terms & Conditions',
                           subtitle: 'The rules for using HolidayCity',
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => LegalScreen.terms()),
+                              builder: (_) => LegalScreen.terms(),
+                            ),
                           ),
                         ),
                         _buildRow(
-                          icon: Icons.logout,
-                          title: 'Log out',
-                          subtitle: null,
-                          titleColor: AppTheme.errorColor,
+                          icon: Icons.logout_rounded,
+                          iconBgColor: const Color(0xFFFEE2E2),
                           iconColor: AppTheme.errorColor,
+                          title: 'Log out',
+                          subtitle: 'Sign out of your account on this device',
+                          titleColor: AppTheme.errorColor,
                           onTap: () async {
-                            await authProvider.logout();
-                            if (!context.mounted) return;
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
-                              (route) => false,
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
+                                title: const Text('Log out'),
+                                content: const Text(
+                                    'Are you sure you want to log out?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.errorColor),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Log Out'),
+                                  ),
+                                ],
+                              ),
                             );
+                            if (confirm == true) {
+                              await authProvider.logout();
+                              if (!context.mounted) return;
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginScreen()),
+                                (route) => false,
+                              );
+                            }
                           },
                         ),
                       ]),
-                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -741,22 +887,46 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 3.5,
+          height: 15,
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildGroupedCard(List<Widget> rows) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
         clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
@@ -773,55 +943,102 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildRow({
     required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
     required String title,
     String? subtitle,
     Color? titleColor,
-    Color? iconColor,
+    String? badgeText,
+    Color? badgeColor,
     required VoidCallback onTap,
   }) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 38,
+        height: 38,
         decoration: BoxDecoration(
-          color: (iconColor ?? AppTheme.primaryColor).withValues(alpha: 0.1),
+          color: iconBgColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: iconColor ?? AppTheme.primaryColor, size: 20),
+        child: Icon(icon, color: iconColor, size: 18),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-          color: titleColor ?? AppTheme.textPrimary,
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+                color: titleColor ?? AppTheme.textPrimary,
+              ),
+            ),
+          ),
+          if (badgeText != null) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: (badgeColor ?? AppTheme.primaryColor)
+                    .withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                badgeText,
+                style: TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w900,
+                  color: badgeColor ?? AppTheme.primaryColor,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
       subtitle: subtitle != null
-          ? Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary))
+          ? Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
+            )
           : null,
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: Color(0xFF94A3B8),
+        size: 18,
+      ),
       onTap: onTap,
     );
   }
 
-  Widget _detailRowTile(IconData icon, String label, String value, VoidCallback onTap) {
+  Widget _detailRowTile({
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F7FF),
-                borderRadius: BorderRadius.circular(14),
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -829,17 +1046,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Text(
                     label,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF94A3B8),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     value,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
                     ),
@@ -847,7 +1064,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 18),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF94A3B8),
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -856,70 +1077,104 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildStatCard({
     required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
     required String count,
     required String label,
     required String cta,
-    required Color color,
+    required Color ctaColor,
     required VoidCallback onTap,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A6FB5).withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF0A6FB5).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: ctaColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             count,
             style: GoogleFonts.outfit(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
               color: AppTheme.textPrimary,
               height: 1,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
             style: const TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.8,
-                color: AppTheme.textSecondary),
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+              color: AppTheme.textSecondary,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
-          GestureDetector(
+          const SizedBox(height: 6),
+          InkWell(
             onTap: onTap,
-            child: Row(
-              children: [
-                Text(cta,
-                    style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.primaryColor)),
-                const SizedBox(width: 2),
-                const Icon(Icons.arrow_forward, size: 13, color: AppTheme.primaryColor),
-              ],
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    cta,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: ctaColor,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 12,
+                    color: ctaColor,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
 }

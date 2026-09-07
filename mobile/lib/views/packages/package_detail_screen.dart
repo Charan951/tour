@@ -449,11 +449,14 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        child: ExpansionTile(
+                        child: Material(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          clipBehavior: Clip.antiAlias,
+                          child: ExpansionTile(
                           initiallyExpanded: isExpanded,
                           onExpansionChanged: (expanded) {
                             if (expanded) {
@@ -495,7 +498,8 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                             ),
                           ],
                         ),
-                      );
+                      ),
+                    );
                     }),
                     const SizedBox(height: 24),
                   ],

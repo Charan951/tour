@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
+import '../../models/activity_model.dart';
 import '../../config/api_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/connectivity.dart';
 import '../../services/enquiry_service.dart';
+import '../../services/activity_service.dart';
 import '../../services/offline_queue.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -30,6 +33,11 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
   int _travelers = 2;
   bool _isSubmitting = false;
 
+  // Location Activity Add-Ons
+  List<ActivityModel> _availableAddOns = [];
+  final Set<String> _selectedAddOnIds = {};
+  bool _isLoadingAddOns = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +49,28 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
       _nameController.text = user.fullName;
       _emailController.text = user.email;
       _phoneController.text = user.mobile;
+    }
+    if (_destinationController.text.isNotEmpty) {
+      _loadDestinationAddOns(_destinationController.text);
+    }
+  }
+
+  Future<void> _loadDestinationAddOns(String dest) async {
+    if (dest.trim().isEmpty) return;
+    setState(() => _isLoadingAddOns = true);
+    try {
+      final service = ActivityService();
+      final acts = await service.fetchActivities(destination: dest);
+      if (mounted) {
+        setState(() {
+          _availableAddOns = acts;
+          _isLoadingAddOns = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingAddOns = false);
+      }
     }
   }
 
@@ -58,6 +88,12 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 
+      final selectedAddOnModels = _availableAddOns.where((a) => _selectedAddOnIds.contains(a.id)).toList();
+      final addOnNotes = selectedAddOnModels.isNotEmpty
+          ? '\nAdd-ons Selected: ${selectedAddOnModels.map((a) => "${a.title} (+₹${NumberFormat('#,##,###').format(a.startingPrice)}/person)").join(', ')}'
+          : '';
+      final finalMessage = '${_messageController.text.trim()}$addOnNotes'.trim();
+
       try {
         final enquiry = EnquiryModel(
           name: _nameController.text.trim(),
@@ -66,7 +102,7 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
           destination: _destinationController.text.trim(),
           travelers: _travelers,
           travelDate: DateTime.now().add(const Duration(days: 14)).toIso8601String().split('T')[0],
-          message: _messageController.text.trim(),
+          message: finalMessage,
         );
 
         // Offline → save to the outbox and tell the truth about it.
@@ -134,48 +170,56 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
         child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                // Top Inline Header (No Navbar)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        'PLAN YOUR TRIP ENQUIRY',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0284C7),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
-                  ),
+                    Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: IconButton(
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary, size: 20),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Plan Your Trip With Us',
-                  style: GoogleFonts.outfit(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const Text(
-                  'Fill in details to get custom quote & best pricing',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-
+                const SizedBox(height: 12),
                 CustomTextField(
                   controller: _nameController,
                   label: 'Full Name',
@@ -197,22 +241,133 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
 
                 CustomTextField(
                   controller: _phoneController,
-                  label: 'Phone Number',
+                  label: 'Mobile Number',
                   hint: '+91 9876543210',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
-                  validator: (v) => v == null || v.isEmpty ? 'Phone required' : null,
+                  validator: (v) => v == null || v.isEmpty ? 'Mobile required' : null,
                 ),
                 const SizedBox(height: 14),
 
                 CustomTextField(
                   controller: _destinationController,
-                  label: 'Destination',
-                  hint: 'e.g. Bali, Kashmir, Kerala',
-                  prefixIcon: Icons.place_outlined,
+                  label: 'Destination / Package Preference',
+                  hint: 'e.g. Goa, Kerala, Manali',
+                  prefixIcon: Icons.location_on_outlined,
+                  onChanged: (val) {
+                    if (val.trim().length >= 3) {
+                      _loadDestinationAddOns(val.trim());
+                    }
+                  },
                   validator: (v) => v == null || v.isEmpty ? 'Destination required' : null,
                 ),
                 const SizedBox(height: 14),
+
+                // Location Activity Add-Ons Section
+                if (_isLoadingAddOns || _availableAddOns.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.15)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.local_activity_outlined, color: AppTheme.primaryColor, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Location Activity Add-Ons',
+                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textPrimary),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'OPTIONAL',
+                                style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (_isLoadingAddOns)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 6.0),
+                            child: Text('Loading activities...', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          )
+                        else
+                          Column(
+                            children: _availableAddOns.map((act) {
+                              final isSelected = _selectedAddOnIds.contains(act.id);
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedAddOnIds.remove(act.id);
+                                    } else {
+                                      _selectedAddOnIds.add(act.id);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? Colors.white : Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                                        color: isSelected ? AppTheme.primaryColor : Colors.grey,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          act.title,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, height: 1.3),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '+₹${NumberFormat('#,##,###').format(act.startingPrice)}',
+                                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.primaryColor),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Number of Travelers selector
 
                 // Number of Travelers selector
                 Row(

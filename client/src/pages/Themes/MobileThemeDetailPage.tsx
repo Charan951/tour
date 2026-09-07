@@ -45,6 +45,7 @@ export const MobileThemeDetailPage: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'enquiry' | 'booking'>('enquiry');
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) {
@@ -281,7 +282,10 @@ export const MobileThemeDetailPage: React.FC = () => {
               <MobilePackageCard
                 key={pkg._id || i}
                 pkg={pkg}
-                onBookNow={() => setEnquiryOpen(true)}
+                onBookNow={() => {
+                  setModalMode('booking');
+                  setEnquiryOpen(true);
+                }}
               />
             ))
           )}
@@ -291,8 +295,11 @@ export const MobileThemeDetailPage: React.FC = () => {
       {/* ── ORANGE FLOATING ENQUIRE FAB ── Matches Flutter ThemeDetailScreen bottom FAB */}
       <div className="fixed bottom-4 left-4 right-4 z-40">
         <button
-          onClick={() => setEnquiryOpen(true)}
-          className="w-full py-4 bg-[#F6A35A] text-white font-extrabold text-lg rounded-3xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          onClick={() => {
+            setModalMode('enquiry');
+            setEnquiryOpen(true);
+          }}
+          className="w-full py-4 bg-[#F6A35A] text-white font-extrabold text-lg rounded-3xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
         >
           <Headphones className="w-6 h-6" />
           Enquire Now
@@ -302,6 +309,7 @@ export const MobileThemeDetailPage: React.FC = () => {
       <PackageEnquiryModal
         isOpen={enquiryOpen}
         onClose={() => setEnquiryOpen(false)}
+        initialMode={modalMode}
       />
     </div>
   );

@@ -291,23 +291,36 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Type Badge
-                Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: badgeTextCol.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: badgeTextCol,
+                // Type Badge & Submission Time Header Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: badgeTextCol.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: badgeTextCol,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (enquiry.formattedCreatedDateTime.isNotEmpty && enquiry.formattedCreatedDateTime != 'N/A')
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          enquiry.formattedCreatedDateTime,
+                          style: const TextStyle(fontSize: 10.5, color: Colors.grey, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                  ],
                 ),
 
                 // Destination / Subject & Status Header

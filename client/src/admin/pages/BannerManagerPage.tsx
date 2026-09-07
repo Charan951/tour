@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Plus, Trash2, Edit, MapPin, Tag, ExternalLink, Sparkles, Flag, Globe, Palette } from 'lucide-react';
+import { Image as ImageIcon, Plus, Trash2, Edit, MapPin, Tag, ExternalLink, Sparkles, Flag, Globe, Palette, Menu } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
-import { AdminLayout } from '../components/AdminLayout';
+import { AdminLayout, useAdminSidebar } from '../components/AdminLayout';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,7 @@ const ALL_THEME_NAMES = [
 ];
 
 export const BannerManagerPage: React.FC = () => {
+  const { toggleSidebar } = useAdminSidebar();
   const [banners, setBanners] = useState<any[]>([]);
   const [themeBanners, setThemeBanners] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
@@ -234,7 +235,7 @@ export const BannerManagerPage: React.FC = () => {
     >
       <div className="space-y-10">
         
-        {/* SECTION 1: THEME BANNERS CRUD (MATCHING IMAGE COPY 3) */}
+        {/* SECTION 1: THEME BANNERS CRUD */}
         <section className="space-y-4">
           <h2 className="font-['Outfit'] font-bold text-xl text-slate-900 flex items-center gap-2">
             <Palette className="w-5 h-5 text-purple-600" /> Travel Specialization Theme Banners ({themeBanners.length}/8 Uploaded)
@@ -244,8 +245,8 @@ export const BannerManagerPage: React.FC = () => {
             {ALL_THEME_NAMES.map((themeName) => {
               const tb = themeBanners.find((t) => t.themeName === themeName);
               return (
-                <div key={themeName} className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-                  <div className="relative h-32 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100">
+                <div key={themeName} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between space-y-3">
+                  <div className="relative h-32 rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
                     {tb ? (
                       <img src={tb.imageUrl} alt={themeName} className="w-full h-full object-cover" />
                     ) : (
@@ -353,172 +354,343 @@ export const BannerManagerPage: React.FC = () => {
 
       </div>
 
-      {/* Destination Banner Edit Modal */}
+      {/* Edit / Create Destination Banner Full Screen Executive Editor Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">{editingId ? 'Edit Destination Banner' : 'Create New Destination Banner'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-4 text-sm">
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Banner Title / Destination Name *</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  placeholder="e.g. Kedarnath Tour Offer"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <CloudinaryImageUploader
-                label="Upload Clean Banner Image to Cloudinary *"
-                currentUrl={imageUrl}
-                onUploadSuccess={(url) => setImageUrl(url)}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Assign Destination</label>
-                  <select
-                    value={destinationId}
-                    onChange={(e) => setDestinationId(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  >
-                    <option value="">General Destination Promo</option>
-                    {destinations.map((d) => (
-                      <option key={d._id} value={d._id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Placement Slot *</label>
-                  <select
-                    value={targetSection}
-                    onChange={(e) => setTargetSection(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  >
-                    <option value="HeroBanner">Home Page Hero Banner</option>
-                    <option value="HomeBanner">Right Specialization Slider</option>
-                    <option value="OfferCard">Offer Card Row (4 Cards)</option>
-                    <option value="DestinationBanner">Destination Page Hero Banner</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Offer Badge / Tag</label>
-                  <input
-                    type="text"
-                    value={offerText}
-                    onChange={(e) => setOfferText(e.target.value)}
-                    placeholder="e.g. Special Deal 20% OFF"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Price Display Text</label>
-                  <input
-                    type="text"
-                    value={priceText}
-                    onChange={(e) => setPriceText(e.target.value)}
-                    placeholder="e.g. ₹8,500 Per Person"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Duration Display Text</label>
-                  <input
-                    type="text"
-                    value={durationText}
-                    onChange={(e) => setDurationText(e.target.value)}
-                    placeholder="e.g. 03 Night / 04 Days"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Target Redirect URL (Optional)</label>
-                <input
-                  type="text"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="e.g. /packages/kedarnath-yatra or https://..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md">
-                  Save Banner Image
+        <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          <div className="bg-slate-50 w-full flex-1 flex flex-col overflow-y-auto">
+            {/* Top Compact Header Bar */}
+            <div className="px-6 py-3 bg-white border-b border-slate-200/90 flex items-center justify-between shrink-0 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={toggleSidebar}
+                  title="Toggle Sidebar Navigation"
+                  className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs active:scale-95 shrink-0"
+                >
+                  <Menu className="w-4 h-4 text-slate-700" />
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold">
+                <div className="w-9 h-9 rounded-xl bg-ocean-50 text-ocean-600 border border-ocean-200/60 flex items-center justify-center font-bold shrink-0">
+                  <ImageIcon className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-ocean-100 text-ocean-800 border border-ocean-200">
+                      {editingId ? 'Editor Mode' : 'New Asset'}
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium">• Admin Portal</span>
+                  </div>
+                  <h3 className="font-['Outfit'] font-bold text-sm text-slate-900 leading-tight">
+                    {editingId ? 'Edit Promo Banner' : 'Create New Destination Banner'}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const form = document.getElementById('banner-form') as HTMLFormElement;
+                    if (form) form.requestSubmit();
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {editingId ? 'Update Banner' : 'Save Banner'}
+                </button>
               </div>
-            </form>
+            </div>
+
+            {/* Scrollable Compact Body - 2 Column Grid */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs text-slate-800">
+              <form id="banner-form" onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                
+                {/* LEFT COLUMN: Main Form Specifications (2/3 width) */}
+                <div className="lg:col-span-2 space-y-3">
+                  
+                  <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-xs space-y-3">
+                    <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                      <ImageIcon className="w-3.5 h-3.5 text-ocean-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">Banner Specifications</h4>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Banner Title / Destination Name *</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        placeholder="e.g. Kedarnath Tour Offer"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold text-xs focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+
+                    <CloudinaryImageUploader
+                      label="Upload Clean Banner Image to Cloudinary *"
+                      currentUrl={imageUrl}
+                      onUploadSuccess={(url) => setImageUrl(url)}
+                    />
+
+                    {imageUrl && (
+                      <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 max-h-32 bg-slate-950 group">
+                        <img src={imageUrl} alt="Banner Preview" className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2.5">
+                          <div className="text-white">
+                            <span className="px-1.5 py-0.5 rounded-md bg-ocean-500/90 text-white font-bold text-[9px] uppercase tracking-wider">Live Preview</span>
+                            <p className="text-[11px] font-semibold text-slate-200 mt-0.5 line-clamp-1">{title || 'Banner Preview'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Target Redirect Link URL (Optional)</label>
+                      <input
+                        type="text"
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        placeholder="e.g. /packages/kedarnath-yatra"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[11px] focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* RIGHT COLUMN: Sidebar Settings & Controls (1/3 width) */}
+                <div className="space-y-3">
+
+                  {/* 1. Placement & Destination */}
+                  <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-xs space-y-2.5">
+                    <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                      Placement Assignment
+                    </h4>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Placement Slot *</label>
+                      <select
+                        value={targetSection}
+                        onChange={(e) => setTargetSection(e.target.value as any)}
+                        className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold text-xs focus:border-ocean-600"
+                      >
+                        <option value="HeroBanner">Home Page Hero Banner</option>
+                        <option value="HomeBanner">Right Specialization Slider</option>
+                        <option value="OfferCard">Offer Card Row (4 Cards)</option>
+                        <option value="DestinationBanner">Destination Page Hero Banner</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Assign Destination</label>
+                      <select
+                        value={destinationId}
+                        onChange={(e) => setDestinationId(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-medium text-xs focus:border-ocean-600"
+                      >
+                        <option value="">General Destination Promo</option>
+                        {destinations.map((d) => (
+                          <option key={d._id} value={d._id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 2. Badge & Text Overlays */}
+                  <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-xs space-y-2.5">
+                    <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                      Display Text Overlay
+                    </h4>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Offer Badge / Tag</label>
+                      <input
+                        type="text"
+                        value={offerText}
+                        onChange={(e) => setOfferText(e.target.value)}
+                        placeholder="e.g. Special Deal 20% OFF"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-semibold text-xs focus:border-ocean-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Price Text</label>
+                      <input
+                        type="text"
+                        value={priceText}
+                        onChange={(e) => setPriceText(e.target.value)}
+                        placeholder="e.g. ₹8,500 Per Person"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-semibold text-xs focus:border-ocean-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Duration Text</label>
+                      <input
+                        type="text"
+                        value={durationText}
+                        onChange={(e) => setDurationText(e.target.value)}
+                        placeholder="e.g. 03 Night / 04 Days"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-semibold text-xs focus:border-ocean-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 font-extrabold text-white text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Save Banner Asset
+                  </button>
+
+                </div>
+
+              </form>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Theme Banner Upload Modal */}
+      {/* Theme Banner Upload Full Screen Editor Overlay */}
       {themeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-lg text-slate-900">Upload Theme Banner: {selectedThemeName}</h3>
-              <button onClick={() => setThemeModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
-            </div>
-
-            <form onSubmit={handleSaveThemeBanner} className="space-y-4 text-sm">
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Select Travel Theme</label>
-                <select
-                  value={selectedThemeName}
-                  onChange={(e) => setSelectedThemeName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
+        <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          <div className="bg-slate-50 w-full flex-1 flex flex-col overflow-y-auto">
+            {/* Top Compact Header Bar */}
+            <div className="px-4 py-2.5 bg-white border-b border-slate-200/90 flex items-center justify-between shrink-0 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={toggleSidebar}
+                  title="Toggle Sidebar Navigation"
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs mr-0.5 active:scale-95"
                 >
-                  {ALL_THEME_NAMES.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <CloudinaryImageUploader
-                label="Upload Custom Theme Banner to Cloudinary *"
-                currentUrl={themeImageUrl}
-                onUploadSuccess={(url) => setThemeImageUrl(url)}
-              />
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Theme Description</label>
-                <textarea
-                  value={themeDesc}
-                  onChange={(e) => setThemeDesc(e.target.value)}
-                  rows={3}
-                  placeholder="Describe this travel style..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 font-bold text-white shadow-md">
-                  Publish Theme Banner
+                  <Menu className="w-4 h-4 text-slate-700" />
                 </button>
-                <button type="button" onClick={() => setThemeModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold">
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 border border-purple-200/60 flex items-center justify-center font-bold shrink-0">
+                  <Palette className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                      Theme Banner
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium">• Admin Portal</span>
+                  </div>
+                  <h3 className="font-['Outfit'] font-bold text-sm text-slate-900 leading-tight">
+                    Upload Theme Banner: {selectedThemeName}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setThemeModalOpen(false)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const form = document.getElementById('theme-form') as HTMLFormElement;
+                    if (form) form.requestSubmit();
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Publish Banner
+                </button>
               </div>
-            </form>
+            </div>
+
+            {/* Scrollable Compact Body - 2 Column Grid */}
+            <div className="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs text-slate-800">
+              <form id="theme-form" onSubmit={handleSaveThemeBanner} className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                
+                {/* LEFT COLUMN: Specifications (2/3 width) */}
+                <div className="lg:col-span-2 space-y-3">
+                  <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-xs space-y-3">
+                    <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                      <Palette className="w-3.5 h-3.5 text-purple-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">Theme Specifications & Image</h4>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Select Travel Specialization Theme *</label>
+                      <select
+                        value={selectedThemeName}
+                        onChange={(e) => setSelectedThemeName(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold text-xs focus:bg-white focus:border-purple-600 transition-all"
+                      >
+                        {ALL_THEME_NAMES.map((name) => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <CloudinaryImageUploader
+                      label="Upload Custom Theme Banner to Cloudinary *"
+                      currentUrl={themeImageUrl}
+                      onUploadSuccess={(url) => setThemeImageUrl(url)}
+                    />
+
+                    {themeImageUrl && (
+                      <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 max-h-32 bg-slate-950 group">
+                        <img src={themeImageUrl} alt="Theme Banner Preview" className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2.5">
+                          <div className="text-white">
+                            <span className="px-1.5 py-0.5 rounded-md bg-purple-500/90 text-white font-bold text-[9px] uppercase tracking-wider">Theme Banner</span>
+                            <p className="text-[11px] font-semibold text-slate-200 mt-0.5 line-clamp-1">{selectedThemeName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-slate-700 font-bold text-[11px] mb-1">Theme Description</label>
+                      <textarea
+                        value={themeDesc}
+                        onChange={(e) => setThemeDesc(e.target.value)}
+                        rows={2}
+                        placeholder="Describe this travel style and special experiences..."
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-medium text-xs focus:bg-white focus:border-purple-600 transition-all leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: Info & Action */}
+                <div className="space-y-3">
+                  <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-xs space-y-2">
+                    <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                      Theme Info
+                    </h4>
+                    <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 text-purple-900 space-y-0.5">
+                      <span className="font-extrabold text-[11px]">Active: {selectedThemeName}</span>
+                      <p className="text-[10px] text-purple-700 font-medium">Displays on theme landing pages & category filters.</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 font-extrabold text-white text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Publish Theme Banner
+                  </button>
+                </div>
+
+              </form>
+            </div>
           </div>
         </div>
       )}

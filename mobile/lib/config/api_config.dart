@@ -34,6 +34,28 @@ class ApiConfig {
   // Centralized Base API URL
   static String get baseUrl => '$serverHost/api/v1';
 
+  static String get socketUrl {
+    final host = serverHost;
+    if (host.startsWith('https://')) {
+      return host.replaceFirst('https://', 'wss://');
+    } else if (host.startsWith('http://')) {
+      return host.replaceFirst('http://', 'ws://');
+    }
+    return 'ws://$host:5000';
+  }
+
+  static String get notifications => '$baseUrl/notifications';
+  static String get adminNotifications => '$baseUrl/admin/notifications';
+  static String get myNotifications => '$baseUrl/notifications/my';
+  static String myNotificationsForEmail(String email) =>
+      '$baseUrl/notifications/my?email=${Uri.encodeQueryComponent(email)}';
+  static String myNotificationReadUrl(String id, String email) =>
+      '$baseUrl/notifications/my/$id/read?email=${Uri.encodeQueryComponent(email)}';
+  static String myNotificationDeleteUrl(String id, String email) =>
+      '$baseUrl/notifications/my/$id?email=${Uri.encodeQueryComponent(email)}';
+  static String myNotificationsReadAll(String email) =>
+      '$baseUrl/notifications/my/read-all?email=${Uri.encodeQueryComponent(email)}';
+
   static String formatImageUrl(String? url) {
     if (url == null || url.trim().isEmpty) {
       return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop';

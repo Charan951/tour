@@ -122,6 +122,14 @@ connectDB().then(() => {
       console.log(`📡 Socket ${socket.id} joined room: ${room}`);
     });
 
+    socket.on('join_user', (email) => {
+      if (email && typeof email === 'string') {
+        const userRoom = `user_${email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_')}`;
+        socket.join(userRoom);
+        console.log(`👤 Socket ${socket.id} joined user room: ${userRoom}`);
+      }
+    });
+
     socket.on('join_chat_topic', (topicId) => {
       if (topicId) {
         const roomName = `chat_${topicId}`;

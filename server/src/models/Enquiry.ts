@@ -1,8 +1,14 @@
 import { Schema, model } from 'mongoose';
 
+const enquiryAddOnSchema = new Schema({
+  id: { type: Schema.Types.ObjectId, ref: 'Activity', default: null },
+  title: { type: String, required: true },
+  price: { type: Number, required: true, default: 0 }
+});
+
 const enquiryNoteSchema = new Schema({
   note: { type: String, required: true },
-  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -22,6 +28,7 @@ const enquirySchema = new Schema(
     children: { type: Number, default: 0 },
     budget: { type: Number, default: null },
     travelType: { type: String, enum: ['Solo', 'Couple', 'Family', 'Friends', 'Corporate'], default: 'Family' },
+    selectedAddOns: [enquiryAddOnSchema],
     message: { type: String, default: '' },
     source: { 
       type: String, 

@@ -158,6 +158,9 @@ export const createEnquiry = async (req: Request, res: Response) => {
       });
     }
 
+    // Emit real-time Socket.io enquiry:created event to all subscribers
+    emitCreate('Enquiry', populatedEnquiry);
+
     // Trigger instant email notification to user & admin
     sendEnquiryConfirmationEmail(populatedEnquiry).catch(err =>
       console.error('[EnquiryController] Customer email confirmation trigger failed:', err)

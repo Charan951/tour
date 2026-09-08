@@ -107,8 +107,11 @@ function getLocalNetworkIp(): string {
   return 'localhost';
 }
 
+import { initFirebase } from './config/firebase.js';
+
 // Database Connection & Server Start
 connectDB().then(() => {
+  initFirebase();
   const HOST = process.env.HOST || '0.0.0.0';
   const networkIp = process.env.NETWORK_IP || getLocalNetworkIp();
   

@@ -25,7 +25,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     const decoded = jwt.verify(token, secret) as { id: string; email: string; role: string };
     
     const normEmail = (decoded.email || '').trim().toLowerCase();
-    const isAdminEmail = normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
+    const isAdminEmail = normEmail === 'admin@holidaycity.com';
     const assignedRole = isAdminEmail ? 'Admin' : 'Customer';
 
     req.user = {
@@ -55,7 +55,7 @@ export const requireRole = (allowedRoles: string[]) => {
     const normEmail = (req.user.email || '').trim().toLowerCase();
     const normRole = userRole.toLowerCase();
 
-    const isAdmin = normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@') || normRole === 'admin';
+    const isAdmin = normEmail === 'admin@holidaycity.com';
 
     const normalizedAllowed = allowedRoles.map(r => r.toLowerCase().trim());
     const isRoleAllowed = isAdmin || normalizedAllowed.includes(normRole);

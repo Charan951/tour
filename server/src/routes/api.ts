@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, register, forgotPassword, getMe, updateMe, changePassword } from '../controllers/authController.js';
+import { login, register, forgotPassword, getMe, updateMe, changePassword, saveFcmToken, removeFcmToken } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getActivities, getActivityBySlug, createActivity, updateActivity, deleteActivity } from '../controllers/activityController.js';
@@ -75,6 +75,10 @@ router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
 router.get('/auth/me', authenticateToken, getMe);
 router.patch('/auth/me', authenticateToken, updateMe);
 router.post('/auth/change-password', authRateLimiter, authenticateToken, changePassword);
+
+// FCM Push Notification Token Management
+router.post('/users/fcm-token', optionalAuth, saveFcmToken);
+router.delete('/users/fcm-token', optionalAuth, removeFcmToken);
 
 // Packages Catalog & Detail (Live MongoDB Queries with No-Cache Headers)
 router.get('/packages', getPackages);

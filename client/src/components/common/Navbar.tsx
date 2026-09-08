@@ -67,9 +67,11 @@ export const Navbar: React.FC = () => {
     localStorage.removeItem('hc_user');
     localStorage.removeItem('hc_user_email');
     localStorage.removeItem('hc_token');
+    localStorage.removeItem('hc_guest_mode');
+    localStorage.removeItem('hc_guest');
     setCurrentUser(null);
     window.dispatchEvent(new Event('hc_user_updated'));
-    navigate('/');
+    navigate('/login');
   };
 
   // "My Bookings" is included ONLY when logged in

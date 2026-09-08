@@ -471,6 +471,27 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
+      const SizedBox(height: 12),
+      Center(
+        child: TextButton(
+          onPressed: () {
+            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+            authProvider.continueAsGuest();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          },
+          child: const Text(
+            'Explore as Guest →',
+            style: TextStyle(
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
     ];
   }
 

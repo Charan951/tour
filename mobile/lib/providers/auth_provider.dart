@@ -6,6 +6,7 @@ class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   UserModel? _user;
+  bool _isGuest = false;
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _errorMessage;
@@ -16,7 +17,14 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   bool get isLoggedIn => _user != null;
+  bool get isGuest => _isGuest;
+  bool get canAccessApp => isLoggedIn || _isGuest;
   String? get errorMessage => _errorMessage;
+
+  void continueAsGuest() {
+    _isGuest = true;
+    _safeNotifyListeners();
+  }
 
   @override
   void dispose() {

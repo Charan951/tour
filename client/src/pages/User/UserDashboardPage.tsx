@@ -12,6 +12,7 @@ import { apiClient } from '../../api/apiClient';
 import { SEO } from '../../components/common/SEO';
 import { ChatModal } from '../../components/chat/ChatModal';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
+import { initWebPushNotifications } from '../../services/firebaseService';
 import toast from 'react-hot-toast';
 
 /* Rotating travel imagery behind the sign-in header */
@@ -253,6 +254,8 @@ export const UserDashboardPage: React.FC = () => {
         localStorage.setItem('hc_access_token', sessionToken);
       }
 
+      initWebPushNotifications();
+
       window.dispatchEvent(new Event('hc_user_updated'));
       setCurrentUser(loggedInUser);
       setAuthLoading(false);
@@ -260,7 +263,8 @@ export const UserDashboardPage: React.FC = () => {
       if (isUserAdmin) {
         setAuthSuccess('Admin credentials verified! Redirecting to Admin Panel...');
         toast.success(`Welcome to Admin Panel, ${loggedInUser.firstName || 'Admin'}!`);
-        navigate('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
+        return;
       } else {
         setAuthSuccess('Signed in successfully!');
         toast.success(`Welcome back, ${loggedInUser.firstName || loggedInUser.email}!`);
@@ -531,9 +535,18 @@ export const UserDashboardPage: React.FC = () => {
     localStorage.removeItem('hc_user_email');
     localStorage.removeItem('hc_token');
     localStorage.removeItem('hc_guest_mode');
+    localStorage.removeItem('hc_guest');
     setCurrentUser(null);
     window.dispatchEvent(new Event('hc_user_updated'));
     navigate('/login');
+  };
+
+  const handleContinueAsGuest = () => {
+    localStorage.setItem('hc_guest_mode', 'true');
+    localStorage.setItem('hc_guest', 'true');
+    window.dispatchEvent(new Event('hc_user_updated'));
+    toast.success('Exploring as guest');
+    navigate('/');
   };
 
   // Seed the edit form and open the Edit Profile screen.

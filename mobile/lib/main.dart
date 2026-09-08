@@ -13,9 +13,12 @@ import 'widgets/offline_banner.dart';
 import 'views/splash/splash_screen.dart';
 
 
-void main() {
+import 'services/push_notification_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ConnectivityStatus.instance.start();
+  await PushNotificationService.instance.initialize();
   runApp(const HolidayCityApp());
 }
 

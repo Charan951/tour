@@ -105,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
     _navigated = true;
     _initialTimer?.cancel();
 
-    if (authProvider.isLoggedIn) {
+    if (authProvider.canAccessApp) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),

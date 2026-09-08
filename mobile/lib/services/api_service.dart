@@ -421,4 +421,16 @@ class ApiService {
       'message': 'Server unreachable.',
     };
   }
+
+  static Future<dynamic> saveFcmToken(String token, {String? email}) async {
+    final body = <String, dynamic>{'token': token};
+    if (email != null && email.isNotEmpty) body['email'] = email;
+    return post('/users/fcm-token', body);
+  }
+
+  static Future<dynamic> removeFcmToken(String token, {String? email}) async {
+    final body = <String, dynamic>{'token': token};
+    if (email != null && email.isNotEmpty) body['email'] = email;
+    return post('/users/fcm-token', body);
+  }
 }

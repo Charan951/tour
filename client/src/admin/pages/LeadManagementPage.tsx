@@ -34,11 +34,17 @@ const getFormattedDateTime = (item: any): { dateStr: string; timeStr: string; fu
   };
 };
 
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
+
 export const LeadManagementPage: React.FC = () => {
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [destinations, setDestinations] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useRealtimeUpdates({
+    onEnquiryUpdate: () => fetchEnquiries(),
+  });
 
   // Modals state
   const [selectedLead, setSelectedLead] = useState<any>(null);

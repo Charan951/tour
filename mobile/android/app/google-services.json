@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1022570633231",
+    "project_id": "tour-1a8a9",
+    "storage_bucket": "tour-1a8a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022570633231:android:1c562c25ff81f2b1a02b7a",
+        "android_client_info": {
+          "package_name": "com.holidaycity.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqqnCK4mdFOUCy3WGohHuzR6cSo0XmJXM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

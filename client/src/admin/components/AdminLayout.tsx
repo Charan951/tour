@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { Menu } from 'lucide-react';
@@ -12,20 +12,28 @@ interface AdminLayoutProps {
   action?: React.ReactNode;
 }
 
-const isAdminUser = (): boolean => {
+export const isAdminUser = (): boolean => {
   try {
-    const raw = localStorage.getItem('hc_user');
-    if (!raw) return false;
-    const u = JSON.parse(raw);
-    const normEmail = (u.email || '').trim().toLowerCase();
-    const normRole = (u.role || '').trim().toLowerCase();
-    if (normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@')) {
-      return true;
-    }
-    if (normEmail && !normEmail.startsWith('admin@') && normEmail !== 'admin@holidaycity.com') {
-      return false;
-    }
-    return normRole === 'admin';
+    const email = (
+      localStorage.getItem('hc_user_email') ||
+      (() => {
+        const raw = localStorage.getItem('hc_user');
+        if (!raw) return '';
+        const u = JSON.parse(raw);
+        return u.email || u.user?.email || '';
+      })()
+    ).trim().toLowerCase();
+
+    const role = (() => {
+      try {
+        const raw = localStorage.getItem('hc_user');
+        if (!raw) return '';
+        const u = JSON.parse(raw);
+        return (u.role || u.user?.role || '').toString().trim().toLowerCase();
+      } catch { return ''; }
+    })();
+
+    return email === 'admin@holidaycity.com' || role === 'admin' || role === 'superadmin' || email.startsWith('admin@');
   } catch {
     return false;
   }
@@ -55,8 +63,15 @@ export const AdminSidebarContext = React.createContext<AdminSidebarContextType>(
   toggleSidebar: toggleAdminSidebar
 });
 
-export const useAdminSidebar = () => {
+export const useAdminSidebar = (): AdminSidebarContextType => {
   const ctx = React.useContext(AdminSidebarContext);
+  if (!ctx) {
+    return {
+      sidebarOpen: false,
+      setSidebarOpen: () => {},
+      toggleSidebar: () => {}
+    };
+  }
   return {
     sidebarOpen: ctx.sidebarOpen,
     setSidebarOpen: ctx.setSidebarOpen || ((open: boolean) => {
@@ -67,17 +82,22 @@ export const useAdminSidebar = () => {
   };
 };
 
+import { initWebPushNotifications } from '../../services/firebaseService';
+import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
+
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subtitle, action }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const authorized = isAdminUser();
 
+  // Connect real-time socket for popups & desktop notifications
+  useRealtimeUpdates();
+
   useEffect(() => {
-    if (!authorized) {
-      localStorage.removeItem('hc_redirect_after_login');
-      navigate('/profile', { replace: true });
+    if (authorized) {
+      initWebPushNotifications();
     }
-  }, [authorized, navigate]);
+  }, [authorized]);
 
   useEffect(() => {
     const handleToggle = () => setSidebarOpen((prev) => !prev);
@@ -96,7 +116,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subti
   }, []);
 
   if (!authorized) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);

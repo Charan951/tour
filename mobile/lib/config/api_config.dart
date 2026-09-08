@@ -1,8 +1,10 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConfig {
-  // LAN IP of the development machine — matches NETWORK_IP in server/.env
-  // so physical Android/iOS devices on the same WiFi can reach the server.
+  /// Toggle between Production (`true`) and Localhost (`false`)
+  static bool isProduction = true;
+
+  // Endpoint URLs
+  static const String productionHost = 'https://tour.speshway.site';
+  static String localHost = 'http://localhost:5000';
   static String hostIp = '192.168.1.20';
   static String? customHost;
 
@@ -12,23 +14,14 @@ class ApiConfig {
       if (host.startsWith('http')) {
         return host.endsWith('/api/v1') ? host.replaceAll('/api/v1', '') : host;
       }
-      return 'http://$host:5000';
+      return 'https://$host';
     }
 
-    if (kIsWeb) {
-      return 'http://localhost:5000';
+    if (isProduction) {
+      return productionHost;
     }
 
-    // Android: default to localhost — with `adb reverse tcp:5000 tcp:5000`
-    // running, the device/emulator loopback tunnels to the host over USB,
-    // which is far faster than a LAN IP over Wi-Fi. Set `customHost` (or an
-    // explicit `hostIp` other than 'localhost') only if you can't use adb.
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      final ip = (hostIp.isNotEmpty && hostIp != 'localhost') ? hostIp : 'localhost';
-      return 'http://$ip:5000';
-    }
-
-    return 'http://localhost:5000';
+    return localHost;
   }
 
   // Centralized Base API URL
@@ -41,7 +34,7 @@ class ApiConfig {
     } else if (host.startsWith('http://')) {
       return host.replaceFirst('http://', 'ws://');
     }
-    return 'ws://$host:5000';
+    return 'wss://$host';
   }
 
   static String get notifications => '$baseUrl/notifications';

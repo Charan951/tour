@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
+import toast from 'react-hot-toast';
 import { clientCache } from '../utils/cache';
 
 const getSocketURL = (): string => {
@@ -15,6 +16,7 @@ const SOCKET_URL = getSocketURL();
 
 console.log('🔌 Socket URL configured:', SOCKET_URL);
 
+const shownToastSet = new Set<string>();
 let globalSocket: Socket | null = null;
 let connectionAttempts = 0;
 const MAX_RECONNECTION_ATTEMPTS = 5;
@@ -223,9 +225,38 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       callbacksRef.current.onBannerUpdate?.({ id: payload.id, deleted: true });
     };
 
+    const showNotificationPopup = (title: string, message: string, idStr?: string) => {
+      const dedupKey = idStr || `${title}_${message}`;
+      if (shownToastSet.has(dedupKey)) return;
+      shownToastSet.add(dedupKey);
+      setTimeout(() => shownToastSet.delete(dedupKey), 8000);
+
+      toast.success(`${title} — ${message}`, {
+        duration: 6000,
+        id: dedupKey,
+        position: 'top-right',
+      });
+
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(title, {
+            body: message,
+            icon: '/favicon.png',
+          });
+        } catch (_) {}
+      }
+    };
+
     const handleEnquiryCreated = (payload: any) => {
       notifyDataChanged();
       callbacksRef.current.onEnquiryUpdate?.(payload.data);
+
+      const enq = payload?.data || payload;
+      if (enq && (enq.fullName || enq.name || enq.enquiryId)) {
+        const name = enq.fullName || enq.name || 'Customer';
+        const snippet = enq.message ? enq.message.substring(0, 50) : (enq.enquiryId || '');
+        showNotificationPopup(`📩 New Customer Enquiry`, `${name}: ${snippet}`, `enquiry_${enq._id || enq.id || Date.now()}`);
+      }
     };
     const handleEnquiryUpdated = (payload: any) => {
       notifyDataChanged();
@@ -239,6 +270,12 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     const handleBookingCreated = (payload: any) => {
       notifyDataChanged();
       callbacksRef.current.onBookingUpdate?.(payload.data);
+
+      const b = payload?.data || payload;
+      if (b && (b.customerName || b.fullName || b.bookingId)) {
+        const name = b.customerName || b.fullName || 'Customer';
+        showNotificationPopup(`🎉 New Tour Booking`, `${name} placed booking (${b.bookingId || ''})`, `booking_${b._id || b.id || Date.now()}`);
+      }
     };
     const handleBookingUpdated = (payload: any) => {
       notifyDataChanged();
@@ -252,6 +289,10 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     const handleNotificationCreated = (payload: any) => {
       notifyDataChanged();
       callbacksRef.current.onNotificationUpdate?.(payload);
+
+      if (payload && payload.title) {
+        showNotificationPopup(payload.title, payload.message || '', `notif_${payload._id || payload.id || Date.now()}`);
+      }
     };
 
     socket.on('data_updated', handleDataUpdated);

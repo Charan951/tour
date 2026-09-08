@@ -22,6 +22,7 @@ export interface IUserDocument extends Document {
   isDeleted: boolean;
   deletedAt?: Date;
   deletedBy?: any;
+  fcmTokens?: string[];
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -48,7 +49,8 @@ const userSchema = new Schema<IUserDocument>(
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
-    deletedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null }
+    deletedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    fcmTokens: { type: [String], default: [] }
   },
   { timestamps: true }
 );

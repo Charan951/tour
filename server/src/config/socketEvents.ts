@@ -10,12 +10,16 @@ export const emitDataUpdate = (eventType: string, data: any, room: string = 'gen
     return;
   }
 
-  io.to(room).emit('data_updated', {
+  const payload = {
     type: eventType,
     data: data,
     timestamp: new Date().toISOString(),
     event: `${eventType}:updated`
-  });
+  };
+
+  io.to(room).emit('data_updated', payload);
+  io.emit('data_updated', payload);
+  io.emit('hc_data_updated', payload);
 
   console.log(`📤 Emitted ${eventType} update to room: ${room}`);
 };
@@ -27,11 +31,16 @@ export const emitCreate = (entityType: string, data: any, room: string = 'genera
   const io = (global as any).io;
   if (!io) return;
 
-  io.to(room).emit(entityType.toLowerCase() + ':created', {
+  const eventName = entityType.toLowerCase() + ':created';
+  const payload = {
     type: entityType,
     data: data,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  io.to(room).emit(eventName, payload);
+  io.emit(eventName, payload);
+  io.emit('hc_data_updated', payload);
 };
 
 /**
@@ -41,11 +50,16 @@ export const emitUpdate = (entityType: string, data: any, room: string = 'genera
   const io = (global as any).io;
   if (!io) return;
 
-  io.to(room).emit(entityType.toLowerCase() + ':updated', {
+  const eventName = entityType.toLowerCase() + ':updated';
+  const payload = {
     type: entityType,
     data: data,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  io.to(room).emit(eventName, payload);
+  io.emit(eventName, payload);
+  io.emit('hc_data_updated', payload);
 };
 
 /**
@@ -55,11 +69,16 @@ export const emitDelete = (entityType: string, id: string, room: string = 'gener
   const io = (global as any).io;
   if (!io) return;
 
-  io.to(room).emit(entityType.toLowerCase() + ':deleted', {
+  const eventName = entityType.toLowerCase() + ':deleted';
+  const payload = {
     type: entityType,
     id: id,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  io.to(room).emit(eventName, payload);
+  io.emit(eventName, payload);
+  io.emit('hc_data_updated', payload);
 };
 
 /**
@@ -69,10 +88,13 @@ export const emitToRoom = (room: string, event: string, data: any) => {
   const io = (global as any).io;
   if (!io) return;
 
-  io.to(room).emit(event, {
+  const payload = {
     data: data,
     timestamp: new Date().toISOString(),
-  });
+  };
+
+  io.to(room).emit(event, payload);
+  io.emit(event, payload);
 };
 
 /**

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDo4uUJGIharGbkCtGZWMOnRUiR5xuXRNU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1022570633231</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.holidaycity.mobile</string>
+	<key>PROJECT_ID</key>
+	<string>tour-1a8a9</string>
+	<key>STORAGE_BUCKET</key>
+	<string>tour-1a8a9.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1022570633231:ios:a2a6b05e18cd4d30a02b7a</string>
+</dict>
+</plist>

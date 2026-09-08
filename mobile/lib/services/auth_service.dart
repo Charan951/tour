@@ -4,6 +4,8 @@ import '../config/api_config.dart';
 import '../models/user_model.dart';
 import 'api_service.dart';
 
+import 'push_notification_service.dart';
+
 class AuthService {
   static const String tokenKey = 'hc_access_token';
   static const String userKey = 'hc_user_data';
@@ -113,6 +115,7 @@ class AuthService {
     await prefs.setString(tokenKey, token);
     await prefs.setString(userKey, jsonEncode(user.toJson()));
     ApiService.setToken(token);
+    PushNotificationService.instance.syncTokenWithBackend();
   }
 
   Future<UserModel?> getSavedUser() async {
@@ -138,6 +141,7 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    await PushNotificationService.instance.removeTokenFromBackend();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(tokenKey);
     await prefs.remove(userKey);

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Blog, Testimonial, FAQ, Newsletter, ContactMessage, Setting } from '../models/CMS.js';
 import { Enquiry } from '../models/Enquiry.js';
 import { sendEnquiryConfirmationEmail, sendAdminEnquiryNotificationEmail } from '../services/emailService.js';
+import { createNotification } from '../services/notificationService.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 // --- BLOGS ---
@@ -236,6 +237,27 @@ export const createContactMessage = async (req: Request, res: Response) => {
 
     emitDataUpdate('Enquiry', enquiry, 'general_updates');
     emitCreate('Enquiry', enquiry, 'general_updates');
+
+    // Trigger System & FCM Push Notifications for Admin and User
+    createNotification({
+      type: 'enquiry',
+      title: '📩 New Contact Form Enquiry',
+      message: `${resolvedName} submitted a contact enquiry (${enquiryId})`,
+      entityId: enquiry._id.toString(),
+      link: '/admin/leads'
+    });
+
+    if (resolvedEmail) {
+      createNotification({
+        type: 'enquiry',
+        title: 'Enquiry Received',
+        message: `Thank you for contacting HolidayCity! Your enquiry (${enquiryId}) was received successfully.`,
+        entityId: enquiry._id.toString(),
+        status: 'New',
+        link: '/my-enquiries',
+        userEmail: resolvedEmail
+      });
+    }
 
     // Trigger instant email notifications to both Customer and Admin
     sendEnquiryConfirmationEmail(enquiry).catch(err =>

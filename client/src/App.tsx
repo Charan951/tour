@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { MobileStickyBar } from './components/common/MobileStickyBar';
@@ -60,11 +60,22 @@ const PageFallback: React.FC = () => (
 // User dashboard routes — show full-screen app on mobile
 const USER_ROUTES = ['/dashboard', '/profile', '/my-bookings', '/my-enquiries'];
 
+import { initWebPushNotifications } from './services/firebaseService';
+
 export const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const { isOnline, isChecking, checkConnection } = useNetworkStatus();
+
+  const [authVer, setAuthVer] = useState(0);
+
+  useEffect(() => {
+    initWebPushNotifications();
+    const handleAuthChange = () => setAuthVer((v) => v + 1);
+    window.addEventListener('hc_user_updated', handleAuthChange);
+    return () => window.removeEventListener('hc_user_updated', handleAuthChange);
+  }, []);
 
 
 
@@ -83,58 +94,105 @@ export const App: React.FC = () => {
   // Mobile navigates entirely via bottom tab bar — matches Flutter app
   const isAuthPath = ['/my-bookings', '/profile', '/dashboard', '/my-enquiries', '/login'].some(p => location.pathname.startsWith(p));
   const isUserLoggedIn = (() => {
-    try { return !!localStorage.getItem('hc_user') && !!localStorage.getItem('hc_token'); } catch { return false; }
+    try {
+      return (
+        (!!localStorage.getItem('hc_user') && !!localStorage.getItem('hc_token')) ||
+        localStorage.getItem('hc_guest_mode') === 'true' ||
+        localStorage.getItem('hc_guest') === 'true'
+      );
+    } catch {
+      return false;
+    }
   })();
+  const checkIsAdminUser = (): boolean => {
+    try {
+      const email = (
+        localStorage.getItem('hc_user_email') ||
+        (() => {
+          const raw = localStorage.getItem('hc_user');
+          if (!raw) return '';
+          const u = JSON.parse(raw);
+          return u.email || u.user?.email || '';
+        })()
+      ).trim().toLowerCase();
+
+      const role = (() => {
+        try {
+          const raw = localStorage.getItem('hc_user');
+          if (!raw) return '';
+          const u = JSON.parse(raw);
+          return (u.role || u.user?.role || '').toString().trim().toLowerCase();
+        } catch { return ''; }
+      })();
+
+      return email === 'admin@holidaycity.com' || role === 'admin' || role === 'superadmin' || email.startsWith('admin@');
+    } catch {
+      return false;
+    }
+  };
+
+  const isAdmin = checkIsAdminUser();
   const isLoginPage = isAuthPath && !isUserLoggedIn;
   const hideWebChrome = isMobile;
+
+  // Immediate render-time redirect target for public customer pages
+  const getPublicRouteElement = (element: React.ReactNode) => {
+    if (isAdmin) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    if (!isUserLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+    return element;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink">
       {!isOnline && (
         <NetworkErrorScreen onRetry={checkConnection} isChecking={isChecking} />
       )}
-      {!isAdminRoute && !hideWebChrome && <Navbar />}
+      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <Navbar />}
 
       <main
-        className={`flex-1 ${!isAdminRoute && !hideWebChrome && !isLoginPage ? 'pt-[64px]' : ''} ${
+        className={`flex-1 ${!isAdminRoute && !hideWebChrome && isUserLoggedIn && !isLoginPage ? 'pt-[64px]' : ''} ${
           tabletFrame ? 'mx-auto w-full max-w-[480px] border-x border-line shadow-glass min-h-screen' : ''
         }`}
       >
         <Suspense fallback={<PageFallback />}>
           <Routes>
-            {/* ── PUBLIC ROUTES — desktop always, mobile shows mobile-optimised version ── */}
-            <Route path="/" element={<HomePage />} />
+            {/* ── PUBLIC ROUTES — protected with zero-flash render-time redirect ── */}
+            <Route path="/" element={getPublicRouteElement(<HomePage />)} />
 
             {/* Packages */}
-            <Route path="/packages" element={isMobile ? <MobilePackagesPage /> : <PackageCatalogPage />} />
-            <Route path="/package/:slug" element={isMobile ? <MobilePackageDetailPage /> : <PackageDetailPage />} />
+            <Route path="/packages" element={getPublicRouteElement(isMobile ? <MobilePackagesPage /> : <PackageCatalogPage />)} />
+            <Route path="/package/:slug" element={getPublicRouteElement(isMobile ? <MobilePackageDetailPage /> : <PackageDetailPage />)} />
 
             {/* Activities */}
-            <Route path="/activities" element={<ActivityCatalogPage />} />
+            <Route path="/activities" element={getPublicRouteElement(<ActivityCatalogPage />)} />
 
             {/* Destinations */}
-            <Route path="/destinations" element={isMobile ? <MobileDestinationsPage /> : <DestinationsLandingPage />} />
-            <Route path="/destination/:slug" element={isMobile ? <MobileDestinationDetailPage /> : <DestinationDetailPage />} />
+            <Route path="/destinations" element={getPublicRouteElement(isMobile ? <MobileDestinationsPage /> : <DestinationsLandingPage />)} />
+            <Route path="/destination/:slug" element={getPublicRouteElement(isMobile ? <MobileDestinationDetailPage /> : <DestinationDetailPage />)} />
 
             {/* Themes */}
-            <Route path="/themes" element={isMobile ? <MobileThemesPage /> : <ThemeCatalogPage />} />
-            <Route path="/theme/:slug" element={isMobile ? <MobileThemeDetailPage /> : <ThemeCatalogPage />} />
-            <Route path="/themes/:slug" element={isMobile ? <MobileThemeDetailPage /> : <ThemeCatalogPage />} />
+            <Route path="/themes" element={getPublicRouteElement(isMobile ? <MobileThemesPage /> : <ThemeCatalogPage />)} />
+            <Route path="/theme/:slug" element={getPublicRouteElement(isMobile ? <MobileThemeDetailPage /> : <ThemeCatalogPage />)} />
+            <Route path="/themes/:slug" element={getPublicRouteElement(isMobile ? <MobileThemeDetailPage /> : <ThemeCatalogPage />)} />
 
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/blogs" element={<BlogsPage />} />
-            <Route path="/stories" element={<BlogsPage />} />
-            <Route path="/blog/:slug" element={<BlogDetailPage />} />
-            <Route path="/blogs/:slug" element={<BlogDetailPage />} />
-            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/about" element={getPublicRouteElement(<AboutPage />)} />
+            <Route path="/contact" element={getPublicRouteElement(<ContactPage />)} />
+            <Route path="/blogs" element={getPublicRouteElement(<BlogsPage />)} />
+            <Route path="/stories" element={getPublicRouteElement(<BlogsPage />)} />
+            <Route path="/blog/:slug" element={getPublicRouteElement(<BlogDetailPage />)} />
+            <Route path="/blogs/:slug" element={getPublicRouteElement(<BlogDetailPage />)} />
+            <Route path="/faq" element={getPublicRouteElement(<FaqPage />)} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
-            <Route path="/login" element={<UserDashboardPage />} />
-            <Route path="/dashboard" element={<UserDashboardPage />} />
-            <Route path="/profile" element={<UserDashboardPage />} />
-            <Route path="/my-bookings" element={<UserDashboardPage />} />
-            <Route path="/my-enquiries" element={<UserDashboardPage />} />
+            <Route path="/login" element={isAdmin ? <Navigate to="/admin/dashboard" replace /> : <UserDashboardPage />} />
+            <Route path="/dashboard" element={getPublicRouteElement(<UserDashboardPage />)} />
+            <Route path="/profile" element={getPublicRouteElement(<UserDashboardPage />)} />
+            <Route path="/my-bookings" element={getPublicRouteElement(<UserDashboardPage />)} />
+            <Route path="/my-enquiries" element={getPublicRouteElement(<UserDashboardPage />)} />
 
             {/* ── ADMIN BACK-OFFICE ── */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -152,11 +210,11 @@ export const App: React.FC = () => {
         </Suspense>
       </main>
 
-      {!isAdminRoute && !hideWebChrome && <Footer />}
-      {!isAdminRoute && !hideWebChrome && <FloatingActionWidget />}
+      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <Footer />}
+      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <FloatingActionWidget />}
 
-      {/* Bottom tab bar — always visible on mobile non-admin */}
-      {!isAdminRoute && <MobileStickyBar />}
+      {/* Bottom tab bar — visible on mobile when logged in */}
+      {!isAdminRoute && isUserLoggedIn && <MobileStickyBar />}
     </div>
   );
 };

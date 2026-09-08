@@ -1,4 +1,6 @@
 import Notification from '../models/Notification.js';
+import { User } from '../models/User.js';
+import { sendMulticastPushNotification } from '../config/firebase.js';
 
 export const createNotification = async (data: {
   type: 'enquiry' | 'booking' | 'payment' | 'chat' | 'system' | 'package' | 'destination';
@@ -29,6 +31,41 @@ export const createNotification = async (data: {
         io.to(userRoom).emit('user_notification', payload);
         io.emit('user_notification', payload); // Broadcast to all for immediate pickup
       }
+    }
+
+    // Send FCM Push Notification to target device tokens
+    try {
+      let tokensToSend: string[] = [];
+      if (data.userEmail) {
+        // Fetch target user's FCM tokens
+        const user = await User.findOne({ email: data.userEmail.toLowerCase().trim(), isDeleted: false });
+        if (user && user.fcmTokens && user.fcmTokens.length > 0) {
+          tokensToSend = user.fcmTokens;
+        }
+      } else {
+        // Fetch all Admin users' FCM tokens
+        const adminUsers = await User.find({ isDeleted: false, fcmTokens: { $exists: true, $not: { $size: 0 } } });
+        adminUsers.forEach((u) => {
+          if (u.fcmTokens) {
+            tokensToSend.push(...u.fcmTokens);
+          }
+        });
+      }
+
+      if (tokensToSend.length > 0) {
+        const uniqueTokens = Array.from(new Set(tokensToSend));
+        const pushData: Record<string, string> = {
+          id: notification._id.toString(),
+          type: data.type || 'system',
+          entityId: data.entityId || '',
+          link: data.link || '',
+        };
+
+        sendMulticastPushNotification(uniqueTokens, data.title, data.message, pushData)
+          .catch((err) => console.error('Error dispatching push notification:', err));
+      }
+    } catch (pushErr) {
+      console.error('Failed to prepare push notification:', pushErr);
     }
 
     return notification;

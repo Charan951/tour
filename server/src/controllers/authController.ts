@@ -25,7 +25,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const normEmail = email.toLowerCase().trim();
-    const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+    const isAdminEmail = normEmail === 'admin@holidaycity.com';
 
     let user = await User.findOne({ email: normEmail, isDeleted: false })
       .select('+password')
@@ -126,7 +126,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(409).json({ success: false, message: 'User with this email already exists' });
     }
 
-    const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+    const isAdminEmail = normEmail === 'admin@holidaycity.com';
     const targetRoleDoc = await getOrCreateRole(isAdminEmail ? 'Admin' : 'Customer');
 
     const newUser = await User.create({
@@ -188,7 +188,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
 const shapeUser = (user: any, roleName?: string) => {
   const normEmail = (user?.email || '').toLowerCase().trim();
-  const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+  const isAdminEmail = normEmail === 'admin@holidaycity.com';
   const roleVal = roleName || (typeof user?.role === 'object' && user?.role !== null ? (user.role as any).name : user?.role);
   const finalRole = isAdminEmail ? 'Admin' : (roleVal === 'Admin' || roleVal === 'Super Admin' ? 'Customer' : (roleVal || 'Customer'));
 
@@ -321,6 +321,54 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       message: 'Profile fetched',
       data: user
     });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const saveFcmToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token, email: bodyEmail } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'FCM token is required' });
+    }
+
+    const email = (req.user?.email || bodyEmail)?.toLowerCase().trim();
+    if (email) {
+      await User.updateOne(
+        { email, isDeleted: false },
+        { $addToSet: { fcmTokens: token } }
+      );
+      return res.status(200).json({ success: true, message: 'FCM token registered to user successfully' });
+    }
+
+    return res.status(200).json({ success: true, message: 'FCM token received (guest)' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const removeFcmToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'FCM token is required' });
+    }
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthenticated' });
+    }
+
+    const email = req.user.email?.toLowerCase().trim();
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'User email missing' });
+    }
+
+    await User.updateOne(
+      { email, isDeleted: false },
+      { $pull: { fcmTokens: token } }
+    );
+
+    return res.status(200).json({ success: true, message: 'FCM token removed successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

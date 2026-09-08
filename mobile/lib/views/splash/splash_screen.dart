@@ -96,10 +96,15 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateNext() {
     if (_navigated || !mounted) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isInitialized) {
+      return;
+    }
+
     _navigated = true;
     _initialTimer?.cancel();
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isLoggedIn) {
       Navigator.pushReplacement(
         context,

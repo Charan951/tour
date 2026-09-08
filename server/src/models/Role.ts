@@ -14,7 +14,7 @@ const roleSchema = new Schema(
       type: String, 
       required: true, 
       unique: true, 
-      enum: ['Super Admin', 'Admin', 'Sales Executive', 'Content Manager', 'Marketing Executive'] 
+      enum: ['Admin', 'Customer', 'Sales Executive', 'Content Manager', 'Marketing Executive', 'Super Admin'] 
     },
     description: { type: String },
     permissions: [{ type: Schema.Types.ObjectId, ref: 'Permission' }],

@@ -22,14 +22,18 @@ const seed = async () => {
 
     // 1. Roles
     await Role.deleteMany({});
-    const superAdminRole = await Role.create({
-      name: 'Super Admin',
-      description: 'Full Unrestricted System Access',
+    const adminRole = await Role.create({
+      name: 'Admin',
+      description: 'System & Business Administrator',
       isSystemRole: true
     });
-    await Role.create({ name: 'Admin', description: 'Business & Operations Manager' });
+    await Role.create({
+      name: 'Customer',
+      description: 'Standard Customer Account',
+      isSystemRole: true
+    });
 
-    // 2. Default Super Admin
+    // 2. Default Admin User
     await User.deleteMany({});
     await User.create({
       firstName: 'HolidayCity',
@@ -37,7 +41,7 @@ const seed = async () => {
       email: 'admin@holidaycity.com',
       mobile: '+91 98765 43210',
       password: 'Holiday@2026',
-      role: superAdminRole._id,
+      role: adminRole._id,
       department: 'Management',
       status: 'Active'
     });

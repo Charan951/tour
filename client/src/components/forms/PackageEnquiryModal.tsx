@@ -9,6 +9,7 @@ import {
   MapPin, User, Calendar, 
   Minus, Plus, Info, Sparkles, Send, MessageSquare, ShieldCheck, Clock, Check
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { UserAuthModal } from '../auth/UserAuthModal';
 import { Modal } from '../common/Modal';
 
@@ -33,6 +34,7 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
   selectedDestination,
   initialMode = 'enquiry'
 }) => {
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [settings, setSettings] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -69,6 +71,21 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
       setCurrentUser(null);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      const u = localStorage.getItem('hc_user');
+      const token = localStorage.getItem('hc_token');
+      if (!u || !token) {
+        toast.error('Please log in to submit a booking or enquiry');
+        localStorage.setItem('hc_redirect_after_login', window.location.pathname + window.location.search);
+        localStorage.setItem('hc_open_booking_modal', 'true');
+        localStorage.setItem('hc_booking_mode', initialMode || 'booking');
+        onClose();
+        navigate('/profile');
+      }
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     fetchSettings();

@@ -9,12 +9,14 @@ import '../../models/banner_model.dart';
 import '../../models/package_model.dart';
 import '../../models/destination_model.dart';
 import '../../models/activity_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/package_provider.dart';
 import '../../providers/destination_provider.dart';
 import '../../services/package_service.dart';
 import '../../services/destination_service.dart';
 import '../../services/activity_service.dart';
 import '../../widgets/package_card.dart';
+import '../auth/login_screen.dart';
 import '../packages/package_detail_screen.dart';
 import '../destinations/destination_detail_screen.dart';
 import '../activities/activity_detail_screen.dart';
@@ -156,7 +158,22 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
     }
   }
 
-  void _openEnquirySheet(BuildContext context, {String? customTitle}) {
+  Future<void> _openEnquirySheet(BuildContext context, {String? customTitle}) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !context.mounted) return;
+    }
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

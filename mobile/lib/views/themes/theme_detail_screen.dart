@@ -9,7 +9,9 @@ import '../../models/package_model.dart';
 import '../../models/theme_model.dart';
 import '../../providers/package_provider.dart';
 import '../../services/package_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/package_card.dart';
+import '../auth/login_screen.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 
@@ -401,7 +403,23 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(18),
-                    onTap: () {
+                    onTap: () async {
+                      final auth = Provider.of<AuthProvider>(context, listen: false);
+                      if (auth.user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please log in to submit an enquiry'),
+                            backgroundColor: AppTheme.primaryColor,
+                          ),
+                        );
+                        final loggedIn = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+                        );
+                        if (loggedIn != true || !context.mounted) return;
+                      }
+
+                      if (!context.mounted) return;
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,

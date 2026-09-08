@@ -7,7 +7,7 @@ import { emitCreate, emitUpdate, emitDelete } from '../config/socketEvents.js';
 
 export const getPackages = async (req: Request, res: Response) => {
   try {
-    const { search, destination, category, theme, minPrice, maxPrice, featured, trending, page = 1, limit = 1000 } = req.query;
+    const { search, destination, category, theme, minPrice, maxPrice, featured, trending, page = 1, limit = 50 } = req.query;
 
     const query: any = { isDeleted: false };
 
@@ -108,8 +108,8 @@ export const getPackages = async (req: Request, res: Response) => {
       if (maxPrice) query.startingPrice.$lte = Number(maxPrice);
     }
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(limit as string) || 50), 100);
     const skip = (pageNum - 1) * limitNum;
 
     const total = await Package.countDocuments(query);

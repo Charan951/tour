@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../config/api_config.dart';
 import '../config/theme.dart';
 import '../models/package_model.dart';
+import '../providers/auth_provider.dart';
+import '../views/auth/login_screen.dart';
 import '../views/booking/booking_bottom_sheet.dart';
 
 class PackageCard extends StatelessWidget {
@@ -18,7 +21,23 @@ class PackageCard extends StatelessWidget {
     this.onBookNow,
   });
 
-  void _openBookingSheet(BuildContext context) {
+  Future<void> _openBookingSheet(BuildContext context) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to make a booking'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !context.mounted) return;
+    }
+
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -58,22 +77,22 @@ class PackageCard extends StatelessWidget {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   child: CachedNetworkImage(
-                    imageUrl: ApiConfig.formatImageUrl(package.mainImage),
+                    imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 500),
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    memCacheWidth: 500,
+                    fadeInDuration: const Duration(milliseconds: 150),
                     placeholder: (context, url) => Container(
                       height: 180,
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                      color: const Color(0xFFF1F5F9),
                     ),
-                    errorWidget: (context, url, error) => Image.network(
-                      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
+                    errorWidget: (context, url, error) => CachedNetworkImage(
+                      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=75&auto=format&fit=crop',
                       height: 180,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      memCacheWidth: 500,
                     ),
                   ),
                 ),

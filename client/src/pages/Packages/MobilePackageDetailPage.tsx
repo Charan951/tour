@@ -65,12 +65,22 @@ export const MobilePackageDetailPage: React.FC = () => {
       }
       
       // Fallback matching Flutter package_service.dart getPackageBySlug()
-      const fb = FALLBACK_PACKAGES.find(p => p.slug === slug || p._id === slug || p.id === slug) || FALLBACK_PACKAGES[0];
+      const fb = FALLBACK_PACKAGES.find(p => p.slug === slug || p._id === slug || p.id === slug) || null;
       setPkg(fb);
       setLoading(false);
     };
     if (slug) fetchPackage();
   }, [slug]);
+
+  useEffect(() => {
+    if (localStorage.getItem('hc_open_booking_modal') === 'true') {
+      localStorage.removeItem('hc_open_booking_modal');
+      const savedMode = (localStorage.getItem('hc_booking_mode') as 'booking' | 'enquiry') || 'booking';
+      localStorage.removeItem('hc_booking_mode');
+      setModalMode(savedMode);
+      setEnquiryOpen(true);
+    }
+  }, []);
 
   if (loading) {
     return (

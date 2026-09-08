@@ -81,7 +81,7 @@ export const HomePage: React.FC = () => {
   const isMobile = useIsMobile();
   const [destinations, setDestinations] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
-  const [activities, setActivities] = useState<any[]>(FALLBACK_ACTIVITIES);
+  const [activities, setActivities] = useState<any[]>([]);
   const [selectedActivityForModal, setSelectedActivityForModal] = useState<any>(null);
   const [activityModalMode, setActivityModalMode] = useState<'booking' | 'enquiry'>('enquiry');
   const [banners, setBanners] = useState<any[]>([]);
@@ -192,19 +192,11 @@ export const HomePage: React.FC = () => {
       ]);
 
       if (destRes.status === 'fulfilled') {
-        const apiDests = destRes.value.data?.data || [];
-        const map = new Map<string, any>();
-        apiDests.forEach((d: any) => map.set(d.slug || d._id || d.id, d));
-        FALLBACK_DESTINATIONS.forEach(d => { if (!map.has(d.slug)) map.set(d.slug, d); });
-        setDestinations(Array.from(map.values()));
+        setDestinations(destRes.value.data?.data || []);
       }
 
       if (pkgRes.status === 'fulfilled') {
-        const apiPkgs = pkgRes.value.data?.data || [];
-        const map = new Map<string, any>();
-        apiPkgs.forEach((p: any) => map.set(p.slug || p._id || p.id, p));
-        FALLBACK_PACKAGES.forEach(p => { if (!map.has(p.slug)) map.set(p.slug, p); });
-        setPackages(Array.from(map.values()));
+        setPackages(pkgRes.value.data?.data || []);
       }
 
       if (banRes.status === 'fulfilled' && banRes.value.data?.data) {
@@ -212,11 +204,7 @@ export const HomePage: React.FC = () => {
       }
 
       if (themeRes.status === 'fulfilled') {
-        const apiThemes = themeRes.value.data?.data || [];
-        const map = new Map<string, any>();
-        apiThemes.forEach((t: any) => map.set(t.slug || t._id || t.id, t));
-        FALLBACK_THEMES.forEach(t => { if (!map.has(t.slug)) map.set(t.slug, t); });
-        setThemeBanners(Array.from(map.values()));
+        setThemeBanners(themeRes.value.data?.data || []);
       }
     } catch (_) {}
   };
@@ -227,12 +215,7 @@ export const HomePage: React.FC = () => {
     ? explicitHeroBanners 
     : (homeBanners.length > 0 ? homeBanners : DEFAULT_HERO_BANNERS);
 
-  const effectiveDestinations = (() => {
-    const map = new Map<string, any>();
-    destinations.forEach(d => map.set(d.slug || d._id || d.id, d));
-    FALLBACK_DESTINATIONS.forEach(d => { if (!map.has(d.slug)) map.set(d.slug, d); });
-    return Array.from(map.values());
-  })();
+  const effectiveDestinations = destinations;
 
   const domesticDestinations = effectiveDestinations.filter(
     (d) => d.category === 'Domestic' || (d.isDomestic !== false && (d.country?.isoCode === 'IN' || d.country?.name === 'India' || d.country === 'India'))
@@ -369,6 +352,7 @@ export const HomePage: React.FC = () => {
         <MobileHomePage
           destinations={destinations}
           packages={packages}
+          activities={activities}
           banners={effectiveHeroBanners}
           themeBanners={themeBanners}
           defaultHeroBanners={DEFAULT_HERO_BANNERS}

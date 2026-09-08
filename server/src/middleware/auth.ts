@@ -13,20 +13,10 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  const isAdminRoute = Boolean(
-    req.originalUrl?.includes('/admin') || 
-    req.path?.includes('/admin') || 
-    req.baseUrl?.includes('/admin')
-  );
-
   if (!token) {
-    if (isAdminRoute) {
-      req.user = { id: '650000000000000000000001', email: 'admin@holidaycity.com', role: 'Super Admin' };
-      return next();
-    }
     return res.status(401).json({
       success: false,
-      message: 'Access denied. No bearer token provided.'
+      message: 'Access denied. Authentication token is required.'
     });
   }
 
@@ -35,18 +25,17 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     const decoded = jwt.verify(token, secret) as { id: string; email: string; role: string };
     
     const normEmail = (decoded.email || '').trim().toLowerCase();
-    if (isAdminRoute || normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com') {
-      decoded.role = 'Super Admin';
-    }
+    const isAdminEmail = normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
+    const assignedRole = isAdminEmail ? 'Admin' : 'Customer';
 
-    req.user = decoded;
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: assignedRole
+    };
     next();
   } catch (err) {
-    if (isAdminRoute || token.startsWith('hc_jwt_') || token.startsWith('admin_token_') || token.length < 50) {
-      req.user = { id: '650000000000000000000001', email: 'admin@holidaycity.com', role: 'Super Admin' };
-      return next();
-    }
-    return res.status(403).json({
+    return res.status(401).json({
       success: false,
       message: 'Invalid or expired access token.'
     });
@@ -56,22 +45,25 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 export const requireRole = (allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      req.user = { id: '650000000000000000000001', email: 'admin@holidaycity.com', role: 'Super Admin' };
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. Unauthenticated request.'
+      });
     }
 
-    const userRole = req.user.role || '';
+    const userRole = (req.user.role || '').trim();
     const normEmail = (req.user.email || '').trim().toLowerCase();
-    const isAdminRoute = Boolean(
-      req.originalUrl?.includes('/admin') || 
-      req.path?.includes('/admin') || 
-      req.baseUrl?.includes('/admin')
-    );
-    const isAdmin = isAdminRoute || userRole === 'Super Admin' || userRole === 'Admin' || userRole === 'admin' || normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
+    const normRole = userRole.toLowerCase();
 
-    if (!isAdmin && !allowedRoles.includes(userRole)) {
+    const isAdmin = normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@') || normRole === 'admin';
+
+    const normalizedAllowed = allowedRoles.map(r => r.toLowerCase().trim());
+    const isRoleAllowed = isAdmin || normalizedAllowed.includes(normRole);
+
+    if (!isRoleAllowed) {
       return res.status(403).json({
         success: false,
-        message: `Forbidden. Role '${userRole}' lacks permission for this action.`
+        message: `Forbidden. Role '${userRole}' does not have permission to perform this action.`
       });
     }
 

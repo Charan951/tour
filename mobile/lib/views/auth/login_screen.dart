@@ -22,7 +22,8 @@ import 'register_screen.dart';
 enum _LoginStep { identifier, password, otp }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool isBookingPrompt;
+  const LoginScreen({super.key, this.isBookingPrompt = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -63,6 +64,17 @@ class _LoginScreenState extends State<LoginScreen> {
     _heroTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted) return;
       setState(() => _heroIndex = (_heroIndex + 1) % _heroImages.length);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isLoggedIn) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
     });
   }
 
@@ -186,9 +198,11 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppTheme.successColor,
       ),
     );
-    Navigator.pushReplacement(
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
     );
   }
 
@@ -196,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final headerH =
-        (MediaQuery.of(context).size.height * 0.30).clamp(230.0, 300.0);
+        (MediaQuery.of(context).size.height * 0.33).clamp(260.0, 320.0);
 
     final title = _step == _LoginStep.password
         ? 'Enter your password'
@@ -255,93 +269,80 @@ class _LoginScreenState extends State<LoginScreen> {
                 SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                if (_step != _LoginStep.identifier) {
-                                  setState(() {
-                                    _step = _LoginStep.identifier;
-                                    _identifierError = '';
-                                    _otpController.clear();
-                                  });
-                                  _resendTimer?.cancel();
-                                } else {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const HomeScreen()),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.arrow_back,
-                                  size: 16, color: Colors.white),
-                              label: const Text('Back',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.5)),
-                              style:
-                                  TextButton.styleFrom(padding: EdgeInsets.zero),
-                            ),
-                            GestureDetector(
-                              onTap: () => Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => const HomeScreen()),
+                            if (!widget.isBookingPrompt)
+                              GestureDetector(
+                                  onTap: () {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) => const HomeScreen()),
+                                      (route) => false,
+                                    );
+                                  },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.35)),
+                                  ),
+                                  child: const Text('Guest',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.6)),
+                                ),
                               ),
+                          ],
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onLongPress: _showServerIpDialog,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 7),
+                                    horizontal: 20, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.35)),
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.18),
+                                        blurRadius: 24,
+                                        offset: const Offset(0, 10)),
+                                  ],
                                 ),
-                                child: const Text('Guest',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 0.6)),
+                                child: Image.asset('assets/images/logo.png',
+                                    height: 38, fit: BoxFit.contain),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 24.0),
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onLongPress: _showServerIpDialog,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.18),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 10)),
-                              ],
-                            ),
-                            child: Image.asset('assets/images/logo.png',
-                                height: 40, fit: BoxFit.contain),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(title,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white)),
                       ],
                     ),
                   ),
@@ -366,85 +367,47 @@ class _LoginScreenState extends State<LoginScreen> {
                         offset: Offset(0, -8)),
                   ],
                 ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(24, 14, 24,
-                          20 + MediaQuery.of(context).viewInsets.bottom),
-                      child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minHeight: constraints.maxHeight),
-                        child: IntrinsicHeight(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Center(
-                                  child: Container(
-                                    width: 40,
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE2E8F0),
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 22),
-                                Text(sheetLabel,
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.4,
-                                        color: AppTheme.primaryColor)),
-                                const SizedBox(height: 8),
-                                Text(sheetHelper,
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        height: 1.45,
-                                        color: AppTheme.textSecondary)),
-                                const SizedBox(height: 26),
-                                if (_step == _LoginStep.identifier)
-                                  ..._buildIdentifierStep(),
-                                if (_step == _LoginStep.password)
-                                  ..._buildPasswordStep(authProvider),
-                                if (_step == _LoginStep.otp)
-                                  ..._buildOtpStep(),
-                                // One flexible gap absorbs the rest so the
-                                // sign-up prompt sits at the bottom with a
-                                // single, deliberate space above it.
-                                const Spacer(),
-                                if (_step == _LoginStep.identifier)
-                                  Center(
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Text("Don't have an account? ",
-                                            style: TextStyle(
-                                                color:
-                                                    AppTheme.textSecondary)),
-                                        GestureDetector(
-                                          onTap: () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const RegisterScreen()),
-                                          ),
-                                          child: const Text('Register',
-                                              style: TextStyle(
-                                                  color: AppTheme.primaryColor,
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(24, 16, 24,
+                      24 + MediaQuery.of(context).viewInsets.bottom),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(999),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        const SizedBox(height: 18),
+                        Text(sheetLabel,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.4,
+                                color: AppTheme.primaryColor)),
+                        const SizedBox(height: 6),
+                        Text(sheetHelper,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.45,
+                                color: AppTheme.textSecondary)),
+                        const SizedBox(height: 22),
+                        if (_step == _LoginStep.identifier)
+                          ..._buildIdentifierStep(),
+                        if (_step == _LoginStep.password)
+                          ..._buildPasswordStep(authProvider),
+                        if (_step == _LoginStep.otp)
+                          ..._buildOtpStep(),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -481,8 +444,33 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      const SizedBox(height: 22),
+      const SizedBox(height: 20),
       CustomButton(text: 'Continue', onPressed: _handleIdentifierContinue),
+      const SizedBox(height: 20),
+      Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Don't have an account? ",
+                style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const RegisterScreen()),
+              ),
+              child: const Text('Register',
+                  style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+            ),
+          ],
+        ),
+      ),
     ];
   }
 
@@ -557,6 +545,31 @@ class _LoginScreenState extends State<LoginScreen> {
         text: 'Sign In',
         isLoading: authProvider.isLoading,
         onPressed: _handlePasswordLogin,
+      ),
+      const SizedBox(height: 20),
+      Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Don't have an account? ",
+                style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const RegisterScreen()),
+              ),
+              child: const Text('Register',
+                  style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+            ),
+          ],
+        ),
       ),
     ];
   }

@@ -3,6 +3,8 @@ import { Calendar, User, Mail, Phone, Clock, MapPin, Zap, CheckCircle2, ShieldCh
 import { apiClient } from '../../api/apiClient';
 import toast from 'react-hot-toast';
 
+import { useNavigate } from 'react-router-dom';
+
 interface ActivityBookingModalProps {
   activity: any;
   isOpen: boolean;
@@ -18,6 +20,7 @@ export const ActivityBookingModal: React.FC<ActivityBookingModalProps> = ({
   onSuccess,
   initialMode = 'booking'
 }) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<'booking' | 'enquiry'>(initialMode);
   const [customerName, setCustomerName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +37,21 @@ export const ActivityBookingModal: React.FC<ActivityBookingModalProps> = ({
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const u = localStorage.getItem('hc_user');
+      const token = localStorage.getItem('hc_token');
+      if (!u || !token) {
+        toast.error('Please log in to book or enquire activities');
+        localStorage.setItem('hc_redirect_after_login', window.location.pathname + window.location.search);
+        localStorage.setItem('hc_open_activity_modal', 'true');
+        localStorage.setItem('hc_activity_mode', initialMode || 'booking');
+        onClose();
+        navigate('/profile');
+      }
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     try {

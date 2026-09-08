@@ -59,20 +59,19 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Immediate network error detection trigger
+    if (!error.response || error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      window.dispatchEvent(new Event('offline'));
+    }
 
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       const isExpiredOrInvalid = error.response.data?.message?.toLowerCase().includes('token') ||
         error.response.data?.message?.toLowerCase().includes('forbidden') ||
         error.response.status === 401;
 
-      const hasSession = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
-
-      if (!hasSession && isExpiredOrInvalid && window.location.pathname.startsWith('/admin')) {
+      if (isExpiredOrInvalid) {
         localStorage.removeItem('hc_access_token');
         localStorage.removeItem('hc_token');
-        localStorage.removeItem('hc_user');
-        localStorage.removeItem('hc_user_email');
-        window.location.href = '/my-bookings';
       }
     }
     return Promise.reject(error);

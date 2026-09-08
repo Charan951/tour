@@ -20,6 +20,7 @@ import '../destinations/destination_detail_screen.dart';
 import '../packages/package_detail_screen.dart';
 import '../packages/package_list_screen.dart';
 import '../profile/profile_screen.dart';
+import '../auth/login_screen.dart';
 import '../themes/theme_screen.dart';
 import '../themes/theme_detail_screen.dart';
 import 'banner_detail_screen.dart';
@@ -29,6 +30,7 @@ import '../../models/activity_model.dart';
 import '../../services/activity_service.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notifications_screen.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class _BottomNavItem {
   final IconData icon;
@@ -61,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ActivityModel> _homeActivities = [];
   final ActivityService _activityService = ActivityService();
   Timer? _autoSyncTimer;
+  bool _isInitialLoading = true;
 
   @override
   void initState() {
@@ -105,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       setState(() {
         _homeActivities = results[4] as List<ActivityModel>;
+        _isInitialLoading = false;
       });
 
       // Set the logged-in user's email on NotificationProvider
@@ -168,6 +172,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final isGuest = authProvider.user == null;
+    final hideBottomBar = isGuest && _currentIndex == 4;
+
     final List<Widget> pages = [
       _buildHomeContent(),
       _buildDestinationsGridTab(),
@@ -196,7 +204,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         body: pages[_currentIndex],
-        bottomNavigationBar: SafeArea(
+        bottomNavigationBar: hideBottomBar
+            ? null
+            : SafeArea(
           top: false,
           left: true,
           right: true,
@@ -238,7 +248,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           selected: isSelected,
                           label: '${item.label} tab',
                           child: GestureDetector(
-                          onTap: () => setState(() => _currentIndex = index),
+                          onTap: () {
+                            if (index == 4 && isGuest) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const LoginScreen()),
+                              );
+                            } else {
+                              setState(() => _currentIndex = index);
+                            }
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             curve: Curves.easeInOut,
@@ -451,20 +471,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0EA5E9),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Center(
                   child: Text(
@@ -508,91 +517,91 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 20),
 
-          // Redesigned Floating Search Bar Widget
-          Container(
-            height: 54,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    textInputAction: TextInputAction.search,
-                    onChanged: (val) {
-                      final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                      packageProvider.setSearchQuery(val);
-                    },
-                    onSubmitted: (val) {
-                      final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                      packageProvider.setSearchQuery(val);
-                      setState(() => _currentIndex = 3);
-                    },
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0F172A),
-                    ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      filled: false,
-                      fillColor: Colors.transparent,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      hintText: 'Search packages, destinations, activities...',
-                      hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: const Color(0xFF94A3B8),
-                        fontWeight: FontWeight.w400,
+          // Redesigned Floating Search Bar Widget — icon is outside the container
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                    packageProvider.setSearchQuery(_searchController.text);
-                    setState(() => _currentIndex = 3);
-                  },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0EA5E9),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          textInputAction: TextInputAction.search,
+                          textAlignVertical: TextAlignVertical.center,
+                          onChanged: (val) {
+                            final packageProvider = Provider.of<PackageProvider>(context, listen: false);
+                            packageProvider.setSearchQuery(val);
+                          },
+                          onSubmitted: (val) {
+                            final packageProvider = Provider.of<PackageProvider>(context, listen: false);
+                            packageProvider.setSearchQuery(val);
+                            setState(() => _currentIndex = 3);
+                          },
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF0F172A),
+                          ),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            isCollapsed: true,
+                            hintText: 'Search destinations by name, state, ...',
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              color: const Color(0xFFADB5BD),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.search_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 10),
+              // Search icon button — outside the search bar
+              GestureDetector(
+                onTap: () {
+                  final packageProvider = Provider.of<PackageProvider>(context, listen: false);
+                  packageProvider.setSearchQuery(_searchController.text);
+                  setState(() => _currentIndex = 3);
+                },
+                child: Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0EA5E9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.search_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -623,7 +632,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final dest = items[index];
-              final formattedUrl = ApiConfig.formatImageUrl(dest.image);
+              final formattedUrl = ApiConfig.formatImageUrl(dest.image, width: 400);
 
               return GestureDetector(
                 onTap: () {
@@ -655,11 +664,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: CachedNetworkImage(
                             imageUrl: formattedUrl,
                             fit: BoxFit.cover,
+                            memCacheWidth: 400,
+                            fadeInDuration: const Duration(milliseconds: 150),
                             placeholder: (context, url) =>
-                                Container(color: Colors.grey[300]),
-                            errorWidget: (context, url, error) => Image.network(
-                              'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop',
+                                Container(color: const Color(0xFFF1F5F9)),
+                            errorWidget: (context, url, error) => CachedNetworkImage(
+                              imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75&auto=format&fit=crop',
                               fit: BoxFit.cover,
+                              memCacheWidth: 400,
                             ),
                           ),
                         ),
@@ -728,6 +740,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final themeProvider = Provider.of<SpecializationThemeProvider>(context);
     final packageProvider = Provider.of<PackageProvider>(context);
     final destinationProvider = Provider.of<DestinationProvider>(context);
+
+    if (_isInitialLoading && packageProvider.packages.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _fetchAllData,
+        child: const HomeScreenSkeleton(),
+      );
+    }
 
     return RefreshIndicator(
       onRefresh: _fetchAllData,
@@ -922,84 +941,46 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
             ],
 
-            // Thrill & Adventure Activities
-            SectionHeader(
-              title: 'Thrill & Adventure Activities ⚡',
-              subtitle: 'Bungee jumping, scuba diving, rafting & safari',
-              onSeeAll: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ActivityListScreen()),
-                );
-              },
-            ),
-            SizedBox(
-              height: 185,
-              child: _homeActivities.isNotEmpty
-                  ? ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: _homeActivities.length,
-                      itemBuilder: (context, idx) {
-                        final act = _homeActivities[idx];
-                        return _buildActivityQuickCard(
-                          title: act.title,
-                          location: act.destinationName.isNotEmpty ? act.destinationName : act.location,
-                          priceText: '₹${act.price.toInt()}',
-                          badge: act.category,
-                          imageUrl: ApiConfig.formatImageUrl(act.coverImage),
-                          color: AppTheme.primaryColor,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ActivityDetailScreen(activity: act),
-                              ),
-                            );
-                          },
+            if (_homeActivities.isNotEmpty) ...[
+              SectionHeader(
+                title: 'Thrill & Adventure Activities ⚡',
+                subtitle: 'Bungee jumping, scuba diving, rafting & safari',
+                onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ActivityListScreen()),
+                  );
+                },
+              ),
+              SizedBox(
+                height: 185,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _homeActivities.length,
+                  itemBuilder: (context, idx) {
+                    final act = _homeActivities[idx];
+                    return _buildActivityQuickCard(
+                      title: act.title,
+                      location: act.destinationName.isNotEmpty ? act.destinationName : act.location,
+                      priceText: '₹${act.price.toInt()}',
+                      badge: act.category,
+                      imageUrl: ApiConfig.formatImageUrl(act.coverImage),
+                      color: AppTheme.primaryColor,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ActivityDetailScreen(activity: act),
+                          ),
                         );
                       },
-                    )
-                  : ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        _buildActivityQuickCard(
-                          title: 'Bungee Jumping 🪂',
-                          location: 'Rishikesh, Uttarakhand',
-                          priceText: '₹3,550',
-                          badge: '83m Jump',
-                          imageUrl: 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=600&auto=format&fit=crop',
-                          color: const Color(0xFFEF4444),
-                        ),
-                        _buildActivityQuickCard(
-                          title: 'Scuba Diving 🤿',
-                          location: 'Grande Island, Goa',
-                          priceText: '₹4,200',
-                          badge: 'Deep Sea',
-                          imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&auto=format&fit=crop',
-                          color: const Color(0xFF0EA5E9),
-                        ),
-                        _buildActivityQuickCard(
-                          title: 'River Rafting 🚣',
-                          location: 'Rishikesh, Uttarakhand',
-                          priceText: '₹1,200',
-                          badge: '16 km Rapids',
-                          imageUrl: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&auto=format&fit=crop',
-                          color: const Color(0xFF10B981),
-                        ),
-                        _buildActivityQuickCard(
-                          title: 'Desert Safari 🏜️',
-                          location: 'Dubai Desert, UAE',
-                          priceText: '₹5,500',
-                          badge: 'Dune Bashing',
-                          imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop',
-                          color: const Color(0xFFF59E0B),
-                        ),
-                      ],
-                    ),
-            ),
-            const SizedBox(height: 24),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
 
             // Trending Tour Packages
             SectionHeader(
@@ -1060,7 +1041,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroBannerCard(BannerModel banner) {
-    final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl);
+    final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl, width: 600);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -1079,15 +1060,15 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CachedNetworkImage(
           imageUrl: formattedUrl,
           fit: BoxFit.fill,
+          memCacheWidth: 600,
+          fadeInDuration: const Duration(milliseconds: 150),
           placeholder: (context, url) => Container(
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+            color: const Color(0xFFF1F5F9),
           ),
-          errorWidget: (context, url, error) => Image.network(
-            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop',
+          errorWidget: (context, url, error) => CachedNetworkImage(
+            imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75&auto=format&fit=crop',
             fit: BoxFit.fill,
+            memCacheWidth: 600,
           ),
         ),
       ),
@@ -1127,77 +1108,89 @@ class _HomeScreenState extends State<HomeScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
               children: [
-                // Top Search Bar Widget
-                Container(
-                  height: 52,
-                  padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _destSearchController,
-                          textInputAction: TextInputAction.search,
-                          onChanged: (_) => setState(() {}),
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            filled: false,
-                            fillColor: Colors.transparent,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: 'Search destinations by name, state, country...',
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: const Color(0xFF94A3B8),
-                              fontWeight: FontWeight.w400,
+                // Search Bar — icon outside the container (matches Home screen)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
-                          ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => setState(() {}),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0EA5E9),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextField(
+                                controller: _destSearchController,
+                                textInputAction: TextInputAction.search,
+                                textAlignVertical: TextAlignVertical.center,
+                                onChanged: (_) => setState(() {}),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isCollapsed: true,
+                                  hintText: 'Search destinations by name, state, country...',
+                                  hintStyle: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    color: const Color(0xFFADB5BD),
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.search_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                            ),
+                            if (_destSearchController.text.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _destSearchController.clear();
+                                  setState(() {});
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                ),
+                              )
+                            else
+                              const SizedBox(width: 12),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Search button — outside the bar
+                    GestureDetector(
+                      onTap: () => setState(() {}),
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0EA5E9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.search_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 14),

@@ -46,7 +46,7 @@ class AppTheme {
               fontWeight: FontWeight.bold,
             ),
           ),
-          centerTitle: false,
+          centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.white),

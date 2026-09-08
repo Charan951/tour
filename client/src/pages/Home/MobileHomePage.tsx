@@ -8,6 +8,8 @@ import { formatImageUrl } from '../../utils/imageUrl';
 import CoverflowCarousel from '../../components/common/CoverflowCarousel';
 import ScrollStack, { ScrollStackItem } from '../../components/common/ScrollStack';
 import { FALLBACK_ACTIVITIES } from '../../utils/mobileDataFallback';
+import { MobileHomePageSkeleton } from '../../components/common/Skeleton';
+import { NotificationBell } from '../../components/common/NotificationBell';
 
 /* ─────────────────────────────────────────
    Mobile Home Screen — matches Flutter home_screen.dart _buildHomeContent()
@@ -16,6 +18,7 @@ import { FALLBACK_ACTIVITIES } from '../../utils/mobileDataFallback';
 interface MobileHomePageProps {
   destinations: any[];
   packages: any[];
+  activities?: any[];
   banners: any[];
   themeBanners: any[];
   defaultHeroBanners: any[];
@@ -25,6 +28,7 @@ interface MobileHomePageProps {
 export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   destinations,
   packages,
+  activities = [],
   banners,
   themeBanners,
   defaultHeroBanners,
@@ -123,28 +127,35 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
     return `/packages?search=${encodeURIComponent(slide.title || '')}`;
   };
 
+  const isLoading = packages.length === 0 && destinations.length === 0 && banners.length === 0 && defaultHeroBanners.length === 0;
+
+  if (isLoading) {
+    return <MobileHomePageSkeleton />;
+  }
+
   return (
     <>
-      {/* ── App bar: logo, greeting, and a search field on the header seam.
-          Gutter is px-4 to line up with the section headings below.
-          Rhythm: generous logo→greeting, tight greeting→subtitle, generous subtitle→search. ── */}
+      {/* ── App bar: logo, greeting, notification bell and a search field ── */}
       <div className="relative overflow-hidden bg-[#F1F5F9] border-b border-slate-200/90 px-4 pt-5 pb-6 rounded-b-[28px] shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="relative font-display font-black text-2xl tracking-tight text-slate-900">
             Holiday<span className="text-aqua-500">City</span>
           </h2>
+          <NotificationBell forceMobile={true} />
         </div>
 
-        <div className="relative mt-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
-            {(userName || 'E')[0].toUpperCase()}
-          </div>
-          <div>
-            <h1 className="font-display font-black text-xl text-slate-900 leading-tight">
-              {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
-              <span className="inline-block align-middle">👋</span>
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">Where do you want to travel next?</p>
+        <div className="relative mt-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+              {(userName || 'E')[0].toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-display font-black text-xl text-slate-900 leading-tight truncate">
+                {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
+                <span className="inline-block align-middle">👋</span>
+              </h1>
+              <p className="text-xs text-slate-500 font-medium truncate">Where do you want to travel next?</p>
+            </div>
           </div>
         </div>
 
@@ -311,70 +322,73 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
         )}
 
         {/* ── Thrill & Adventure Activities Section ── */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between px-4 mb-3">
-            <div>
-              <h2 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
-                Thrill & Adventure Activities ⚡
-              </h2>
-              <p className="text-[0.6875rem] text-slate-500 mt-0.5">Bungee jumping, rafting, scuba diving & safari</p>
+        {activities.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between px-4 mb-3">
+              <div>
+                <h2 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
+                  Thrill & Adventure Activities ⚡
+                </h2>
+                <p className="text-[0.6875rem] text-slate-500 mt-0.5">Bungee jumping, rafting, scuba diving & safari</p>
+              </div>
+              <Link to="/activities" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
+                See All <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <Link to="/activities" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
-              See All <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3.5 overflow-x-auto pb-2 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-            {FALLBACK_ACTIVITIES.slice(0, 6).map((act: any, i: number) => {
-              const unitPrice = Number(act.startingPrice || act.price || 1500);
-              return (
-                <div
-                  key={act._id || i}
-                  className="shrink-0 relative rounded-2xl2 overflow-hidden shadow-md bg-white border border-slate-200 flex flex-col justify-between"
-                  style={{ width: 165, height: 180 }}
-                >
-                  <div className="relative h-24 overflow-hidden">
-                    <img src={act.coverImage} alt={act.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500 text-white font-black text-[9px]">
-                      {act.category || 'Adventure'}
-                    </span>
-                  </div>
-                  <div className="p-2 flex-1 flex flex-col justify-between">
-                    <div>
-                      <p className="text-slate-900 font-bold text-xs line-clamp-1">{act.title}</p>
-                      <p className="text-[10px] text-slate-500 line-clamp-1">{act.location || act.destinationName}</p>
+            <div className="flex gap-3.5 overflow-x-auto pb-2 px-4 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+              {activities.slice(0, 6).map((act: any, i: number) => {
+                const unitPrice = Number(act.startingPrice || act.price || 1500);
+                const coverImg = formatImageUrl(act.coverImage || act.image, 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=600');
+                return (
+                  <div
+                    key={act._id || i}
+                    className="shrink-0 relative rounded-2xl2 overflow-hidden shadow-md bg-white border border-slate-200 flex flex-col justify-between"
+                    style={{ width: 165, height: 180 }}
+                  >
+                    <div className="relative h-24 overflow-hidden">
+                      <img src={coverImg} alt={act.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-500 text-white font-black text-[9px]">
+                        {act.category || 'Adventure'}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="font-black text-xs text-ocean-600">₹{unitPrice.toLocaleString()}</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            setSelectedAct(act);
-                            setActModalMode('enquiry');
-                            setActModalOpen(true);
-                          }}
-                          className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]"
-                        >
-                          Enquire
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedAct(act);
-                            setActModalMode('booking');
-                            setActModalOpen(true);
-                          }}
-                          className="px-1.5 py-0.5 rounded-md bg-ocean-600 text-white font-bold text-[10px]"
-                        >
-                          Book
-                        </button>
+                    <div className="p-2 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-slate-900 font-bold text-xs line-clamp-1">{act.title}</p>
+                        <p className="text-[10px] text-slate-500 line-clamp-1">{act.location || act.destinationName}</p>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="font-black text-xs text-ocean-600">₹{unitPrice.toLocaleString()}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setSelectedAct(act);
+                              setActModalMode('enquiry');
+                              setActModalOpen(true);
+                            }}
+                            className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px]"
+                          >
+                            Enquire
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedAct(act);
+                              setActModalMode('booking');
+                              setActModalOpen(true);
+                            }}
+                            className="px-1.5 py-0.5 rounded-md bg-ocean-600 text-white font-bold text-[10px]"
+                          >
+                            Book
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Trending Tour Packages List (matches Flutter PackageCard list) ── */}
         <div className="mt-6 px-4">

@@ -13,6 +13,7 @@ import '../../services/activity_service.dart';
 import '../../services/offline_queue.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../auth/login_screen.dart';
 
 class EnquiryBottomSheet extends StatefulWidget {
   final String? defaultDestination;
@@ -85,6 +86,32 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
   }
 
   void _submitEnquiry() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn == true && mounted) {
+        final u = Provider.of<AuthProvider>(context, listen: false).user;
+        if (u != null) {
+          setState(() {
+            _nameController.text = u.fullName;
+            _emailController.text = u.email;
+            _phoneController.text = u.mobile;
+          });
+        }
+      } else {
+        return;
+      }
+    }
+
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 

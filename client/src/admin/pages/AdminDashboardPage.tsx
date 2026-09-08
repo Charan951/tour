@@ -80,8 +80,8 @@ export const AdminDashboardPage: React.FC = () => {
       const [enqRes, bookRes, pkgRes, actRes, destRes, blogRes] = await Promise.allSettled([
         apiClient.get('/admin/enquiries'),
         apiClient.get('/admin/bookings'),
-        apiClient.get('/packages?limit=100'),
-        apiClient.get('/activities?limit=100'),
+        apiClient.get('/packages?limit=12'),
+        apiClient.get('/activities?limit=12'),
         apiClient.get('/destinations'),
         apiClient.get('/blogs')
       ]);
@@ -159,7 +159,7 @@ export const AdminDashboardPage: React.FC = () => {
     fetchDashboardData();
     const handleDataUpdate = () => fetchDashboardData();
     window.addEventListener('hc_data_updated', handleDataUpdate);
-    const interval = setInterval(fetchDashboardData, 10000);
+    const interval = setInterval(fetchDashboardData, 60000);
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
       clearInterval(interval);
@@ -204,7 +204,7 @@ export const AdminDashboardPage: React.FC = () => {
   return (
     <AdminLayout
       title="Executive Overview"
-      subtitle={`Welcome back, ${user.firstName || 'Super Admin'}! Here is your live business metrics breakdown.`}
+      subtitle={`Welcome back, ${user.firstName || 'Admin'}! Here is your live business metrics breakdown.`}
       action={
         <div className="flex items-center gap-2.5">
           <Link

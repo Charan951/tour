@@ -50,7 +50,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
         } catch (_) {}
 
         if (!d) {
-          d = FALLBACK_DESTINATIONS.find(item => item.slug === slug || item._id === slug || item.id === slug) || FALLBACK_DESTINATIONS[0];
+          d = FALLBACK_DESTINATIONS.find(item => item.slug === slug || item._id === slug || item.id === slug) || null;
         }
         setDest(d);
 
@@ -60,20 +60,9 @@ export const MobileDestinationDetailPage: React.FC = () => {
           pkgList = pkgRes.data?.data || [];
         } catch (_) {}
 
-        if (pkgList.length === 0 && d?.name) {
-          const cleanName = d.name.split(',')[0].toLowerCase().trim();
-          pkgList = FALLBACK_PACKAGES.filter((p: any) => {
-            const destStr = safeStr(p.destination).toLowerCase();
-            const titleStr = (p.title || '').toLowerCase();
-            return destStr.includes(cleanName) || titleStr.includes(cleanName);
-          });
-        }
-        if (pkgList.length === 0) {
-          pkgList = FALLBACK_PACKAGES;
-        }
         setPackages(pkgList);
 
-        const themeList = [{ name: 'All Packages', imageUrl: d?.image }, ...FALLBACK_THEMES];
+        const themeList = [{ name: 'All Packages', imageUrl: d?.image }];
         setThemes(themeList);
       } catch (e) {
         console.error(e);
@@ -83,6 +72,16 @@ export const MobileDestinationDetailPage: React.FC = () => {
     };
     if (slug) fetchData();
   }, [slug]);
+
+  useEffect(() => {
+    if (localStorage.getItem('hc_open_booking_modal') === 'true') {
+      localStorage.removeItem('hc_open_booking_modal');
+      const savedMode = (localStorage.getItem('hc_booking_mode') as 'booking' | 'enquiry') || 'booking';
+      localStorage.removeItem('hc_booking_mode');
+      setModalMode(savedMode);
+      setEnquiryOpen(true);
+    }
+  }, []);
 
   if (loading) {
     return (

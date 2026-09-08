@@ -122,7 +122,7 @@ export const PackageManagerPage: React.FC = () => {
 
   const fetchDataSilently = async () => {
     try {
-      const pkgRes = await apiClient.get('/packages?limit=100');
+      const pkgRes = await apiClient.get('/packages?limit=30');
       setPackages(mergePackagesWithFallback(pkgRes.data?.data || []));
     } catch (_) {}
   };
@@ -131,7 +131,7 @@ export const PackageManagerPage: React.FC = () => {
     try {
       setLoading(true);
       const [pkgRes, destRes] = await Promise.all([
-        apiClient.get('/packages?limit=100'),
+        apiClient.get('/packages?limit=30'),
         apiClient.get('/destinations')
       ]);
       setPackages(mergePackagesWithFallback(pkgRes.data?.data || []));

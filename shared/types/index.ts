@@ -1,4 +1,4 @@
-export type UserRoleName = 'Super Admin' | 'Admin' | 'Sales Executive' | 'Content Manager' | 'Marketing Executive';
+export type UserRoleName = 'Admin' | 'Customer' | 'Sales Executive' | 'Content Manager' | 'Marketing Executive';
 export type LeadStatus = 'New' | 'Contacted' | 'FollowupPending' | 'QuotationSent' | 'Negotiation' | 'Confirmed' | 'Cancelled' | 'Lost' | 'Completed';
 export type LeadPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 export type HotelStarRating = 3 | 4 | 5;

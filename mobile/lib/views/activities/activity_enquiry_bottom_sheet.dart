@@ -9,6 +9,7 @@ import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/enquiry_service.dart';
 import '../../widgets/custom_text_field.dart';
+import '../auth/login_screen.dart';
 
 class ActivityEnquiryBottomSheet extends StatefulWidget {
   final ActivityModel activity;
@@ -53,6 +54,32 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
   }
 
   Future<void> _submitEnquiry() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an activity enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn == true && mounted) {
+        final u = Provider.of<AuthProvider>(context, listen: false).user;
+        if (u != null) {
+          setState(() {
+            _nameController.text = u.fullName.isNotEmpty ? u.fullName : u.firstName;
+            _emailController.text = u.email;
+            _mobileController.text = u.mobile;
+          });
+        }
+      } else {
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);

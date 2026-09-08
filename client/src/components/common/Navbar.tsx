@@ -156,7 +156,7 @@ export const Navbar: React.FC = () => {
                     </Link>
                   ) : (
                     <Link
-                      to="/my-bookings"
+                      to="/profile"
                       className="px-4 py-2 rounded-full bg-slate-100 text-ocean-600 hover:bg-slate-200 text-xs xl:text-sm font-extrabold transition-all flex items-center gap-1.5 border border-slate-200 whitespace-nowrap overflow-hidden"
                     >
                       <User className="w-4 h-4 text-ocean-600 shrink-0" />

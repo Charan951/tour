@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/activity_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/activity_service.dart';
+import '../auth/login_screen.dart';
 import 'activity_booking_bottom_sheet.dart';
 import 'activity_enquiry_bottom_sheet.dart';
 
@@ -45,6 +48,54 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
         setState(() => _isLoadingRelated = false);
       }
     }
+  }
+
+  Future<void> _openEnquirySheet() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an activity enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !mounted) return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ActivityEnquiryBottomSheet(activity: widget.activity),
+    );
+  }
+
+  Future<void> _openBookingSheet() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to make an activity booking'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !mounted) return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ActivityBookingBottomSheet(activity: widget.activity),
+    );
   }
 
   @override
@@ -545,14 +596,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   OutlinedButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => ActivityEnquiryBottomSheet(activity: activity),
-                      );
-                    },
+                    onPressed: _openEnquirySheet,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -574,14 +618,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   ),
                   const SizedBox(width: 6),
                   ElevatedButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => ActivityBookingBottomSheet(activity: activity),
-                      );
-                    },
+                    onPressed: _openBookingSheet,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,

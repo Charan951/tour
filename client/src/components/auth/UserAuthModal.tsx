@@ -63,7 +63,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
         lastName: '',
         email: email || 'user@holidaycity.com',
         mobile: mobile || '+91 98765 43210',
-        role: isDemoAdmin ? 'Super Admin' : 'user'
+        role: isDemoAdmin ? 'Admin' : 'Customer'
       };
       sessionToken = `hc_jwt_${Date.now()}`;
     }
@@ -95,7 +95,17 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
         if (isUserAdmin) {
           navigate('/admin/dashboard');
         } else {
-          navigate('/my-bookings');
+          let redirectUrl = localStorage.getItem('hc_redirect_after_login');
+          if (redirectUrl && redirectUrl.startsWith('/admin')) {
+            redirectUrl = null;
+            localStorage.removeItem('hc_redirect_after_login');
+          }
+          if (redirectUrl) {
+            localStorage.removeItem('hc_redirect_after_login');
+            navigate(redirectUrl);
+          } else {
+            navigate('/');
+          }
         }
       }, 600);
     } else {
@@ -137,7 +147,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
         lastName,
         email: email || 'user@holidaycity.com',
         mobile: mobile || '+91 98765 43210',
-        role: 'user'
+        role: 'Customer'
       };
       sessionToken = `hc_jwt_${Date.now()}`;
     }
@@ -154,7 +164,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
 
       window.dispatchEvent(new Event('hc_user_updated'));
 
-      setSuccessMsg('Account created successfully! Redirecting to your profile...');
+      setSuccessMsg('Account created successfully! Redirecting...');
       toast.success(`Account created! Welcome, ${registeredUser.firstName}!`);
 
       setTimeout(() => {
@@ -164,7 +174,17 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({ isOpen, onClose, o
         if (isUserAdmin) {
           navigate('/admin/dashboard');
         } else {
-          navigate('/my-bookings');
+          let redirectUrl = localStorage.getItem('hc_redirect_after_login');
+          if (redirectUrl && redirectUrl.startsWith('/admin')) {
+            redirectUrl = null;
+            localStorage.removeItem('hc_redirect_after_login');
+          }
+          if (redirectUrl) {
+            localStorage.removeItem('hc_redirect_after_login');
+            navigate(redirectUrl);
+          } else {
+            navigate('/');
+          }
         }
       }, 600);
     } else {

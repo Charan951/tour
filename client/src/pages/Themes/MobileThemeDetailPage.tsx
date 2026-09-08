@@ -138,7 +138,7 @@ export const MobileThemeDetailPage: React.FC = () => {
 
         let apiPkgsList: any[] = [];
         try {
-          const pkgRes = await apiClient.get('/packages?limit=100');
+          const pkgRes = await apiClient.get('/packages?limit=24');
           apiPkgsList = pkgRes.data?.data || [];
         } catch (_) {}
 
@@ -182,6 +182,16 @@ export const MobileThemeDetailPage: React.FC = () => {
     if (slug) fetchData();
   }, [slug]);
 
+  useEffect(() => {
+    if (localStorage.getItem('hc_open_booking_modal') === 'true') {
+      localStorage.removeItem('hc_open_booking_modal');
+      const savedMode = (localStorage.getItem('hc_booking_mode') as 'booking' | 'enquiry') || 'booking';
+      localStorage.removeItem('hc_booking_mode');
+      setModalMode(savedMode);
+      setEnquiryOpen(true);
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center p-8">
@@ -190,19 +200,19 @@ export const MobileThemeDetailPage: React.FC = () => {
     );
   }
 
-  const themeName = safeStr(theme?.name || theme?.title) || (slug ? slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Honeymoon Tour');
+  const themeName = safeStr(theme?.name || theme?.title) || (slug ? slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Theme');
   const fallbackObj = FALLBACK_THEMES.find(t => 
     t.slug === theme?.slug || 
     t.name.toLowerCase() === themeName.toLowerCase() || 
     (slug && (t.slug.includes(slug) || slug.includes(t.slug)))
-  ) || FALLBACK_THEMES[0];
+  ) || null;
 
   const rawImg = (theme?.imageUrl && !theme.imageUrl.includes('placeholder') && !theme.imageUrl.includes('fitness')) 
     ? theme.imageUrl 
-    : (theme?.image || fallbackObj.imageUrl);
-  const imgUrl = formatImageUrl(rawImg, fallbackObj.imageUrl);
-  const rating = theme?.blurb || fallbackObj.blurb || '';
-  const description = theme?.description || THEME_DESCRIPTIONS[themeName] || fallbackObj.description;
+    : (theme?.image || fallbackObj?.imageUrl);
+  const imgUrl = formatImageUrl(rawImg);
+  const rating = theme?.blurb || fallbackObj?.blurb || '';
+  const description = theme?.description || THEME_DESCRIPTIONS[themeName] || fallbackObj?.description || '';
   const highlights = THEME_HIGHLIGHTS[themeName] || THEME_HIGHLIGHTS['Honeymoon Tour'] || ['Couple stay', 'Private cab', 'Sunset dinner', 'Luxury room'];
 
   return (

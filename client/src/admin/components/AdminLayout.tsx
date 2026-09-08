@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdminSidebar } from './AdminSidebar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { Menu } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,14 @@ const isAdminUser = (): boolean => {
     if (!raw) return false;
     const u = JSON.parse(raw);
     const normEmail = (u.email || '').trim().toLowerCase();
-    return normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@');
+    const normRole = (u.role || '').trim().toLowerCase();
+    if (normEmail === 'admin@holidaycity.com' || normEmail.startsWith('admin@')) {
+      return true;
+    }
+    if (normEmail && !normEmail.startsWith('admin@') && normEmail !== 'admin@holidaycity.com') {
+      return false;
+    }
+    return normRole === 'admin';
   } catch {
     return false;
   }
@@ -66,7 +74,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title, subti
 
   useEffect(() => {
     if (!authorized) {
-      navigate('/my-bookings', { replace: true });
+      localStorage.removeItem('hc_redirect_after_login');
+      navigate('/profile', { replace: true });
     }
   }, [authorized, navigate]);
 

@@ -4,6 +4,18 @@ import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { AuthRequest } from '../middleware/auth.js';
 
+const getOrCreateRole = async (name: 'Admin' | 'Customer') => {
+  let r = await Role.findOne({ name });
+  if (!r) {
+    r = await Role.create({
+      name,
+      description: name === 'Admin' ? 'System Administrator' : 'Standard Customer Account',
+      isSystemRole: true
+    });
+  }
+  return r;
+};
+
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -19,14 +31,11 @@ export const login = async (req: Request, res: Response) => {
       .select('+password')
       .populate('role');
 
-    if (!user) {
-      let defaultRole = null;
-      if (isAdminEmail) {
-        defaultRole = await Role.findOne({ name: 'Super Admin' }) || await Role.findOne({ name: 'Admin' });
-      }
-      if (!defaultRole) defaultRole = await Role.findOne({ name: 'Customer' });
-      if (!defaultRole) defaultRole = await Role.findOne({});
+    const adminRoleDoc = await getOrCreateRole('Admin');
+    const customerRoleDoc = await getOrCreateRole('Customer');
 
+    if (!user) {
+      const targetRole = isAdminEmail ? adminRoleDoc : customerRoleDoc;
       const namePrefix = normEmail.split('@')[0];
       user = await User.create({
         firstName: namePrefix.charAt(0).toUpperCase() + namePrefix.slice(1),
@@ -34,7 +43,7 @@ export const login = async (req: Request, res: Response) => {
         email: normEmail,
         mobile: '9632508978',
         password: password,
-        role: defaultRole?._id,
+        role: targetRole._id,
         status: 'Active'
       });
       user = await User.findById(user._id).select('+password').populate('role');
@@ -45,6 +54,15 @@ export const login = async (req: Request, res: Response) => {
         user.failedAttempts = 0;
         user.accountLockedUntil = undefined;
         await user.save();
+      }
+      // Non-admin user fix: if existing user has Admin role ID, correct it to Customer role ID in DB
+      if (!isAdminEmail) {
+        const currentRoleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : user.role;
+        if (currentRoleName === 'Admin' || currentRoleName === 'Super Admin' || !user.role) {
+          user.role = customerRoleDoc._id;
+          await user.save();
+          user = await User.findById(user._id).select('+password').populate('role');
+        }
       }
     }
 
@@ -57,10 +75,7 @@ export const login = async (req: Request, res: Response) => {
     user.lastLogin = new Date();
     await user.save();
 
-    let roleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : 'Customer';
-    if (isAdminEmail) {
-      roleName = 'Super Admin';
-    }
+    const roleName = isAdminEmail ? 'Admin' : 'Customer';
 
     const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(
@@ -105,41 +120,30 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Name, email, mobile and password are required' });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+    const normEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normEmail, isDeleted: false });
     if (existingUser) {
       return res.status(409).json({ success: false, message: 'User with this email already exists' });
     }
 
-    // Default Customer/User role fallback
-    let defaultRole = await Role.findOne({ name: 'Customer' });
-    if (!defaultRole) {
-      defaultRole = await Role.findOne({ name: 'Sales Executive' });
-    }
-    if (!defaultRole) {
-      defaultRole = await Role.findOne({});
-    }
-    if (!defaultRole) {
-      // Dynamic fallback role creation if the DB has no roles seeded
-      defaultRole = await Role.create({
-        name: 'Sales Executive',
-        description: 'Default Sales Executive Role',
-        isSystemRole: true
-      });
-    }
+    const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+    const targetRoleDoc = await getOrCreateRole(isAdminEmail ? 'Admin' : 'Customer');
 
     const newUser = await User.create({
       firstName,
       lastName,
-      email: email.toLowerCase(),
+      email: normEmail,
       mobile,
       password,
-      role: defaultRole._id,
+      role: targetRoleDoc._id,
       status: 'Active'
     });
 
+    const roleName = isAdminEmail ? 'Admin' : 'Customer';
+
     const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(
-      { id: newUser._id, email: newUser.email, role: 'Customer' },
+      { id: newUser._id, email: newUser.email, role: roleName },
       secret,
       { expiresIn: '24h' }
     );
@@ -150,7 +154,7 @@ export const register = async (req: Request, res: Response) => {
       data: {
         token: accessToken,
         accessToken,
-        user: shapeUser(newUser, 'Customer'),
+        user: shapeUser(newUser, roleName),
       }
     });
   } catch (error: any) {
@@ -167,7 +171,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
     if (!user) {
-      // Return 200 to prevent user enumeration attacks
       return res.status(200).json({
         success: true,
         message: 'If an account exists with this email, a password reset link has been dispatched.'
@@ -183,20 +186,27 @@ export const forgotPassword = async (req: Request, res: Response) => {
   }
 };
 
-const shapeUser = (user: any, roleName?: string) => ({
-  id: user._id,
-  firstName: user.firstName,
-  lastName: user.lastName,
-  email: user.email,
-  mobile: user.mobile,
-  city: user.city || '',
-  avatar: user.avatar || null,
-  role: roleName || (typeof user.role === 'object' && user.role !== null ? (user.role as any).name : user.role),
-  preferences: {
-    language: user.preferences?.language || 'English',
-    currency: user.preferences?.currency || 'INR',
-  },
-});
+const shapeUser = (user: any, roleName?: string) => {
+  const normEmail = (user?.email || '').toLowerCase().trim();
+  const isAdminEmail = normEmail.startsWith('admin@') || normEmail === 'admin@holidaycity.com';
+  const roleVal = roleName || (typeof user?.role === 'object' && user?.role !== null ? (user.role as any).name : user?.role);
+  const finalRole = isAdminEmail ? 'Admin' : (roleVal === 'Admin' || roleVal === 'Super Admin' ? 'Customer' : (roleVal || 'Customer'));
+
+  return {
+    id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    mobile: user.mobile,
+    city: user.city || '',
+    avatar: user.avatar || null,
+    role: finalRole,
+    preferences: {
+      language: user.preferences?.language || 'English',
+      currency: user.preferences?.currency || 'INR',
+    },
+  };
+};
 
 // PATCH /auth/me — the signed-in user edits their own profile.
 export const updateMe = async (req: AuthRequest, res: Response) => {

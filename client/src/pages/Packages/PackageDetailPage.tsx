@@ -36,6 +36,16 @@ export const PackageDetailPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (localStorage.getItem('hc_open_booking_modal') === 'true') {
+      localStorage.removeItem('hc_open_booking_modal');
+      const mode = (localStorage.getItem('hc_booking_mode') as 'enquiry' | 'booking') || 'booking';
+      localStorage.removeItem('hc_booking_mode');
+      setEnquiryInitialMode(mode);
+      setEnquiryModalOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchPackageData = async () => {
       try {
         setLoading(true);

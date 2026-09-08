@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/package_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../auth/login_screen.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
 import '../booking/booking_bottom_sheet.dart';
 
@@ -23,7 +26,22 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
   int _expandedDayIndex = 0;
   bool _showInclusions = true;
 
-  void _openBookingSheet() {
+  Future<void> _openEnquirySheet() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !mounted) return;
+    }
+
     final selectedTier = widget.package.pricingTiers.isNotEmpty &&
             _selectedTierIndex < widget.package.pricingTiers.length
         ? widget.package.pricingTiers[_selectedTierIndex]
@@ -44,7 +62,22 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
     );
   }
 
-  void _openBookPackageSheet() {
+  Future<void> _openBookPackageSheet() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to make a booking'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !mounted) return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -75,12 +108,14 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: ApiConfig.formatImageUrl(package.mainImage),
+                    imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 800),
                     fit: BoxFit.cover,
+                    memCacheWidth: 800,
+                    fadeInDuration: const Duration(milliseconds: 150),
                     placeholder: (context, url) =>
-                        Container(color: Colors.grey[300]),
+                        Container(color: const Color(0xFFF1F5F9)),
                     errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
+                      color: const Color(0xFFF1F5F9),
                       child: const Icon(Icons.terrain,
                           size: 64, color: Colors.grey),
                     ),
@@ -666,7 +701,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
               child: CustomButton(
                 text: 'Enquire',
                 isOutlined: true,
-                onPressed: _openBookingSheet,
+                onPressed: _openEnquirySheet,
               ),
             ),
             const SizedBox(width: 8),

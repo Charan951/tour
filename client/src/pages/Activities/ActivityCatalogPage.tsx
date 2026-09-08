@@ -39,21 +39,33 @@ export const ActivityCatalogPage: React.FC = () => {
     fetchActivities();
   }, []);
 
+  useEffect(() => {
+    if (localStorage.getItem('hc_open_activity_modal') === 'true') {
+      localStorage.removeItem('hc_open_activity_modal');
+      const savedMode = (localStorage.getItem('hc_activity_mode') as 'booking' | 'enquiry') || 'booking';
+      localStorage.removeItem('hc_activity_mode');
+      if (activities.length > 0) {
+        setSelectedActivityMode(savedMode);
+        setSelectedActivityForBooking(activities[0]);
+      }
+    }
+  }, [activities]);
+
   const fetchActivities = async () => {
     try {
       setLoading(true);
       const [actRes, catRes] = await Promise.all([
-        apiClient.get('/activities?limit=100'),
+        apiClient.get('/activities?limit=24'),
         apiClient.get('/categories')
       ]);
-      setActivities(mergeActivitiesWithFallback(actRes.data?.data || []));
+      setActivities(actRes.data?.data || []);
       if (catRes.data?.data && catRes.data.data.length > 0) {
         const fetched = catRes.data.data.map((c: any) => ({ name: c.name, icon: c.icon || '⚡' }));
         setCategories([{ name: 'All', icon: '⚡' }, ...fetched]);
       }
     } catch (err) {
       console.error('Failed to fetch activities', err);
-      setActivities(FALLBACK_ACTIVITIES);
+      setActivities([]);
     } finally {
       setLoading(false);
     }

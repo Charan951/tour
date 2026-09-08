@@ -23,7 +23,8 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
   final EnquiryService _enquiryService = EnquiryService();
   List<EnquiryModel> _enquiries = [];
   bool _isLoading = true;
-  String _activeFilter = 'All';
+  String _activeFilter = 'Pending';
+  bool _showFilters = false;
 
   @override
   void initState() {
@@ -110,6 +111,12 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final pendingCount = _enquiries.where((e) => e.status.toLowerCase() == 'pending' || e.status.toLowerCase() == 'new').length;
+    final respondedCount = _enquiries.where((e) {
+      final s = e.status.toLowerCase();
+      return s == 'responded' || s == 'quoted' || s == 'replied' || s == 'confirmed';
+    }).length;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -117,33 +124,118 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
           'My Enquiries & Quotes',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 18),
         ),
+        centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
       ),
       body: Column(
         children: [
-          // Filter Tabs (All, Pending, Responded)
+          // Filter control bar — sits directly below the AppBar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Row(
               children: [
-                _buildFilterChip('All', _enquiries.length),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'Pending',
-                  _enquiries.where((e) => e.status.toLowerCase() == 'pending' || e.status.toLowerCase() == 'new').length,
+                // Active filter pill (left)
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.25)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.tune_rounded, size: 13, color: AppTheme.primaryColor),
+                            const SizedBox(width: 5),
+                            Text(
+                              _activeFilter,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${_filteredEnquiries.length} result${_filteredEnquiries.length == 1 ? '' : 's'}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'Responded',
-                  _enquiries.where((e) {
-                    final s = e.status.toLowerCase();
-                    return s == 'responded' || s == 'quoted' || s == 'replied' || s == 'confirmed';
-                  }).length,
+                // Filter toggle button (right side, below navbar)
+                GestureDetector(
+                  onTap: () => setState(() => _showFilters = !_showFilters),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: _showFilters
+                          ? AppTheme.primaryColor
+                          : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _showFilters
+                            ? AppTheme.primaryColor
+                            : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 14,
+                          color: _showFilters ? Colors.white : AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _showFilters ? Colors.white : AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
+          ),
+
+          // Collapsible Filter Chips — visible only when _showFilters is true
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            child: _showFilters
+                ? Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Row(
+                      children: [
+                        _buildFilterChip('All', _enquiries.length),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Pending', pendingCount),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Responded', respondedCount),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
           ),
 
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
@@ -164,11 +256,16 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                                   !ConnectivityStatus.instance.online)
                                 AppErrorState(onRetry: _loadEnquiries)
                               else
-                                const AppEmptyState(
+                                AppEmptyState(
                                   icon: Icons.chat_bubble_outline_rounded,
-                                  title: 'No enquiries yet',
-                                  message:
-                                      'Tap “Enquire Now” on any package to send a request to our travel specialists.',
+                                  title: _activeFilter == 'Pending'
+                                      ? 'No pending enquiries'
+                                      : _activeFilter == 'Responded'
+                                          ? 'No responded enquiries'
+                                          : 'No enquiries yet',
+                                  message: _activeFilter == 'All'
+                                      ? 'Tap "Enquire Now" on any package to send a request to our travel specialists.'
+                                      : 'No enquiries matching the "$_activeFilter" filter.',
                                 ),
                             ],
                           )

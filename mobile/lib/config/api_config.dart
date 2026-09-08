@@ -56,19 +56,32 @@ class ApiConfig {
   static String myNotificationsReadAll(String email) =>
       '$baseUrl/notifications/my/read-all?email=${Uri.encodeQueryComponent(email)}';
 
-  static String formatImageUrl(String? url) {
+  static String formatImageUrl(String? url, {int width = 500}) {
     if (url == null || url.trim().isEmpty) {
-      return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=$width&q=75&auto=format&fit=crop';
     }
     final cleanUrl = url.trim();
     if (cleanUrl.startsWith('data:') || cleanUrl.startsWith('blob:') || cleanUrl.startsWith('assets/')) {
       return cleanUrl;
     }
     if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
-      if (cleanUrl.contains(':5000')) {
-        return cleanUrl.replaceFirst(RegExp(r'http://[^/]+:5000'), serverHost);
+      String result = cleanUrl;
+      if (result.contains(':5000')) {
+        result = result.replaceFirst(RegExp(r'http://[^/]+:5000'), serverHost);
       }
-      return cleanUrl;
+
+      // Optimize Unsplash images for instant mobile loading (small WebP/JPEG payload)
+      if (result.contains('images.unsplash.com')) {
+        if (result.contains('w=')) {
+          result = result.replaceAll(RegExp(r'w=\d+'), 'w=$width');
+        } else {
+          result += '&w=$width';
+        }
+        if (!result.contains('q=')) result += '&q=75';
+        if (!result.contains('auto=')) result += '&auto=format';
+        if (!result.contains('fit=')) result += '&fit=crop';
+      }
+      return result;
     }
     if (cleanUrl.startsWith('/')) {
       return '$serverHost$cleanUrl';

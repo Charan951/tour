@@ -38,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isInitialLoadComplete = false;
 
   final ScrollController _scrollController = ScrollController();
-  bool _showLoginForm = false;
 
   @override
   void initState() {
@@ -207,191 +206,13 @@ class _ProfileScreenState extends State<ProfileScreen>
     final user = authProvider.user;
 
     if (user == null) {
-      return _showLoginForm ? _buildInlineLoginForm() : _buildSignedOutMenu();
+      return const LoginScreen();
     }
 
     return _buildSignedInProfile(context, authProvider, user);
   }
 
-  /// Signed-out view
-  Widget _buildSignedOutMenu() {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Account',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: AppTheme.headerGradient,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Plan trips. Track quotes.',
-                    style: GoogleFonts.outfit(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sign in to see your bookings, custom itineraries and consultant messages in one place.',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.4,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => setState(() => _showLoginForm = true),
-                      icon: const Icon(Icons.login_rounded,
-                          color: AppTheme.primaryDarkColor),
-                      label: const Text('Log in to Your Account'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppTheme.primaryDarkColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: GoogleFonts.outfit(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 4,
-                        shadowColor: Colors.black.withValues(alpha: 0.15),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'Explore HolidayCity',
-              style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 14),
-            _quickLinkTile(
-                Icons.support_agent_rounded,
-                'Contact us',
-                'Talk to a travel consultant 24/7', () {
-              ChatBottomSheet.show(
-                context,
-                topicId: 'GENERAL-SUPPORT',
-                topicType: 'General',
-                topicTitle: 'Customer Support',
-                customerName: 'Guest',
-                customerEmail: 'guest@holidaycity.com',
-              );
-            }),
-            _quickLinkTile(Icons.info_outline_rounded, 'About us',
-                'Learn how we curate unforgettable trips', () {}),
-            _quickLinkTile(Icons.card_travel_rounded, 'Offers & Packages',
-                'Discover popular curated tour packages', () {}),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _quickLinkTile(
-      IconData icon, String title, String subtitle, VoidCallback onTap) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: AppTheme.primaryColor, size: 22),
-          ),
-          title: Text(
-            title,
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-          ),
-          trailing: const Icon(Icons.chevron_right_rounded,
-              color: Color(0xFF94A3B8)),
-          onTap: onTap,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInlineLoginForm() {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => setState(() => _showLoginForm = false),
-        ),
-        title: Text(
-          'Sign in',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: const LoginScreen(),
-    );
-  }
 
   /// Redesigned Signed-In Profile View matching user image layout with top modern aesthetics
   Widget _buildSignedInProfile(
@@ -656,7 +477,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     iconColor: const Color(0xFF4F46E5),
                                     label: 'Phone Number',
                                     value: displayPhone,
-                                    onTap: openEdit,
                                   ),
                                   const Padding(
                                     padding:
@@ -670,7 +490,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     iconColor: const Color(0xFF0891B2),
                                     label: 'Address',
                                     value: displayAddress,
-                                    onTap: openEdit,
                                   ),
                                 ],
                               ),
@@ -1020,59 +839,59 @@ class _ProfileScreenState extends State<ProfileScreen>
     required Color iconColor,
     required String label,
     required String value,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 18),
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF94A3B8),
-                    ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF94A3B8),
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    value,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
-                    ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFF94A3B8),
-              size: 18,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildStatCard({

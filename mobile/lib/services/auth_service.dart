@@ -86,6 +86,12 @@ class AuthService {
   }
 
   Future<UserModel?> fetchCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(tokenKey);
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    ApiService.setToken(token);
     try {
       final response = await ApiService.get(ApiConfig.me);
       if (response['success'] == true && response['data'] != null) {
@@ -95,10 +101,7 @@ class AuthService {
             ? rawData
             : (rawData['user'] ?? rawData);
         final user = UserModel.fromJson(userData);
-        // Preserve existing token — getMe does not return a new accessToken
-        final prefs = await SharedPreferences.getInstance();
-        final existingToken = prefs.getString(tokenKey) ?? '';
-        await saveSession(existingToken, user);
+        await saveSession(token, user);
         return user;
       }
     } catch (_) {}
@@ -114,6 +117,10 @@ class AuthService {
 
   Future<UserModel?> getSavedUser() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(tokenKey);
+    if (token == null || token.isEmpty) {
+      return null;
+    }
     final userStr = prefs.getString(userKey);
     if (userStr != null) {
       try {

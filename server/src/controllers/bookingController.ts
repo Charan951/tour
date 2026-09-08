@@ -205,6 +205,18 @@ export const createBooking = async (req: Request, res: Response) => {
       link: '/admin/bookings'
     });
 
+    if (normalizedEmail) {
+      createNotification({
+        type: 'booking',
+        title: 'Booking Request Submitted',
+        message: `Your booking request for "${exactPackageName}" (${bookingId}) was submitted successfully.`,
+        entityId: booking._id.toString(),
+        status: 'Pending',
+        link: '/my-bookings',
+        userEmail: normalizedEmail
+      });
+    }
+
     // Trigger instant email notification to customer
     sendBookingConfirmationEmail(populatedBooking).catch(err =>
       console.error('[BookingController] Email trigger failed:', err)

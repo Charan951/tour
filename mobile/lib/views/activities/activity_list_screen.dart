@@ -3,10 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import 'package:provider/provider.dart';
+
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/activity_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/activity_service.dart';
+import '../auth/login_screen.dart';
 import 'activity_detail_screen.dart';
 import 'activity_booking_bottom_sheet.dart';
 import 'activity_enquiry_bottom_sheet.dart';
@@ -365,7 +369,22 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                                                 Row(
                                                   children: [
                                                     OutlinedButton(
-                                                      onPressed: () {
+                                                      onPressed: () async {
+                                                        final auth = Provider.of<AuthProvider>(context, listen: false);
+                                                        if (auth.user == null) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text('Please log in to submit an activity enquiry'),
+                                                              backgroundColor: AppTheme.primaryColor,
+                                                            ),
+                                                          );
+                                                          final loggedIn = await Navigator.push<bool>(
+                                                            context,
+                                                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                                          );
+                                                          if (loggedIn != true || !context.mounted) return;
+                                                        }
+                                                        if (!context.mounted) return;
                                                         showModalBottomSheet(
                                                           context: context,
                                                           isScrollControlled: true,
@@ -385,7 +404,22 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                                                     ),
                                                     const SizedBox(width: 6),
                                                     ElevatedButton(
-                                                      onPressed: () {
+                                                      onPressed: () async {
+                                                        final auth = Provider.of<AuthProvider>(context, listen: false);
+                                                        if (auth.user == null) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text('Please log in to make an activity booking'),
+                                                              backgroundColor: AppTheme.primaryColor,
+                                                            ),
+                                                          );
+                                                          final loggedIn = await Navigator.push<bool>(
+                                                            context,
+                                                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                                          );
+                                                          if (loggedIn != true || !context.mounted) return;
+                                                        }
+                                                        if (!context.mounted) return;
                                                         showModalBottomSheet(
                                                           context: context,
                                                           isScrollControlled: true,

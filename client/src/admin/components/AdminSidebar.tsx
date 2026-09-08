@@ -18,7 +18,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     localStorage.removeItem('hc_user_email');
     window.dispatchEvent(new Event('hc_user_updated'));
     onClose();
-    navigate('/my-bookings');
+    navigate('/login');
   };
 
   const user = JSON.parse(localStorage.getItem('hc_user') || '{}');
@@ -136,7 +136,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
             {(user.firstName || 'A').charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-slate-900 truncate">{user.firstName || 'Super Admin'}</div>
+            <div className="text-xs font-bold text-slate-900 truncate">{user.firstName || 'Admin'}</div>
             <div className="text-[10px] text-emerald-600 flex items-center gap-1 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Connected Live

@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/booking_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../auth/login_screen.dart';
 
 class ActivityBookingBottomSheet extends StatefulWidget {
   final ActivityModel activity;
@@ -68,6 +69,32 @@ class _ActivityBookingBottomSheetState extends State<ActivityBookingBottomSheet>
   }
 
   void _submitBooking() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an activity booking'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn == true && mounted) {
+        final u = Provider.of<AuthProvider>(context, listen: false).user;
+        if (u != null) {
+          setState(() {
+            _nameController.text = u.fullName;
+            _emailController.text = u.email;
+            _phoneController.text = u.mobile;
+          });
+        }
+      } else {
+        return;
+      }
+    }
+
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 

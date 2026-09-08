@@ -8,9 +8,6 @@ import '../config/api_config.dart';
 import '../services/realtime_service.dart';
 
 class NotificationProvider extends ChangeNotifier {
-  static const String _storageKey = 'holidaycity_user_notifications_v3';
-  static const String _deletedNotifsKey = 'holidaycity_deleted_notifications_v3';
-
   final List<NotificationModel> _notifications = [];
   final Set<String> _deletedNotificationIds = {};
   String? _userEmail;
@@ -20,31 +17,44 @@ class NotificationProvider extends ChangeNotifier {
 
   List<NotificationModel> get notifications => List.unmodifiable(_notifications);
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
+  String? get userEmail => _userEmail;
+
+  String get _storageKey =>
+      _userEmail != null && _userEmail!.isNotEmpty
+          ? 'holidaycity_user_notifications_${_userEmail!}'
+          : 'holidaycity_user_notifications_guest';
+
+  String get _deletedNotifsKey =>
+      _userEmail != null && _userEmail!.isNotEmpty
+          ? 'holidaycity_deleted_notifications_${_userEmail!}'
+          : 'holidaycity_deleted_notifications_guest';
 
   NotificationProvider() {
     _initProvider();
   }
 
   Future<void> _initProvider() async {
-    await _loadFromStorage();
     _connectRealtimeSockets();
     _startRealtimeSync();
   }
 
-  /// Call this when the user logs in so we can fetch their notifications
-  void setUserEmail(String? email) {
+  /// Call this when user logs in, switches accounts, or logs out
+  Future<void> setUserEmail(String? email) async {
     final normalized = email?.trim().toLowerCase();
     if (_userEmail != normalized) {
       _userEmail = normalized;
+      _notifications.clear();
+      _deletedNotificationIds.clear();
+      notifyListeners();
+
       RealtimeService.instance.setCurrentUserEmail(_userEmail);
-      // Refresh notifications for this user
+
       if (_userEmail != null && _userEmail!.isNotEmpty) {
-        _fetchUserNotifications();
+        await _loadFromStorage();
+        await _fetchUserNotifications();
       }
     }
   }
-
-  String? get userEmail => _userEmail;
 
   void _connectRealtimeSockets() {
     try {
@@ -60,6 +70,8 @@ class NotificationProvider extends ChangeNotifier {
   }
 
   void _handleSocketEvent(Map<String, dynamic> event) {
+    if (_userEmail == null || _userEmail!.isEmpty) return;
+
     final eventName = event['event'] as String? ?? '';
     final payload = event['data'];
 
@@ -77,22 +89,24 @@ class NotificationProvider extends ChangeNotifier {
         // If payload is a direct notification object, process immediately
         if (payload is Map<String, dynamic> && payload['_id'] != null) {
           final payloadEmail = payload['userEmail']?.toString().toLowerCase();
-          if (payloadEmail == null || payloadEmail == _userEmail) {
-            try {
-              final model = NotificationModel.fromJson(payload);
-              if (!_deletedNotificationIds.contains(model.id)) {
-                final idx = _notifications.indexWhere((n) => n.id == model.id);
-                if (idx == -1) {
-                  _notifications.insert(0, model);
-                } else {
-                  _notifications[idx] = model;
-                }
-                _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-                notifyListeners();
-                _saveNotificationsToStorage();
-              }
-            } catch (_) {}
+          if (payloadEmail != null && payloadEmail.isNotEmpty && payloadEmail != _userEmail) {
+            return; // Ignore notifications meant for other users
           }
+
+          try {
+            final model = NotificationModel.fromJson(payload);
+            if (!_deletedNotificationIds.contains(model.id)) {
+              final idx = _notifications.indexWhere((n) => n.id == model.id);
+              if (idx == -1) {
+                _notifications.insert(0, model);
+              } else {
+                _notifications[idx] = model;
+              }
+              _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+              notifyListeners();
+              _saveNotificationsToStorage();
+            }
+          } catch (_) {}
         }
 
         // Fetch fresh user notifications from server as well
@@ -105,6 +119,10 @@ class NotificationProvider extends ChangeNotifier {
       if (eventName == 'user_notification_deleted' ||
           eventName == 'notification_deleted') {
         if (payload is Map && payload['id'] != null) {
+          final payloadEmail = payload['userEmail']?.toString().toLowerCase();
+          if (payloadEmail != null && payloadEmail.isNotEmpty && payloadEmail != _userEmail) {
+            return;
+          }
           final deletedId = payload['id'].toString();
           _deletedNotificationIds.add(deletedId);
           _notifications.removeWhere((n) => n.id == deletedId);
@@ -127,7 +145,6 @@ class NotificationProvider extends ChangeNotifier {
         _fetchUserNotifications();
       }
     });
-    // Run immediate check
     if (_userEmail != null && _userEmail!.isNotEmpty) {
       _fetchUserNotifications();
     }
@@ -141,36 +158,23 @@ class NotificationProvider extends ChangeNotifier {
       final res = await ApiService.get(url);
       if (res is Map && res['data'] is List) {
         final List serverList = res['data'];
-        bool changed = false;
 
+        final List<NotificationModel> freshList = [];
         for (final item in serverList) {
           if (item is Map<String, dynamic>) {
             final model = NotificationModel.fromJson(item);
-            // Skip if deleted locally
             if (_deletedNotificationIds.contains(model.id)) continue;
-
-            final existingIdx = _notifications.indexWhere((n) => n.id == model.id);
-            if (existingIdx == -1) {
-              // New notification from server
-              _notifications.insert(0, model);
-              changed = true;
-            } else {
-              // Update read status from server
-              if (_notifications[existingIdx].isRead != model.isRead) {
-                _notifications[existingIdx] = model;
-                changed = true;
-              }
-            }
+            freshList.add(model);
           }
         }
 
-        // Sort by timestamp descending
-        _notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        freshList.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-        if (changed) {
-          notifyListeners();
-          await _saveNotificationsToStorage();
-        }
+        _notifications.clear();
+        _notifications.addAll(freshList);
+
+        notifyListeners();
+        await _saveNotificationsToStorage();
       }
     } catch (e) {
       if (kDebugMode) print('User notifications fetch error: $e');
@@ -179,9 +183,10 @@ class NotificationProvider extends ChangeNotifier {
 
   Future<void> checkForUpdates({String? userEmail}) async {
     if (userEmail != null && userEmail.isNotEmpty) {
-      setUserEmail(userEmail);
+      await setUserEmail(userEmail);
+    } else {
+      await _fetchUserNotifications();
     }
-    await _fetchUserNotifications();
   }
 
   Future<void> markAsRead(String id) async {
@@ -236,7 +241,6 @@ class NotificationProvider extends ChangeNotifier {
 
     try {
       if (_userEmail != null && _userEmail!.isNotEmpty) {
-        // Hard delete from DB via user-scoped endpoint
         await ApiService.delete(
             ApiConfig.myNotificationDeleteUrl(id, _userEmail!));
       } else {
@@ -257,11 +261,17 @@ class NotificationProvider extends ChangeNotifier {
     await _saveDeletedIdsToStorage();
 
     try {
-      await ApiService.delete('${ApiConfig.notifications}/clear-all');
+      if (_userEmail != null && _userEmail!.isNotEmpty) {
+        await ApiService.delete(
+            ApiConfig.myNotificationDeleteUrl('all', _userEmail!));
+      } else {
+        await ApiService.delete('${ApiConfig.notifications}/clear-all');
+      }
     } catch (_) {}
   }
 
   Future<void> _loadFromStorage() async {
+    if (_userEmail == null || _userEmail!.isEmpty) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final List<String>? deletedList = prefs.getStringList(_deletedNotifsKey);
@@ -288,6 +298,7 @@ class NotificationProvider extends ChangeNotifier {
   }
 
   Future<void> _saveNotificationsToStorage() async {
+    if (_userEmail == null || _userEmail!.isEmpty) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final listJson = _notifications.map((n) => n.toJson()).toList();
@@ -296,6 +307,7 @@ class NotificationProvider extends ChangeNotifier {
   }
 
   Future<void> _saveDeletedIdsToStorage() async {
+    if (_userEmail == null || _userEmail!.isEmpty) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(

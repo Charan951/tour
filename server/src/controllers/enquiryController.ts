@@ -146,6 +146,18 @@ export const createEnquiry = async (req: Request, res: Response) => {
       link: '/admin/leads'
     });
 
+    if (normalizedEmail) {
+      createNotification({
+        type: 'enquiry',
+        title: 'Enquiry Received',
+        message: `Your enquiry for "${exactPackageName}" (${enquiryId}) has been submitted successfully.`,
+        entityId: enquiry._id.toString(),
+        status: 'New',
+        link: '/my-enquiries',
+        userEmail: normalizedEmail
+      });
+    }
+
     // Trigger instant email notification to user & admin
     sendEnquiryConfirmationEmail(populatedEnquiry).catch(err =>
       console.error('[EnquiryController] Customer email confirmation trigger failed:', err)

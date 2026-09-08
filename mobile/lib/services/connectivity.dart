@@ -4,8 +4,9 @@ import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 import 'offline_queue.dart';
 
-/// Lightweight reachability tracker. Pings local server / socket and DNS
-/// hosts to accurately detect online/offline state without false positives.
+/// Accurate reachability tracker.
+/// Uses direct IP sockets (Cloudflare 1.1.1.1 / Google 8.8.8.8) and DNS lookup
+/// to reliably detect real internet status without false positives on mobile networks.
 class ConnectivityStatus extends ChangeNotifier {
   ConnectivityStatus._();
   static final ConnectivityStatus instance = ConnectivityStatus._();
@@ -13,10 +14,13 @@ class ConnectivityStatus extends ChangeNotifier {
   bool _online = true;
   bool get online => _online;
 
+  bool _isChecking = false;
+  bool get isChecking => _isChecking;
+
   Timer? _timer;
 
   void start() {
-    _timer ??= Timer.periodic(const Duration(seconds: 10), (_) => check());
+    _timer ??= Timer.periodic(const Duration(seconds: 1), (_) => check());
     check();
   }
 
@@ -25,41 +29,68 @@ class ConnectivityStatus extends ChangeNotifier {
     _timer = null;
   }
 
-  /// Called by ApiService: `true` after any successful HTTP response.
+  /// Called by ApiService: `true` after any successful HTTP response, `false` on network failure.
   void report(bool ok) => _set(ok);
 
-  Future<void> check() async {
-    try {
-      // 1. Test connection to server host (port 5000) directly
-      final host = ApiConfig.hostIp;
-      final targetHost = (host.isNotEmpty && host != 'localhost') ? host : '127.0.0.1';
+  Future<bool> check() async {
+    _isChecking = true;
+    notifyListeners();
 
+    bool detected = false;
+    try {
+      // 1. Direct IP socket test to 1.1.1.1 or 8.8.8.8 (No DNS lookup required!)
       try {
         final socket = await Socket.connect(
-          targetHost,
-          5000,
-          timeout: const Duration(seconds: 2),
+          InternetAddress('1.1.1.1'),
+          53,
+          timeout: const Duration(seconds: 1),
         );
         socket.destroy();
-        _set(true);
-        return;
-      } catch (_) {}
+        detected = true;
+      } catch (_) {
+        try {
+          final socket = await Socket.connect(
+            InternetAddress('8.8.8.8'),
+            53,
+            timeout: const Duration(seconds: 1),
+          );
+          socket.destroy();
+          detected = true;
+        } catch (_) {}
+      }
 
-      // 2. Test DNS lookup for well-known internet host
-      try {
-        final res = await InternetAddress.lookup('google.com')
-            .timeout(const Duration(seconds: 3));
-        if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) {
-          _set(true);
-          return;
-        }
-      } catch (_) {}
+      // 2. Fallback: DNS lookup for well-known internet host (1 second timeout)
+      if (!detected) {
+        try {
+          final res = await InternetAddress.lookup('google.com')
+              .timeout(const Duration(seconds: 1));
+          if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) {
+            detected = true;
+          }
+        } catch (_) {}
+      }
 
-      // 3. Fallback: preserve current state if API requests were previously working
-      _set(_online);
+      // 3. Fallback: Server host IP check if configured (1 second timeout)
+      if (!detected && ApiConfig.hostIp.isNotEmpty && ApiConfig.hostIp != 'localhost') {
+        try {
+          final socket = await Socket.connect(
+            ApiConfig.hostIp,
+            5000,
+            timeout: const Duration(seconds: 1),
+          );
+          socket.destroy();
+          detected = true;
+        } catch (_) {}
+      }
+
+      _set(detected);
     } catch (_) {
-      _set(_online);
+      _set(false);
+    } finally {
+      _isChecking = false;
+      notifyListeners();
     }
+    return _online;
   }
 
   void _set(bool value) {
@@ -67,7 +98,7 @@ class ConnectivityStatus extends ChangeNotifier {
     _online = value;
     notifyListeners();
     if (value) {
-      // Back online — send anything queued while offline.
+      // Back online — flush queued offline requests.
       OfflineQueue.instance.flush();
     }
   }

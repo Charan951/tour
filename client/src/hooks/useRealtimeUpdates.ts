@@ -4,14 +4,11 @@ import { clientCache } from '../utils/cache';
 
 const getSocketURL = (): string => {
   const apiUrl = (import.meta as any).env?.VITE_API_URL as string | undefined;
-  
   if (apiUrl) {
-    // Remove /api/v1 from the URL
     return apiUrl.replace(/\/api\/v1\/?$/, '');
   }
-  
-  // Fallback to localhost
-  return 'http://localhost:5000';
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  return `http://${host}:5000`;
 };
 
 const SOCKET_URL = getSocketURL();
@@ -20,7 +17,7 @@ console.log('🔌 Socket URL configured:', SOCKET_URL);
 
 let globalSocket: Socket | null = null;
 let connectionAttempts = 0;
-const MAX_RECONNECTION_ATTEMPTS = 10;
+const MAX_RECONNECTION_ATTEMPTS = 5;
 
 /**
  * Get or create global socket instance
@@ -31,10 +28,10 @@ const getSocket = (): Socket => {
     
     globalSocket = io(SOCKET_URL, {
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
       reconnectionAttempts: MAX_RECONNECTION_ATTEMPTS,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       withCredentials: true,
       upgrade: true
     });
@@ -151,10 +148,14 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
 
-    // Socket Event Handlers calling latest refs
+    // Socket Event Handlers calling latest refs with 500ms debounce to prevent refetch storms
+    let notifyTimer: any = null;
     const notifyDataChanged = () => {
       clientCache.clear();
-      window.dispatchEvent(new Event('hc_data_updated'));
+      if (notifyTimer) clearTimeout(notifyTimer);
+      notifyTimer = setTimeout(() => {
+        window.dispatchEvent(new Event('hc_data_updated'));
+      }, 500);
     };
 
     const handleDataUpdated = (payload: any) => {
@@ -291,6 +292,7 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
     socket.on('booking:deleted', handleBookingDeleted);
 
     return () => {
+      if (notifyTimer) clearTimeout(notifyTimer);
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);

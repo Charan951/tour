@@ -8,11 +8,14 @@ import 'providers/banner_provider.dart';
 import 'providers/specialization_theme_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/notification_provider.dart';
+import 'services/connectivity.dart';
+import 'widgets/offline_banner.dart';
 import 'views/splash/splash_screen.dart';
 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  ConnectivityStatus.instance.start();
   runApp(const HolidayCityApp());
 }
 
@@ -42,14 +45,16 @@ class HolidayCityApp extends StatelessWidget {
             builder: (context, child) {
               // Clamp system text scaling so very large fonts stay usable.
               final mq = MediaQuery.of(context);
-              return MediaQuery(
-                data: mq.copyWith(
-                  textScaler: mq.textScaler.clamp(
-                    minScaleFactor: 0.9,
-                    maxScaleFactor: 1.3,
+              return OfflineOverlay(
+                child: MediaQuery(
+                  data: mq.copyWith(
+                    textScaler: mq.textScaler.clamp(
+                      minScaleFactor: 0.9,
+                      maxScaleFactor: 1.3,
+                    ),
                   ),
+                  child: child ?? const SizedBox(),
                 ),
-                child: child ?? const SizedBox(),
               );
             },
    

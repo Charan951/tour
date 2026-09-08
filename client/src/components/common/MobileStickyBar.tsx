@@ -10,6 +10,33 @@ export const MobileStickyBar: React.FC = () => {
   const location = useLocation();
   const [contact, setContact] = useState<{ phone?: string; whatsapp?: string }>({});
 
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    try {
+      const u = localStorage.getItem('hc_user');
+      const token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+      return u && token ? JSON.parse(u) : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    const syncState = () => {
+      try {
+        const u = localStorage.getItem('hc_user');
+        const token = localStorage.getItem('hc_token') || localStorage.getItem('hc_access_token');
+        if (u && token) {
+          setCurrentUser(JSON.parse(u));
+        } else {
+          setCurrentUser(null);
+        }
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    syncState();
+    window.addEventListener('hc_user_updated', syncState);
+    return () => window.removeEventListener('hc_user_updated', syncState);
+  }, []);
+
   useEffect(() => {
     apiClient
       .get('/settings')
@@ -20,57 +47,28 @@ export const MobileStickyBar: React.FC = () => {
       .catch(() => {});
   }, []);
 
+  // Hide sticky bar on admin routes and on login/auth pages when user is not logged in
+  const isAuthPath = ['/login', '/my-bookings', '/profile', '/dashboard', '/my-enquiries'].some((p) => location.pathname.startsWith(p));
+  if (location.pathname.startsWith('/admin') || (isAuthPath && !currentUser)) {
+    return null;
+  }
+
   const navItems = [
     { label: 'Home',         path: '/',             icon: Home },
     { label: 'Destinations', path: '/destinations', icon: Compass },
     { label: 'Themes',       path: '/themes',       icon: Palette },
     { label: 'Packages',     path: '/packages',     icon: ShoppingBag },
-    { label: 'Profile',      path: '/my-bookings',  icon: User },
+    { label: 'Profile',      path: '/profile',      icon: User },
   ];
 
   const getIsActive = (item: (typeof navItems)[0]) => {
     if (item.path === '/') return location.pathname === '/';
-    if (item.path === '/my-bookings') return USER_ROUTES.some((r) => location.pathname.startsWith(r));
+    if (item.path === '/profile' || item.path === '/my-bookings') return USER_ROUTES.some((r) => location.pathname.startsWith(r));
     return location.pathname.startsWith(item.path);
   };
 
-  // Contact actions only belong on the home page.
-  const showContactRow = location.pathname === '/';
-
-  const tel = contact.phone ? `tel:${contact.phone.replace(/\s+/g, '')}` : undefined;
-  const wa = contact.whatsapp
-    ? `https://wa.me/${contact.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(
-        'Hi HolidayCity, I would like to plan a trip.'
-      )}`
-    : undefined;
-
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-line/80 px-3 pb-2.5 pt-2 shadow-[0_-4px_24px_rgba(6,59,109,0.12)]">
-      {/* Persistent "talk to a human" row */}
-      {showContactRow && (
-      <div className="flex items-stretch gap-2 mb-1.5">
-        {tel && (
-          <a
-            href={tel}
-            aria-label="Call HolidayCity"
-            className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-800 font-bold text-[0.6875rem] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-          >
-            <Phone className="w-3.5 h-3.5 text-ocean-600" /> Call
-          </a>
-        )}
-        {wa && (
-          <a
-            href={wa}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Message HolidayCity on WhatsApp"
-            className="flex-1 h-9 rounded-xl bg-emerald-50 text-emerald-800 font-bold text-[0.6875rem] uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-          >
-            <MessageCircle className="w-3.5 h-3.5 text-whatsapp" /> WhatsApp
-          </a>
-        )}
-      </div>
-      )}
 
       {/* Pill-style nav bar */}
       <div className="flex items-center bg-white rounded-3xl2 border border-line h-[58px] overflow-hidden shadow-[0_-2px_16px_rgba(6,59,109,0.05)]">

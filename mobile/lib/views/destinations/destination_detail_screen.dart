@@ -9,6 +9,7 @@ import '../../models/activity_model.dart';
 import '../../models/destination_model.dart';
 import '../../models/package_model.dart';
 import '../../models/theme_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/package_provider.dart';
 import '../../providers/specialization_theme_provider.dart';
 import '../../services/activity_service.dart';
@@ -16,6 +17,7 @@ import '../../services/package_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/package_card.dart';
 import '../activities/activity_detail_screen.dart';
+import '../auth/login_screen.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 
@@ -177,6 +179,32 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     setState(() {
       _displayedPackages = filtered;
     });
+  }
+
+  Future<void> _openEnquirySheet() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to submit an enquiry'),
+          backgroundColor: AppTheme.primaryColor,
+        ),
+      );
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+      );
+      if (loggedIn != true || !mounted) return;
+    }
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EnquiryBottomSheet(
+        defaultDestination: widget.destination.name,
+      ),
+    );
   }
 
   @override
@@ -740,15 +768,23 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               bottom: 18,
               child: CustomButton(
                 text: 'Enquire for ${widget.destination.name} Tour',
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => EnquiryBottomSheet(
-                      defaultDestination: widget.destination.name,
-                    ),
-                  );
+                onPressed: () async {
+                  final auth = Provider.of<AuthProvider>(context, listen: false);
+                  if (auth.user == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please log in to submit an enquiry'),
+                        backgroundColor: AppTheme.primaryColor,
+                      ),
+                    );
+                    final loggedIn = await Navigator.push<bool>(
+                      context,
+                                    MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
+                    );
+                    if (loggedIn != true) return;
+                  }
+
+                  _openEnquirySheet();
                 },
               ),
             ),

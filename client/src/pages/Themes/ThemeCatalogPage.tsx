@@ -48,7 +48,7 @@ export const ThemeCatalogPage: React.FC = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/packages?limit=100');
+      const res = await apiClient.get('/packages?limit=24');
       let fetched = res.data.data || [];
       if (selectedTheme !== 'All') {
         fetched = fetched.filter((p: any) => isPackageMatchingTheme(p, selectedTheme));

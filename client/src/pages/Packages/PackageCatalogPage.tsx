@@ -63,7 +63,7 @@ export const PackageCatalogPage: React.FC = () => {
 
   const fetchPackagesSilently = async () => {
     try {
-      let url = `/packages?limit=1000`;
+      let url = `/packages?limit=24`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;
       const res = await apiClient.get(url);
@@ -99,7 +99,7 @@ export const PackageCatalogPage: React.FC = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      let url = `/packages?limit=1000`;
+      let url = `/packages?limit=24`;
 
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;

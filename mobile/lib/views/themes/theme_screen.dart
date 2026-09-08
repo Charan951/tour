@@ -84,77 +84,89 @@ class _ThemeScreenState extends State<ThemeScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
               children: [
-                // Top Search Bar Widget
-                Container(
-                  height: 52,
-                  padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          textInputAction: TextInputAction.search,
-                          onChanged: (_) => setState(() {}),
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            filled: false,
-                            fillColor: Colors.transparent,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: 'Search travel themes...',
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: const Color(0xFF94A3B8),
-                              fontWeight: FontWeight.w400,
+                // Search Bar — icon outside the container (matches Home screen)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
-                          ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => setState(() {}),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0EA5E9),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                textInputAction: TextInputAction.search,
+                                textAlignVertical: TextAlignVertical.center,
+                                onChanged: (_) => setState(() {}),
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                  isCollapsed: true,
+                                  hintText: 'Search travel themes...',
+                                  hintStyle: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    color: const Color(0xFFADB5BD),
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.search_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                            ),
+                            if (_searchController.text.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _searchController.clear();
+                                  setState(() {});
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                ),
+                              )
+                            else
+                              const SizedBox(width: 12),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Search button — outside the bar
+                    GestureDetector(
+                      onTap: () => setState(() {}),
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0EA5E9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.search_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 14),
@@ -275,7 +287,6 @@ class _ThemeScreenState extends State<ThemeScreen> {
                     ),
                     itemBuilder: (context, index) {
                       final theme = filteredThemes[index];
-                      final imageUrl = ApiConfig.formatImageUrl(theme.imageUrl);
 
                       return SizedBox(
                         height: 240,
@@ -303,17 +314,17 @@ class _ThemeScreenState extends State<ThemeScreen> {
                                   child: AspectRatio(
                                     aspectRatio: 1.6,
                                     child: CachedNetworkImage(
-                                      imageUrl: imageUrl,
+                                      imageUrl: ApiConfig.formatImageUrl(theme.imageUrl, width: 400),
                                       width: double.infinity,
                                       fit: BoxFit.cover,
+                                      memCacheWidth: 400,
+                                      fadeInDuration: const Duration(milliseconds: 150),
                                       placeholder: (context, url) => Container(
-                                        color: AppTheme.primaryColor
-                                            .withValues(alpha: 0.08),
+                                        color: const Color(0xFFF1F5F9),
                                       ),
                                       errorWidget: (context, url, error) =>
                                           Container(
-                                        color: AppTheme.primaryColor
-                                            .withValues(alpha: 0.08),
+                                        color: const Color(0xFFF1F5F9),
                                         child: const Icon(
                                             Icons.image_not_supported_outlined,
                                             color: AppTheme.textSecondary),

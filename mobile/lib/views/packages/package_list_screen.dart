@@ -65,87 +65,91 @@ class _PackageListScreenState extends State<PackageListScreen> {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
                 children: [
-                  // Top Search Bar Widget (Matching Themes & Destinations Screens)
-                  Container(
-                    height: 52,
-                    padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            textInputAction: TextInputAction.search,
-                            onChanged: packageProvider.setSearchQuery,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF0F172A),
-                            ),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              filled: false,
-                              fillColor: Colors.transparent,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              hintText: 'Search packages by destination, title...',
-                              hintStyle: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w400,
+                  // Search Bar — icon outside the container (matches Home screen)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
-                            ),
+                            ],
                           ),
-                        ),
-                        if (_searchController.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 18, color: Color(0xFF94A3B8)),
-                            onPressed: () {
-                              _searchController.clear();
-                              packageProvider.setSearchQuery('');
-                            },
-                          ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: () {
-                            packageProvider.setSearchQuery(_searchController.text);
-                          },
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0EA5E9),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  textInputAction: TextInputAction.search,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  onChanged: packageProvider.setSearchQuery,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    isCollapsed: true,
+                                    hintText: 'Search packages by destination, title...',
+                                    hintStyle: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      color: const Color(0xFFADB5BD),
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.search_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                              ),
+                              if (_searchController.text.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    _searchController.clear();
+                                    packageProvider.setSearchQuery('');
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                  ),
+                                )
+                              else
+                                const SizedBox(width: 12),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Search button — outside the bar
+                      GestureDetector(
+                        onTap: () {
+                          packageProvider.setSearchQuery(_searchController.text);
+                        },
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0EA5E9),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.search_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 14),

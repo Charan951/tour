@@ -1,9 +1,11 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { MobileStickyBar } from './components/common/MobileStickyBar';
 import { FloatingActionWidget } from './components/common/FloatingActionWidget';
+import { useNetworkStatus } from './hooks/useNetworkStatus';
+import { NetworkErrorScreen } from './components/common/NetworkErrorScreen';
 
 // Lazy-loaded Desktop Pages
 const HomePage = lazy(() => import('./pages/Home/HomePage').then(m => ({ default: m.HomePage })));
@@ -59,8 +61,12 @@ const PageFallback: React.FC = () => (
 const USER_ROUTES = ['/dashboard', '/profile', '/my-bookings', '/my-enquiries'];
 
 export const App: React.FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const { isOnline, isChecking, checkConnection } = useNetworkStatus();
+
+
 
   // Real-time viewport width — the mobile page components render below 1024px (lg).
   const [vw, setVw] = useState(() => window.innerWidth);
@@ -84,6 +90,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink">
+      {!isOnline && (
+        <NetworkErrorScreen onRetry={checkConnection} isChecking={isChecking} />
+      )}
       {!isAdminRoute && !hideWebChrome && <Navbar />}
 
       <main

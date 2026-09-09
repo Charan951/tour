@@ -22,6 +22,7 @@ export interface IUserDocument extends Document {
   isDeleted: boolean;
   deletedAt?: Date;
   deletedBy?: any;
+  walletBalance?: number;
   fcmTokens?: string[];
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
@@ -41,6 +42,7 @@ const userSchema = new Schema<IUserDocument>(
       language: { type: String, default: 'English' },
       currency: { type: String, default: 'INR' },
     },
+    walletBalance: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: ['Active', 'Inactive', 'Suspended'], default: 'Active' },
     lastLogin: { type: Date, default: null },
     failedAttempts: { type: Number, default: 0 },

@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
+import '../../config/api_config.dart';
 import '../../config/theme.dart';
+import '../../services/api_service.dart';
+import '../../services/realtime_service.dart';
 import '../../widgets/custom_button.dart';
 import 'pay_remaining_bottom_sheet.dart';
 import '../chat/chat_bottom_sheet.dart';
@@ -19,11 +23,68 @@ class BookingDetailScreen extends StatefulWidget {
 
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
   late Map<String, dynamic> _bookingData;
+  StreamSubscription? _socketSub;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _bookingData = Map<String, dynamic>.from(widget.booking);
+    _listenRealtimeEvents();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _refreshBookingData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    _socketSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refreshBookingData() async {
+    final rawId = _bookingData['_id'] ?? _bookingData['id'] ?? _bookingData['bookingId'];
+    if (rawId == null) return;
+    try {
+      final res = await ApiService.get('${ApiConfig.baseUrl}/bookings/$rawId');
+      if (res['success'] == true && res['data'] != null && mounted) {
+        final newMap = Map<String, dynamic>.from(res['data'] as Map<String, dynamic>);
+        if (newMap['paymentStatus'] != _bookingData['paymentStatus'] ||
+            newMap['remainingBalance'] != _bookingData['remainingBalance'] ||
+            newMap['advancePaid'] != _bookingData['advancePaid']) {
+          setState(() {
+            _bookingData = newMap;
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _listenRealtimeEvents() {
+    _socketSub = RealtimeService.instance.eventStream.listen((event) {
+      if (!mounted) return;
+      final payload = event['data'];
+      if (payload is Map) {
+        final currentId = (_bookingData['_id'] ?? _bookingData['id'] ?? _bookingData['bookingId'])?.toString();
+        final eventId = (payload['_id'] ?? payload['id'] ?? payload['bookingId'])?.toString();
+        
+        if (currentId != null && eventId != null && currentId == eventId) {
+          setState(() {
+            _bookingData = Map<String, dynamic>.from(payload as Map<String, dynamic>);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚡ Booking updated live by Admin!'),
+              duration: Duration(seconds: 2),
+              backgroundColor: AppTheme.primaryColor,
+            ),
+          );
+        }
+      } else {
+        _refreshBookingData();
+      }
+    });
   }
 
   void _openPaySheet() async {
@@ -66,9 +127,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     final totalPrice = (b['totalPrice'] as num?)?.toDouble() ?? 0.0;
     final advanceAmount = (b['advanceAmount'] as num?)?.toDouble() ?? 0.0;
+    final targetAdv = advanceAmount > 0 ? advanceAmount : (totalPrice * 0.25).roundToDouble();
     final remainingBalance = isFullPaid
         ? 0.0
-        : ((b['remainingBalance'] as num?)?.toDouble() ?? (totalPrice - (isAdvPaid ? advanceAmount : 0)).clamp(0, double.infinity));
+        : (totalPrice - targetAdv).clamp(0.0, double.infinity);
 
     Color statusColor;
     switch (status.toLowerCase()) {
@@ -85,7 +147,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         statusColor = Colors.amber.shade700;
     }
 
-    final targetAdv = advanceAmount > 0 ? advanceAmount : (totalPrice * 0.25).roundToDouble();
     final pct = totalPrice > 0 ? (targetAdv / totalPrice * 100).round() : 25;
 
     return Scaffold(

@@ -13,10 +13,16 @@ class RealtimeService {
   bool _isConnected = false;
   String? _currentUserEmail;
 
-  final StreamController<Map<String, dynamic>> _eventController =
+  StreamController<Map<String, dynamic>> _eventController =
       StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<Map<String, dynamic>> get eventStream => _eventController.stream;
+  Stream<Map<String, dynamic>> get eventStream {
+    if (_eventController.isClosed) {
+      _eventController = StreamController<Map<String, dynamic>>.broadcast();
+    }
+    return _eventController.stream;
+  }
+
   bool get isConnected => _isConnected;
 
   void init({String? userEmail}) {
@@ -37,8 +43,21 @@ class RealtimeService {
     }
   }
 
+  void reconnect() {
+    debugPrint('🔄 [RealtimeService] Reconnecting Socket.io to updated serverHost: ${ApiConfig.serverHost}');
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
+    _isConnected = false;
+    connect();
+  }
+
   Future<void> connect() async {
     if (_socket != null && _socket!.connected) return;
+
+    if (_eventController.isClosed) {
+      _eventController = StreamController<Map<String, dynamic>>.broadcast();
+    }
 
     final url = ApiConfig.serverHost;
     debugPrint('🔌 [RealtimeService] Connecting to Socket.io: $url');
@@ -90,11 +109,13 @@ class RealtimeService {
       for (final eventName in events) {
         _socket?.on(eventName, (data) {
           debugPrint('📩 [RealtimeService] Socket Event: $eventName');
-          _eventController.add({
-            'event': eventName,
-            'data': data,
-            'timestamp': DateTime.now().toIso8601String(),
-          });
+          if (!_eventController.isClosed) {
+            _eventController.add({
+              'event': eventName,
+              'data': data,
+              'timestamp': DateTime.now().toIso8601String(),
+            });
+          }
         });
       }
 
@@ -121,6 +142,8 @@ class RealtimeService {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
-    _eventController.close();
+    if (!_eventController.isClosed) {
+      _eventController.close();
+    }
   }
 }

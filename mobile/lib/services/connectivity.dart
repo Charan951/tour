@@ -62,52 +62,57 @@ class ConnectivityStatus extends ChangeNotifier {
 
     bool detected = false;
     try {
-      // 1. Direct IP socket to Cloudflare DNS (1.1.1.1:53)
-      try {
-        final socket = await Socket.connect(
-          InternetAddress('1.1.1.1'),
-          53,
-          timeout: const Duration(seconds: 3),
-        );
-        socket.destroy();
+      if (kIsWeb) {
+        // Web browser environment — raw IP Sockets are unsupported in dart:io on Web
         detected = true;
-      } catch (_) {
-        // 2. Fallback: Google DNS (8.8.8.8:53)
+      } else {
+        // 1. Direct IP socket to Cloudflare DNS (1.1.1.1:53)
         try {
           final socket = await Socket.connect(
-            InternetAddress('8.8.8.8'),
+            InternetAddress('1.1.1.1'),
             53,
             timeout: const Duration(seconds: 3),
           );
           socket.destroy();
           detected = true;
-        } catch (_) {}
-      }
-
-      // 3. DNS lookup fallback (handles cases where raw IP sockets are blocked)
-      if (!detected) {
-        try {
-          final res = await InternetAddress.lookup('google.com')
-              .timeout(const Duration(seconds: 3));
-          if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) {
+        } catch (_) {
+          // 2. Fallback: Google DNS (8.8.8.8:53)
+          try {
+            final socket = await Socket.connect(
+              InternetAddress('8.8.8.8'),
+              53,
+              timeout: const Duration(seconds: 3),
+            );
+            socket.destroy();
             detected = true;
-          }
-        } catch (_) {}
-      }
+          } catch (_) {}
+        }
 
-      // 4. Server host check as last resort
-      if (!detected &&
-          ApiConfig.hostIp.isNotEmpty &&
-          ApiConfig.hostIp != 'localhost') {
-        try {
-          final socket = await Socket.connect(
-            ApiConfig.hostIp,
-            5000,
-            timeout: const Duration(seconds: 3),
-          );
-          socket.destroy();
-          detected = true;
-        } catch (_) {}
+        // 3. DNS lookup fallback (handles cases where raw IP sockets are blocked)
+        if (!detected) {
+          try {
+            final res = await InternetAddress.lookup('google.com')
+                .timeout(const Duration(seconds: 3));
+            if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) {
+              detected = true;
+            }
+          } catch (_) {}
+        }
+
+        // 4. Server host check as last resort
+        if (!detected &&
+            ApiConfig.hostIp.isNotEmpty &&
+            ApiConfig.hostIp != 'localhost') {
+          try {
+            final socket = await Socket.connect(
+              ApiConfig.hostIp,
+              5000,
+              timeout: const Duration(seconds: 3),
+            );
+            socket.destroy();
+            detected = true;
+          } catch (_) {}
+        }
       }
 
       if (detected) {

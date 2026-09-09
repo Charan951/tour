@@ -17,6 +17,8 @@ import { getBanners, createBanner, updateBanner, deleteBanner } from '../control
 import { getThemeBanners, upsertThemeBanner, deleteThemeBanner } from '../controllers/themeBannerController.js';
 import { getSitemapXML } from '../controllers/sitemapController.js';
 import { createBooking, getAdminBookings, getUserBookings, updateBookingStatus, deleteBooking, payRemainingBalance } from '../controllers/bookingController.js';
+import { getRazorpayKey, createRazorpayOrder, verifyRazorpayPayment } from '../controllers/paymentController.js';
+import { getUserWallet, requestWithdrawal, applyWalletPayment } from '../controllers/walletController.js';
 import { sendChatMessage, getTopicMessages, getAdminConversations, markTopicAsRead } from '../controllers/chatController.js';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, clearAllNotifications, getUserNotifications, markUserNotificationRead, markAllUserNotificationsRead, deleteUserNotification } from '../controllers/notificationController.js';
 import uploadRoutes from './uploadRoutes.js';
@@ -113,6 +115,17 @@ router.post('/bookings', enquiryRateLimiter, createBooking);
 router.get('/bookings/my', optionalAuth, getUserBookings);
 router.patch('/bookings/:id/pay-remaining', payRemainingBalance);
 router.post('/bookings/:id/pay-remaining', payRemainingBalance);
+
+// Razorpay Payment Gateway Routes
+router.get('/payments/razorpay-key', getRazorpayKey);
+router.post('/payments/create-order', createRazorpayOrder);
+router.post('/payments/verify', verifyRazorpayPayment);
+
+// User Wallet Routes
+router.get('/wallet/my', getUserWallet);
+router.post('/wallet/withdraw', requestWithdrawal);
+router.post('/wallet/apply', applyWalletPayment);
+
 router.post('/contact', enquiryRateLimiter, createContactMessage);
 router.post('/newsletter', subscribeNewsletter);
 

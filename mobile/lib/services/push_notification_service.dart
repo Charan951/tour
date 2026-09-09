@@ -190,6 +190,7 @@ class PushNotificationService {
       final result = await ApiService.saveFcmToken(
         _fcmToken!,
         email: user?.email,
+        mobile: user?.mobile,
         role: user?.role,
       );
 

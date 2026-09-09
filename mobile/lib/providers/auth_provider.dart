@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/push_notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -59,6 +60,7 @@ class AuthProvider extends ChangeNotifier {
       final savedUser = await _authService.fetchCurrentUser();
       if (savedUser != null) {
         _user = savedUser;
+        PushNotificationService.instance.syncTokenWithBackend();
       }
     } catch (_) {
       _user = null;
@@ -74,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
       final updatedUser = await _authService.fetchCurrentUser();
       if (updatedUser != null) {
         _user = updatedUser;
+        PushNotificationService.instance.syncTokenWithBackend();
         _safeNotifyListeners();
       }
     } catch (_) {}
@@ -86,6 +89,7 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       _user = await _authService.login(email, password);
+      PushNotificationService.instance.syncTokenWithBackend();
       _isLoading = false;
       _safeNotifyListeners();
       return true;
@@ -116,6 +120,7 @@ class AuthProvider extends ChangeNotifier {
         mobile: mobile,
         password: password,
       );
+      PushNotificationService.instance.syncTokenWithBackend();
       _isLoading = false;
       _safeNotifyListeners();
       return true;

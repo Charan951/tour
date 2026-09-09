@@ -15,7 +15,14 @@ export const initFirebase = (): App | null => {
       : path.join(process.cwd(), relativeOrAbsolutePath);
 
     if (fs.existsSync(serviceAccountPath)) {
-      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+      const rawText = fs.readFileSync(serviceAccountPath, 'utf8').trim();
+      let serviceAccount: any;
+      try {
+        serviceAccount = JSON.parse(rawText);
+      } catch (jsonErr) {
+        const sanitized = rawText.replace(/[\u0000-\u001F]+/g, (match) => (match === '\n' || match === '\r' ? '\\n' : ''));
+        serviceAccount = JSON.parse(sanitized);
+      }
       if (serviceAccount && typeof serviceAccount.private_key === 'string') {
         const rawKey = serviceAccount.private_key.replace(/\\n/g, '\n');
         const lines = rawKey.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);

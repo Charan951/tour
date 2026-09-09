@@ -49,21 +49,21 @@ export const createNotification = async (data: {
         const targetEmail = data.userEmail.toLowerCase().trim();
 
         // 1. FCM tokens from the User record
-        const user = await User.findOne({ email: targetEmail, isDeleted: false });
+        const user = await User.findOne({
+          email: { $regex: new RegExp(`^${targetEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+          isDeleted: false
+        });
         if (user?.fcmTokens?.length) {
           tokensToSend.push(...user.fcmTokens);
         }
 
-        // 2. DeviceToken records matching this email (non-admin devices)
-        //    isAdmin: false  → registered user/customer devices
-        //    isAdmin: null   → old tokens registered before isAdmin field existed (treat as user)
+        // 2. DeviceToken records matching this email
         const deviceTokens = await DeviceToken.find({
-          email: targetEmail,
-          $or: [{ isAdmin: false }, { isAdmin: null }, { isAdmin: { $exists: false } }]
+          email: { $regex: new RegExp(`^${targetEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
         });
         deviceTokens.forEach(dt => { if (dt.token) tokensToSend.push(dt.token); });
 
-        // 3. Also match by mobile number from enquiry/booking
+        // 3. Also match by mobile number from user, enquiry, or booking
         let targetMobile = user?.mobile || '';
         if (!targetMobile && data.entityId && mongoose.Types.ObjectId.isValid(data.entityId)) {
           if (data.type === 'enquiry') {
@@ -76,15 +76,25 @@ export const createNotification = async (data: {
         }
 
         if (targetMobile) {
-          const mobileTokens = await DeviceToken.find({
-            mobile: targetMobile.trim(),
-            $or: [{ isAdmin: false }, { isAdmin: null }, { isAdmin: { $exists: false } }]
-          });
-          mobileTokens.forEach(dt => { if (dt.token) tokensToSend.push(dt.token); });
+          const cleanMobile = targetMobile.replace(/\D/g, '').slice(-10);
+          if (cleanMobile && cleanMobile.length >= 7) {
+            const mobileTokens = await DeviceToken.find({
+              mobile: { $regex: cleanMobile + '$' }
+            });
+            mobileTokens.forEach(dt => { if (dt.token) tokensToSend.push(dt.token); });
+
+            const mobileUser = await User.findOne({
+              mobile: { $regex: cleanMobile + '$' },
+              isDeleted: false
+            });
+            if (mobileUser?.fcmTokens?.length) {
+              tokensToSend.push(...mobileUser.fcmTokens);
+            }
+          }
         }
 
         if (tokensToSend.length === 0) {
-          console.warn(`⚠️ No FCM tokens for user "${targetEmail}". User must open the app to register.`);
+          console.warn(`⚠️ No FCM tokens found for user "${targetEmail}". User device token will register on next app launch.`);
         }
 
       } else {
@@ -95,25 +105,32 @@ export const createNotification = async (data: {
 
         // 2. FCM tokens from admin User records
         const adminUsers = await User.find({
-          role: { $in: adminRoleIds },
+          $or: [
+            { role: { $in: adminRoleIds } },
+            { email: 'admin@holidaycity.com' }
+          ],
           isDeleted: false,
           fcmTokens: { $exists: true, $not: { $size: 0 } }
         });
         adminUsers.forEach(u => { if (u.fcmTokens) tokensToSend.push(...u.fcmTokens); });
 
-        // 3. DeviceTokens explicitly marked as admin devices
-        const adminDeviceTokens = await DeviceToken.find({ isAdmin: true })
+        // 3. DeviceTokens explicitly marked as admin devices or admin email
+        const adminDeviceTokens = await DeviceToken.find({
+          $or: [
+            { isAdmin: true },
+            { email: 'admin@holidaycity.com' }
+          ]
+        })
           .sort({ updatedAt: -1 })
           .limit(30);
         adminDeviceTokens.forEach(dt => { if (dt.token) tokensToSend.push(dt.token); });
 
-        // 4. SAFE FALLBACK: tokens with no isAdmin field at all (legacy — pre-isAdmin schema)
-        //    Only used when zero admin-specific tokens are found (i.e., first-run situation)
+        // 4. SAFE FALLBACK: recent device tokens if zero admin-specific tokens exist
         if (tokensToSend.length === 0) {
-          console.warn('⚠️ No admin-flagged tokens found. Using legacy DeviceTokens as fallback (re-open app to fix).');
-          const legacyTokens = await DeviceToken.find({
-            isAdmin: { $exists: false }
-          }).sort({ updatedAt: -1 }).limit(20);
+          console.warn('⚠️ No admin-flagged tokens found. Using recent DeviceTokens as fallback.');
+          const legacyTokens = await DeviceToken.find({})
+            .sort({ updatedAt: -1 })
+            .limit(20);
           legacyTokens.forEach(dt => { if (dt.token) tokensToSend.push(dt.token); });
         }
 
@@ -139,12 +156,10 @@ export const createNotification = async (data: {
         sendMulticastPushNotification(uniqueTokens, data.title, data.message, pushData)
           .then(res => {
             console.log(`✅ FCM result: ${res?.successCount} success, ${res?.failureCount} failed`);
-            // Log failed token details for debugging
             if (res?.failureCount && res.failureCount > 0) {
               res.responses?.forEach((r, i) => {
                 if (!r.success) {
                   console.warn(`  ❌ Token[${i}] failed: ${r.error?.code} — ${r.error?.message}`);
-                  // Optionally clean up invalid tokens
                   if (r.error?.code === 'messaging/registration-token-not-registered' ||
                       r.error?.code === 'messaging/invalid-registration-token') {
                     DeviceToken.deleteOne({ token: uniqueTokens[i] }).catch(() => {});

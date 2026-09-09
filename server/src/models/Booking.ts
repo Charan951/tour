@@ -58,8 +58,7 @@ const bookingSchema = new Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['UPI / Online', 'Bank Transfer', 'Card', 'Cash', 'Other'],
-      default: 'UPI / Online'
+      default: 'Razorpay'
     },
     transactionId: { type: String, default: '' },
     paymentDetails: {
@@ -67,8 +66,14 @@ const bookingSchema = new Schema(
       cardLast4: { type: String, default: '' },
       cardHolder: { type: String, default: '' },
       cardExpiry: { type: String, default: '' },
-      bankName: { type: String, default: '' }
+      bankName: { type: String, default: '' },
+      razorpayOrderId: { type: String, default: '' },
+      razorpayPaymentId: { type: String, default: '' },
+      razorpaySignature: { type: String, default: '' }
     },
+    refundReason: { type: String, default: '', trim: true },
+    refundAmount: { type: Number, default: 0 },
+    walletAmountUsed: { type: Number, default: 0 },
     specialRequests: { type: String, default: '' },
 
     status: {

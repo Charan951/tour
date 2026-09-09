@@ -5,6 +5,8 @@ import { Package } from '../models/Package.js';
 import { Activity } from '../models/Activity.js';
 import { Destination } from '../models/Destination.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { User } from '../models/User.js';
+import { WalletTransaction } from '../models/WalletTransaction.js';
 import { emitCreate, emitDataUpdate, emitDelete, emitUpdate } from '../config/socketEvents.js';
 import {
   sendBookingConfirmationEmail,
@@ -323,7 +325,9 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       paymentMethod,
       transactionId,
       assignedTo,
-      specialRequests
+      specialRequests,
+      refundReason,
+      refundAmount: customRefundAmount
     } = req.body;
 
     const isValidObjectId = (str: string) =>
@@ -341,11 +345,79 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
+    if (paymentStatus !== undefined && paymentStatus !== booking.paymentStatus) {
+      const statusRank: Record<string, number> = {
+        'Pending Advance': 1,
+        'Advance Paid': 2,
+        'Full Paid': 3,
+        'Refunded': 4,
+        'Failed': 0
+      };
+      const currRank = statusRank[booking.paymentStatus || 'Pending Advance'] || 1;
+      const newRank = statusRank[paymentStatus] || 1;
+
+      if (paymentStatus !== 'Refunded' && newRank < currRank) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot revert payment status backwards from "${booking.paymentStatus}" to "${paymentStatus}". Status can only move forward.`
+        });
+      }
+
+      // Handle Refund
+      if (paymentStatus === 'Refunded') {
+        const isFull = booking.paymentStatus === 'Full Paid' || Number(booking.remainingBalance || 0) === 0;
+        const defaultAmount = isFull ? Number(booking.totalPrice) : Number(booking.advanceAmount || booking.totalPrice);
+        const calcRefundAmount = Number(customRefundAmount) > 0 ? Number(customRefundAmount) : defaultAmount;
+
+        booking.paymentStatus = 'Refunded';
+        booking.refundReason = refundReason || 'Booking refunded by Admin';
+        booking.refundAmount = calcRefundAmount;
+
+        // Find customer user account and credit wallet
+        const customer = await User.findOne({ email: booking.email });
+        if (customer) {
+          const newBalance = (customer.walletBalance || 0) + calcRefundAmount;
+          customer.walletBalance = newBalance;
+          await customer.save();
+
+          await WalletTransaction.create({
+            user: customer._id,
+            email: booking.email,
+            type: 'credit',
+            amount: calcRefundAmount,
+            balanceAfter: newBalance,
+            description: `Refund credited for booking #${booking.bookingId}`,
+            reason: booking.refundReason,
+            bookingId: booking.bookingId,
+            status: 'completed'
+          });
+
+          emitDataUpdate('Wallet', { userId: customer._id, email: booking.email, balance: newBalance }, 'general_updates');
+        }
+
+        // 🔔 Send User In-App & Mobile Push Notification for Refund & Wallet Credit
+        createNotification({
+          type: 'payment',
+          title: `💰 Refund Credited: ₹${calcRefundAmount.toLocaleString()}`,
+          message: `A refund of ₹${calcRefundAmount.toLocaleString()} for booking #${booking.bookingId} has been credited to your User Wallet. ${booking.refundReason ? 'Reason: ' + booking.refundReason : ''}`,
+          entityId: booking._id ? booking._id.toString() : booking.bookingId,
+          userEmail: booking.email.toString().trim().toLowerCase(),
+          link: '/wallet',
+          metadata: {
+            bookingId: booking.bookingId,
+            refundAmount: calcRefundAmount,
+            refundReason: booking.refundReason
+          }
+        }).catch(err => console.error('Failed to dispatch refund notification:', err));
+      } else {
+        booking.paymentStatus = paymentStatus;
+      }
+    }
+
     if (status !== undefined) booking.status = status;
     if (totalPrice !== undefined) booking.totalPrice = Number(totalPrice);
     if (advanceAmount !== undefined) booking.advanceAmount = Number(advanceAmount);
     if (advancePaid !== undefined) booking.advancePaid = Boolean(advancePaid);
-    if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
     if (paymentMethod !== undefined) booking.paymentMethod = paymentMethod;
     if (transactionId !== undefined) booking.transactionId = transactionId;
     if (assignedTo !== undefined) booking.assignedTo = assignedTo || null;
@@ -491,7 +563,10 @@ export const payRemainingBalance = async (req: Request, res: Response) => {
         cardLast4,
         cardHolder: (paymentDetails.cardHolder || booking.paymentDetails?.cardHolder || '').toString().trim(),
         cardExpiry: (paymentDetails.cardExpiry || booking.paymentDetails?.cardExpiry || '').toString().trim(),
-        bankName: (paymentDetails.bankName || booking.paymentDetails?.bankName || '').toString().trim()
+        bankName: (paymentDetails.bankName || booking.paymentDetails?.bankName || '').toString().trim(),
+        razorpayOrderId: (paymentDetails.razorpayOrderId || booking.paymentDetails?.razorpayOrderId || '').toString().trim(),
+        razorpayPaymentId: (paymentDetails.razorpayPaymentId || booking.paymentDetails?.razorpayPaymentId || '').toString().trim(),
+        razorpaySignature: (paymentDetails.razorpaySignature || booking.paymentDetails?.razorpaySignature || '').toString().trim()
       };
     }
 

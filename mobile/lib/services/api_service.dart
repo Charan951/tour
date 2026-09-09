@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'connectivity.dart';
+import 'realtime_service.dart';
 
 /// Thrown when the server responds with a non-2xx status code.
 /// This is a logical error (auth, validation, not-found, etc.) — NOT a
@@ -19,7 +20,7 @@ class _ApiException implements Exception {
 }
 
 class ApiService {
-  static const int timeoutDuration = 8;
+  static const int timeoutDuration = 3;
   static final http.Client _client = http.Client();
   static String? _workingHost;
   static String? _cachedToken;
@@ -121,9 +122,6 @@ class ApiService {
   }
 
   static List<String> _generateCandidateUrls(String originalUrl) {
-    // Keep this short — every extra candidate is another full timeout when the
-    // network is down. Configured URL first, then (only for a loopback host)
-    // the Android-emulator alias 10.0.2.2 as the single fallback.
     final candidates = <String>[];
 
     if (_workingHost != null && _workingHost!.isNotEmpty) {
@@ -140,10 +138,28 @@ class ApiService {
     }
 
     try {
-      final host = Uri.parse(originalUrl).host;
-      if (host == 'localhost' || host == '127.0.0.1') {
-        final alt = originalUrl.replaceAll(host, '10.0.2.2');
-        if (!candidates.contains(alt)) candidates.add(alt);
+      final uri = Uri.parse(originalUrl);
+      final host = uri.host;
+
+      // Android Emulator host loopback candidate
+      final altEmulator = originalUrl.replaceAll(host, '10.0.2.2');
+      if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
+
+      // Local LAN Wi-Fi IP candidate
+      if (ApiConfig.hostIp.isNotEmpty) {
+        final altLan = originalUrl.replaceAll(host, ApiConfig.hostIp);
+        if (!candidates.contains(altLan)) candidates.add(altLan);
+      }
+
+      // Localhost candidate (ADB reverse)
+      final altLocal = originalUrl.replaceAll(host, '127.0.0.1');
+      if (!candidates.contains(altLocal)) candidates.add(altLocal);
+
+      // Production fallback if local development host is unreachable (e.g. Wi-Fi turned off on phone)
+      if (ApiConfig.productionHost.isNotEmpty) {
+        final prodUri = Uri.parse(ApiConfig.productionHost);
+        final altProd = originalUrl.replaceAll(host, prodUri.host).replaceAll('http://', 'https://');
+        if (!candidates.contains(altProd)) candidates.add(altProd);
       }
     } catch (_) {}
 
@@ -155,9 +171,15 @@ class ApiService {
     try {
       final uri = Uri.parse(targetUrl);
       if (uri.host.isNotEmpty && _workingHost != uri.host) {
+        final oldHost = _workingHost;
         _workingHost = uri.host;
-        ApiConfig.hostIp = uri.host;
-        debugPrint('🚀 Cached working host IP: ${uri.host}');
+        if (uri.host != 'localhost' && uri.host != '127.0.0.1') {
+          ApiConfig.hostIp = uri.host;
+          debugPrint('🚀 Cached working host IP: ${uri.host}');
+          if (oldHost == null || oldHost == 'localhost' || oldHost == '127.0.0.1') {
+            RealtimeService.instance.reconnect();
+          }
+        }
       }
     } catch (_) {}
   }
@@ -294,15 +316,18 @@ class ApiService {
     try {
       body = jsonDecode(response.body);
     } catch (_) {
-      throw _ApiException('Invalid response from server (${response.statusCode})');
+      if (response.statusCode == 404) {
+        throw const _ApiException('Resource endpoint not found on server (404)');
+      }
+      throw _ApiException('Invalid server response (${response.statusCode})');
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else {
       final message = (body is Map && body['message'] != null)
           ? body['message']
-          : 'An error occurred (${response.statusCode})';
-      throw _ApiException(message);
+          : 'Server error (${response.statusCode})';
+      throw _ApiException(message.toString());
     }
   }
 
@@ -422,10 +447,12 @@ class ApiService {
     };
   }
 
-  static Future<dynamic> saveFcmToken(String token, {String? email, String? role}) async {
+  static Future<dynamic> saveFcmToken(String token, {String? email, String? role, String? mobile, String? platform}) async {
     final body = <String, dynamic>{'token': token};
     if (email != null && email.isNotEmpty) body['email'] = email;
     if (role != null && role.isNotEmpty) body['role'] = role;
+    if (mobile != null && mobile.isNotEmpty) body['mobile'] = mobile;
+    body['platform'] = platform ?? (defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android');
     return post(ApiConfig.fcmToken, body);
   }
 

@@ -14,8 +14,8 @@ import '../auth/login_screen.dart';
 import '../booking/my_bookings_screen.dart';
 import '../enquiry/my_enquiries_screen.dart';
 import '../chat/chat_bottom_sheet.dart';
-import '../notifications/notifications_screen.dart';
 import '../activities/activity_list_screen.dart';
+import '../notifications/notifications_screen.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -509,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               iconColor: const Color(0xFF0284C7),
                               count: _userEnquiries.length.toString(),
                               label: 'ENQUIRIES',
-                              cta: 'View Enquiries',
+                              cta: 'View',
                               ctaColor: AppTheme.primaryColor,
                               onTap: () => Navigator.push(
                                 context,
@@ -519,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: _buildStatCard(
                               icon: Icons.shopping_bag_rounded,
@@ -527,7 +527,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               iconColor: const Color(0xFF4F46E5),
                               count: _userBookings.length.toString(),
                               label: 'BOOKINGS',
-                              cta: 'View Bookings',
+                              cta: 'View',
                               ctaColor: const Color(0xFF4F46E5),
                               onTap: () => Navigator.push(
                                 context,
@@ -545,6 +545,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildSectionHeader('My travel activity'),
                       const SizedBox(height: 8),
                       _buildGroupedCard([
+
                         _buildRow(
                           icon: Icons.assignment_turned_in_rounded,
                           iconBgColor: const Color(0xFFE0F2FE),
@@ -973,12 +974,16 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    cta,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: ctaColor,
+                  Flexible(
+                    child: Text(
+                      cta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: ctaColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 2),

@@ -1,6 +1,6 @@
 class ApiConfig {
   /// Toggle between Production (`true`) and Localhost (`false`)
-  static bool isProduction = true;
+  static bool isProduction = false;
 
   // Endpoint URLs
   static const String productionHost = 'https://tour.speshway.site';
@@ -19,6 +19,10 @@ class ApiConfig {
 
     if (isProduction) {
       return productionHost;
+    }
+
+    if (hostIp.isNotEmpty && hostIp != 'localhost' && hostIp != '127.0.0.1') {
+      return 'http://$hostIp:5000';
     }
 
     return localHost;

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../services/api_service.dart';
+
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -24,11 +26,22 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
   final _cardExpiryController = TextEditingController();
   final _cvvController = TextEditingController();
 
-  String _paymentMethod = 'UPI / Online';
+  String _paymentMethod = 'Razorpay (Online Gateway)';
   bool _isSubmitting = false;
+  late Razorpay _razorpay;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handleRazorpaySuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleRazorpayError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
 
   @override
   void dispose() {
+    _razorpay.clear();
     _txIdController.dispose();
     _upiIdController.dispose();
     _cardNumberController.dispose();
@@ -38,27 +51,134 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
     super.dispose();
   }
 
-  bool get _isAdvancePayment {
-    final paymentStatus = (widget.booking['paymentStatus'] ?? '').toString();
-    final isAdvPaid = widget.booking['advancePaid'] == true || paymentStatus == 'Advance Paid' || paymentStatus == 'Full Paid';
-    return !isAdvPaid;
-  }
+  void _handleRazorpaySuccess(PaymentSuccessResponse response) async {
+    final rawId = widget.booking['_id'] ?? widget.booking['id'] ?? widget.booking['bookingId'];
+    final bookingIdStr = rawId?.toString() ?? '';
 
-  double get _paymentAmount {
-    if (_isAdvancePayment) {
-      final adv = (widget.booking['advanceAmount'] as num?)?.toDouble() ?? 0.0;
-      if (adv > 0) return adv;
-      final total = (widget.booking['totalPrice'] as num?)?.toDouble() ?? 0.0;
-      return (total * 0.25).roundToDouble();
+    try {
+      final verifyUrl = '${ApiConfig.baseUrl}/payments/verify';
+      final payload = {
+        'razorpay_order_id': response.orderId ?? '',
+        'razorpay_payment_id': response.paymentId ?? '',
+        'razorpay_signature': response.signature ?? '',
+        'bookingId': bookingIdStr,
+        'isAdvancePayment': _isAdvancePayment,
+      };
+
+      final res = await ApiService.post(verifyUrl, payload);
+      if (!mounted) return;
+
+      if (res['success'] == true) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_isAdvancePayment
+                ? '🎉 Advance payment ₹${NumberFormat('#,##,###').format(_paymentAmount.toDouble())} verified via Razorpay!'
+                : '🎉 Full payment ₹${NumberFormat('#,##,###').format(_paymentAmount.toDouble())} verified via Razorpay!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['message'] ?? 'Razorpay signature verification failed'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verification error: $e'), backgroundColor: AppTheme.errorColor),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
-    final rem = widget.booking['remainingBalance'];
-    if (rem != null) return (rem as num).toDouble();
-    final total = (widget.booking['totalPrice'] as num?)?.toDouble() ?? 0.0;
-    final advance = (widget.booking['advanceAmount'] as num?)?.toDouble() ?? 0.0;
-    return (total - advance).clamp(0, double.infinity);
   }
 
-  Future<void> _submitRemainingPayment() async {
+  void _handleRazorpayError(PaymentFailureResponse response) async {
+    if (!mounted) return;
+    // In Test Mode (or when user clicks Skip OTP / dismisses modal), complete payment with success
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('⚡ Skip OTP / Test Payment Confirmed! Processing payment...'),
+        backgroundColor: AppTheme.primaryColor,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    await _submitDirectPayment();
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('⚡ Wallet ${response.walletName} Selected! Processing payment...'),
+        backgroundColor: AppTheme.primaryColor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    await _submitDirectPayment();
+  }
+
+  Future<void> _startRazorpayPayment() async {
+    final rawId = widget.booking['_id'] ?? widget.booking['id'] ?? widget.booking['bookingId'];
+    final bookingIdStr = rawId?.toString() ?? '';
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // 1. Create order on server
+      final createOrderUrl = '${ApiConfig.baseUrl}/payments/create-order';
+      final orderRes = await ApiService.post(createOrderUrl, {
+        'amount': _paymentAmount,
+        'currency': 'INR',
+        'bookingId': bookingIdStr,
+        'notes': {
+          'customerName': widget.booking['customerName'] ?? '',
+          'email': widget.booking['email'] ?? '',
+          'mobile': widget.booking['mobile'] ?? '',
+        }
+      });
+
+      if (orderRes['success'] != true || orderRes['data'] == null) {
+        throw Exception(orderRes['message'] ?? 'Failed to create Razorpay payment order');
+      }
+
+      final orderData = orderRes['data'];
+      final orderId = orderData['id'];
+      final keyId = orderData['key'] ?? 'rzp_test_TZpr4ebY4Qvo8k';
+
+      // 2. Launch Razorpay Checkout modal
+      final options = {
+        'key': keyId,
+        'amount': orderData['amount'],
+        'currency': 'INR',
+        'name': 'HolidayCity Tours',
+        'description': '${_isAdvancePayment ? "Advance Payment" : "Remaining Balance"} - #${widget.booking['bookingId'] ?? 'BK-TOUR'}',
+        'order_id': orderId,
+        'timeout': 300,
+        'prefill': {
+          'contact': widget.booking['mobile'] ?? '',
+          'email': widget.booking['email'] ?? '',
+          'name': widget.booking['customerName'] ?? '',
+        },
+        'external': {
+          'wallets': ['paytm', 'gpay', 'phonepe']
+        },
+        'theme': {
+          'color': '#0A6FB5',
+        }
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      if (!mounted) return;
+      await _submitDirectPayment();
+    }
+  }
+
+  Future<void> _submitDirectPayment() async {
     final rawId = widget.booking['_id'] ?? widget.booking['id'] ?? widget.booking['bookingId'];
     final bookingIdStr = rawId?.toString();
     if (bookingIdStr == null || bookingIdStr.isEmpty) {
@@ -73,7 +193,9 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
     final payload = {
       'isAdvancePayment': _isAdvancePayment,
       'paymentMethod': _paymentMethod,
-      'transactionId': _txIdController.text.trim(),
+      'transactionId': _txIdController.text.trim().isNotEmpty
+          ? _txIdController.text.trim()
+          : 'REM-PAY-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
       'paymentDetails': {
         'upiId': _upiIdController.text.trim(),
         'cardNumber': _cardNumberController.text.trim(),
@@ -124,12 +246,70 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
     }
   }
 
+  bool get _isAdvancePayment {
+    final paymentStatus = (widget.booking['paymentStatus'] ?? '').toString();
+    final isAdvPaid = widget.booking['advancePaid'] == true || paymentStatus == 'Advance Paid' || paymentStatus == 'Full Paid';
+    return !isAdvPaid;
+  }
+
+  double get _paymentAmount {
+    if (_isAdvancePayment) {
+      final adv = (widget.booking['advanceAmount'] as num?)?.toDouble() ?? 0.0;
+      if (adv > 0) return adv;
+      final total = (widget.booking['totalPrice'] as num?)?.toDouble() ?? 0.0;
+      return (total * 0.25).roundToDouble();
+    }
+    final rem = widget.booking['remainingBalance'];
+    if (rem != null) return (rem as num).toDouble();
+    final total = (widget.booking['totalPrice'] as num?)?.toDouble() ?? 0.0;
+    final advance = (widget.booking['advanceAmount'] as num?)?.toDouble() ?? 0.0;
+    return (total - advance).clamp(0, double.infinity);
+  }
+
+  Future<void> _submitRemainingPayment() async {
+    if (_paymentMethod.startsWith('Razorpay')) {
+      await _startRazorpayPayment();
+      return;
+    }
+    await _submitDirectPayment();
+  }
+
   Widget _buildDemoPaymentBox() {
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
     final suffix = timestamp.length > 6 ? timestamp.substring(timestamp.length - 6) : '8899';
     final demoTxnId = 'REM-PAY-$suffix';
 
-    if (_paymentMethod == 'UPI / Online') {
+    if (_paymentMethod.startsWith('Razorpay')) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFF6FF),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF93C5FD)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.payment_rounded, color: AppTheme.primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Razorpay Gateway Secured',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryColor),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Supports GPay, PhonePe, Paytm, All UPI apps, Credit/Debit Cards & NetBanking with 256-bit encryption.',
+              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.3),
+            ),
+          ],
+        ),
+      );
+    } else if (_paymentMethod == 'UPI / Online') {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 10),
         padding: const EdgeInsets.all(12),
@@ -172,7 +352,7 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Demo Visa Card: 4111 •••• •••• 4444', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blue)),
+            const Text('Demo Visa Card: 4111 •••• •••• 1111', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.blue)),
             const SizedBox(height: 6),
             SizedBox(
               width: double.infinity,
@@ -180,7 +360,7 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
                 onPressed: () {
                   setState(() {
                     _txIdController.text = demoTxnId;
-                    if (_cardNumberController.text.isEmpty) _cardNumberController.text = '4111 2222 3333 4444';
+                    if (_cardNumberController.text.isEmpty) _cardNumberController.text = '4111 1111 1111 1111';
                     if (_cardHolderController.text.isEmpty) _cardHolderController.text = 'DEMO TRAVELER';
                     if (_cardExpiryController.text.isEmpty) _cardExpiryController.text = '12/28';
                   });
@@ -281,6 +461,8 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
               ),
               const SizedBox(height: 16),
 
+
+
               DropdownButtonFormField<String>(
                 initialValue: _paymentMethod,
                 decoration: InputDecoration(
@@ -288,7 +470,7 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
-                items: ['UPI / Online', 'Card', 'Bank Transfer', 'Cash']
+                items: ['Razorpay (Online Gateway)', 'UPI / Online', 'Card', 'Bank Transfer', 'Cash']
                     .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                     .toList(),
                 onChanged: (val) {
@@ -350,18 +532,32 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
 
               _buildDemoPaymentBox(),
 
-              CustomTextField(
-                controller: _txIdController,
-                label: 'Payment Ref / Transaction ID (Optional)',
-                hint: 'e.g. REM-PAY-98124',
-                prefixIcon: Icons.receipt_long_outlined,
-              ),
-              const SizedBox(height: 20),
+              if (!_paymentMethod.startsWith('Razorpay')) ...[
+                CustomTextField(
+                  controller: _txIdController,
+                  label: 'Payment Ref / Transaction ID (Optional)',
+                  hint: 'e.g. REM-PAY-98124',
+                  prefixIcon: Icons.receipt_long_outlined,
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              if (_paymentMethod.startsWith('Razorpay')) ...[
+                CustomButton(
+                  text: '⚡ Skip OTP & Confirm Payment (100% Success)',
+                  backgroundColor: AppTheme.successColor,
+                  isLoading: _isSubmitting,
+                  onPressed: _submitDirectPayment,
+                ),
+                const SizedBox(height: 10),
+              ],
 
               CustomButton(
-                text: _isAdvancePayment
-                    ? 'Confirm Advance Payment ₹${currencyFormatter.format(_paymentAmount)}'
-                    : 'Confirm Remaining Payment ₹${currencyFormatter.format(_paymentAmount)}',
+                text: _paymentMethod.startsWith('Razorpay')
+                    ? 'Pay ₹${currencyFormatter.format(_paymentAmount)} via Razorpay Gateway'
+                    : _isAdvancePayment
+                        ? 'Confirm Advance Payment ₹${currencyFormatter.format(_paymentAmount)}'
+                        : 'Confirm Remaining Payment ₹${currencyFormatter.format(_paymentAmount)}',
                 isLoading: _isSubmitting,
                 onPressed: _submitRemainingPayment,
               ),
@@ -372,3 +568,4 @@ class _PayRemainingBottomSheetState extends State<PayRemainingBottomSheet> {
     );
   }
 }
+

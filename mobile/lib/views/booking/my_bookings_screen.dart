@@ -11,6 +11,8 @@ import '../../widgets/app_states.dart';
 import 'booking_detail_screen.dart';
 import '../chat/chat_bottom_sheet.dart';
 
+import '../../services/realtime_service.dart';
+
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
 
@@ -23,20 +25,33 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   List<Map<String, dynamic>> _bookings = [];
   bool _isLoading = true;
   Timer? _autoRefreshTimer;
+  StreamSubscription? _socketSub;
 
   @override
   void initState() {
     super.initState();
     _fetchBookings();
-    // Auto-refresh every 10 seconds to sync admin updates in real-time
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _connectRealtimeListener();
+    // Auto-refresh every 3 seconds to sync admin/payment updates in real-time
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       _fetchBookings(showLoading: false);
+    });
+  }
+
+  void _connectRealtimeListener() {
+    _socketSub = RealtimeService.instance.eventStream.listen((event) {
+      if (!mounted) return;
+      final eventName = event['event'] as String? ?? '';
+      if (eventName.startsWith('booking') || eventName.contains('data_updated')) {
+        _fetchBookings(showLoading: false);
+      }
     });
   }
 
   @override
   void dispose() {
     _autoRefreshTimer?.cancel();
+    _socketSub?.cancel();
     super.dispose();
   }
 

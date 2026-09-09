@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Phone, Mail, Calendar, CreditCard, DollarSign, CheckCircle, Clock, Trash2, Edit, AlertCircle, RefreshCw, Eye } from 'lucide-react';
+import { ShoppingBag, Phone, Mail, Calendar, CreditCard, DollarSign, CheckCircle, Clock, Trash2, Edit, AlertCircle, RefreshCw, Eye, Wallet, RotateCcw } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { AdminLayout } from '../components/AdminLayout';
 import toast from 'react-hot-toast';
@@ -33,6 +33,13 @@ const getFormattedDateTime = (item: any): { dateStr: string; timeStr: string; fu
   };
 };
 
+const PAYMENT_STATUS_RANK: Record<string, number> = {
+  'Pending Advance': 1,
+  'Advance Paid': 2,
+  'Full Paid': 3,
+  'Refunded': 4
+};
+
 export const BookingsManagerPage: React.FC = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +59,8 @@ export const BookingsManagerPage: React.FC = () => {
   const [editPaymentMethod, setEditPaymentMethod] = useState('UPI / Online');
   const [editTransactionId, setEditTransactionId] = useState('');
   const [editSpecialRequests, setEditSpecialRequests] = useState('');
+
+
 
   useEffect(() => {
     fetchBookings();
@@ -91,6 +100,15 @@ export const BookingsManagerPage: React.FC = () => {
     e.preventDefault();
     if (!editBooking) return;
 
+    const origStatus = editBooking.paymentStatus || 'Pending Advance';
+    const currRank = PAYMENT_STATUS_RANK[origStatus] || 1;
+    const newRank = PAYMENT_STATUS_RANK[editPaymentStatus] || 1;
+
+    if (newRank < currRank) {
+      toast.error(`Cannot revert payment status backwards from "${origStatus}" to "${editPaymentStatus}"`);
+      return;
+    }
+
     try {
       const payload = {
         status: editStatus,
@@ -123,10 +141,22 @@ export const BookingsManagerPage: React.FC = () => {
   };
 
   const handleQuickPaymentStatusChange = async (id: string, newPaymentStatus: string) => {
+    const targetBooking = bookings.find((b) => String(b._id) === String(id));
+    const currentStatus = targetBooking?.paymentStatus || 'Pending Advance';
+    const currRank = PAYMENT_STATUS_RANK[currentStatus] || 1;
+    const newRank = PAYMENT_STATUS_RANK[newPaymentStatus] || 1;
+
+    if (newRank < currRank) {
+      toast.error(`Cannot revert payment status backwards from "${currentStatus}" to "${newPaymentStatus}"`);
+      return;
+    }
+
     try {
       const payload: any = { paymentStatus: newPaymentStatus };
       if (newPaymentStatus === 'Full Paid') {
         payload.remainingBalance = 0;
+        payload.advancePaid = true;
+      } else if (newPaymentStatus === 'Advance Paid') {
         payload.advancePaid = true;
       }
       await apiClient.patch(`/admin/bookings/${id}`, payload);
@@ -363,22 +393,27 @@ export const BookingsManagerPage: React.FC = () => {
                         <td className="p-4 space-y-1">
                           <div className="font-bold text-slate-900">Total: ₹{Number(b.totalPrice || 0).toLocaleString()}</div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <select
-                              value={b.paymentStatus || (isAdvPaid ? 'Advance Paid' : 'Pending Advance')}
-                              onChange={(e) => handleQuickPaymentStatusChange(b._id, e.target.value)}
-                              className={`px-2 py-1 rounded-lg text-[11px] font-bold border outline-none cursor-pointer ${
-                                b.paymentStatus === 'Full Paid' || Number(b.remainingBalance || 0) === 0
-                                  ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
-                                  : isAdvPaid
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                  : 'bg-amber-100 border-amber-200 text-amber-800'
-                              }`}
-                            >
-                              <option value="Pending Advance">🟡 Pending Advance</option>
-                              <option value="Advance Paid">🟢 Advance Paid</option>
-                              <option value="Full Paid">🎉 Full Paid</option>
-                              <option value="Refunded">🔴 Refunded</option>
-                            </select>
+                            {(() => {
+                              const currentStatusVal = b.paymentStatus || (isAdvPaid ? 'Advance Paid' : 'Pending Advance');
+                              const currentRank = PAYMENT_STATUS_RANK[currentStatusVal] || 1;
+                              return (
+                                <select
+                                  value={currentStatusVal}
+                                  onChange={(e) => handleQuickPaymentStatusChange(b._id, e.target.value)}
+                                  className={`px-2 py-1 rounded-lg text-[11px] font-bold border outline-none cursor-pointer ${
+                                    currentStatusVal === 'Full Paid' || Number(b.remainingBalance || 0) === 0
+                                      ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+                                      : isAdvPaid
+                                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                      : 'bg-amber-100 border-amber-200 text-amber-800'
+                                  }`}
+                                >
+                                  <option value="Pending Advance" disabled={currentRank > 1}>🟡 Pending Advance</option>
+                                  <option value="Advance Paid" disabled={currentRank > 2}>🟢 Advance Paid</option>
+                                  <option value="Full Paid" disabled={currentRank > 3}>🎉 Full Paid</option>
+                                </select>
+                              );
+                            })()}
                           </div>
                           <div className={`text-[11px] font-bold ${
                             Number(b.remainingBalance || 0) === 0 || b.paymentStatus === 'Full Paid'
@@ -545,21 +580,32 @@ export const BookingsManagerPage: React.FC = () => {
 
                 <div>
                   <label className="block text-slate-700 mb-1 font-semibold">Payment Status</label>
-                  <select
-                    value={editPaymentStatus}
-                    onChange={(e) => {
-                      setEditPaymentStatus(e.target.value);
-                      if (e.target.value === 'Advance Paid' || e.target.value === 'Full Paid') {
-                        setEditAdvancePaid(true);
-                      }
-                    }}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
-                  >
-                    <option value="Pending Advance">🟡 Pending Advance</option>
-                    <option value="Advance Paid">🟢 Advance Paid</option>
-                    <option value="Full Paid">🎉 Full Paid</option>
-                    <option value="Refunded">🔴 Refunded</option>
-                  </select>
+                  {(() => {
+                    const origStatusVal = editBooking?.paymentStatus || 'Pending Advance';
+                    const origRank = PAYMENT_STATUS_RANK[origStatusVal] || 1;
+                    return (
+                      <select
+                        value={editPaymentStatus}
+                        onChange={(e) => {
+                          const targetVal = e.target.value;
+                          const targetRank = PAYMENT_STATUS_RANK[targetVal] || 1;
+                          if (targetRank < origRank) {
+                            toast.error(`Cannot revert payment status backwards from "${origStatusVal}" to "${targetVal}"`);
+                            return;
+                          }
+                          setEditPaymentStatus(targetVal);
+                          if (targetVal === 'Advance Paid' || targetVal === 'Full Paid') {
+                            setEditAdvancePaid(true);
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900 font-bold focus:border-ocean-600"
+                      >
+                        <option value="Pending Advance" disabled={origRank > 1}>🟡 Pending Advance</option>
+                        <option value="Advance Paid" disabled={origRank > 2}>🟢 Advance Paid</option>
+                        <option value="Full Paid" disabled={origRank > 3}>🎉 Full Paid</option>
+                      </select>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -733,7 +779,9 @@ export const BookingsManagerPage: React.FC = () => {
           </div>
         </div>
       </div>
-      )}
+    )}
+
+
     </AdminLayout>
   );
 };

@@ -70,8 +70,19 @@ export const sendChatMessage = async (req: Request, res: Response) => {
       });
     }
 
-    // If Admin sent the message, trigger email notification to user
+    // If Admin sent the message, trigger push notification & email to user
     if (resolvedSenderType === 'Admin') {
+      if (resolvedSenderEmail && resolvedSenderEmail.length > 3 && !resolvedSenderEmail.includes('holidaycity.com')) {
+        createNotification({
+          type: 'chat',
+          title: `💬 Support Reply (${resolvedTopicId})`,
+          message: resolvedMessage.length > 80 ? `${resolvedMessage.substring(0, 80)}...` : resolvedMessage,
+          entityId: resolvedTopicId,
+          link: '/my-enquiries',
+          userEmail: resolvedSenderEmail
+        }).catch(err => console.error('[ChatController] Push notify error:', err));
+      }
+
       sendChatReplyNotificationEmail({
         recipientEmail: resolvedSenderEmail,
         recipientName: resolvedSenderName,

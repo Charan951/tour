@@ -21,13 +21,17 @@ const extractRaw = (url?: any): string => {
 
 const withOrigin = (raw: string): string => {
   if (raw.startsWith('http://') || raw.startsWith('https://')) {
-    if (raw.includes(':5000')) {
-      const origin = window.location.hostname;
-      return raw.replace(/http:\/\/[^/]+:5000/, `http://${origin}:5000`);
+    if (raw.includes('cloudinary.com') || raw.includes('unsplash.com')) {
+      return raw;
+    }
+    if (/http:\/\/[^/]+:\d+/.test(raw)) {
+      const origin = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      return raw.replace(/http:\/\/[^/]+:\d+/, `http://${origin}:5000`);
     }
     return raw;
   }
-  const backendBase = `http://${window.location.hostname}:5000`;
+  const origin = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const backendBase = `http://${origin}:5000`;
   return raw.startsWith('/') ? `${backendBase}${raw}` : `${backendBase}/${raw}`;
 };
 

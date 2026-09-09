@@ -31,3 +31,9 @@ CLAUDE.local.md
 Thumbs.db
 .vscode/
 .idea/
+
+# Temporary test files & build artifacts
+test-push.js
+.kotlin/
+*.salive
+

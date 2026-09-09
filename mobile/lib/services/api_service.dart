@@ -422,15 +422,16 @@ class ApiService {
     };
   }
 
-  static Future<dynamic> saveFcmToken(String token, {String? email}) async {
+  static Future<dynamic> saveFcmToken(String token, {String? email, String? role}) async {
     final body = <String, dynamic>{'token': token};
     if (email != null && email.isNotEmpty) body['email'] = email;
-    return post('/users/fcm-token', body);
+    if (role != null && role.isNotEmpty) body['role'] = role;
+    return post(ApiConfig.fcmToken, body);
   }
 
   static Future<dynamic> removeFcmToken(String token, {String? email}) async {
     final body = <String, dynamic>{'token': token};
     if (email != null && email.isNotEmpty) body['email'] = email;
-    return post('/users/fcm-token', body);
+    return post('${ApiConfig.fcmToken}/remove', body);
   }
 }

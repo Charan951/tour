@@ -78,6 +78,7 @@ router.post('/auth/change-password', authRateLimiter, authenticateToken, changeP
 
 // FCM Push Notification Token Management
 router.post('/users/fcm-token', optionalAuth, saveFcmToken);
+router.post('/users/fcm-token/remove', optionalAuth, removeFcmToken);
 router.delete('/users/fcm-token', optionalAuth, removeFcmToken);
 
 // Packages Catalog & Detail (Live MongoDB Queries with No-Cache Headers)

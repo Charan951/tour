@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'providers/auth_provider.dart';
@@ -13,10 +14,20 @@ import 'widgets/offline_banner.dart';
 import 'views/splash/splash_screen.dart';
 
 
+import 'package:firebase_core/firebase_core.dart';
 import 'services/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('Firebase initializeApp error: $e');
+    }
+  }
   ConnectivityStatus.instance.start();
   await PushNotificationService.instance.initialize();
   runApp(const HolidayCityApp());

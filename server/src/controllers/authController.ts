@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
+import { DeviceToken } from '../models/DeviceToken.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 const getOrCreateRole = async (name: 'Admin' | 'Customer') => {
@@ -328,21 +329,70 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 
 export const saveFcmToken = async (req: AuthRequest, res: Response) => {
   try {
-    const { token, email: bodyEmail } = req.body;
+    const { token, email: bodyEmail, mobile, platform, role: bodyRole } = req.body;
     if (!token) {
       return res.status(400).json({ success: false, message: 'FCM token is required' });
     }
 
     const email = (req.user?.email || bodyEmail)?.toLowerCase().trim();
+    const userMobile = ((req.user as any)?.mobile || mobile)?.trim();
+
+    // Determine if this is an admin device:
+    //   1. Use the role sent from the mobile app as a primary hint
+    //   2. Verify against the DB to prevent spoofing
+    const NON_CUSTOMER_ROLES = ['Admin', 'Super Admin', 'Sales Executive', 'Content Manager', 'Marketing Executive'];
+    let isAdmin = false;
+
+    // Quick check from mobile-sent role (no DB hit needed if role is Customer)
+    if (bodyRole && NON_CUSTOMER_ROLES.includes(bodyRole)) {
+      isAdmin = true; // Tentative — will confirm via DB below
+    }
+
+    // Authoritative DB check (always runs when email is present)
+    if (email) {
+      const dbUser = await User.findOne({ email, isDeleted: false }).populate('role', 'name');
+      if (dbUser) {
+        const dbRoleName = (dbUser.role as any)?.name || '';
+        // DB is the single source of truth — override mobile hint
+        isAdmin = NON_CUSTOMER_ROLES.includes(dbRoleName);
+      } else {
+        // Email not in User collection → this is a guest/customer mobile device
+        isAdmin = false;
+      }
+    }
+
+    // 1. Upsert DeviceToken with isAdmin flag
+    await DeviceToken.findOneAndUpdate(
+      { token },
+      {
+        token,
+        ...(email ? { email } : {}),
+        ...(userMobile ? { mobile: userMobile } : {}),
+        platform: platform || 'android',
+        isAdmin,
+        lastActive: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    // 2. Attach token to User.fcmTokens if email matches a DB user
     if (email) {
       await User.updateOne(
         { email, isDeleted: false },
         { $addToSet: { fcmTokens: token } }
       );
-      return res.status(200).json({ success: true, message: 'FCM token registered to user successfully' });
     }
 
-    return res.status(200).json({ success: true, message: 'FCM token received (guest)' });
+    // 3. Attach token to User.fcmTokens if mobile matches a DB user
+    if (userMobile) {
+      await User.updateOne(
+        { mobile: userMobile, isDeleted: false },
+        { $addToSet: { fcmTokens: token } }
+      );
+    }
+
+    console.log(`📲 FCM token registered: ${email || 'guest'} | isAdmin: ${isAdmin} | platform: ${platform || 'android'}`);
+    return res.status(200).json({ success: true, message: 'FCM token registered successfully' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -350,21 +400,14 @@ export const saveFcmToken = async (req: AuthRequest, res: Response) => {
 
 export const removeFcmToken = async (req: AuthRequest, res: Response) => {
   try {
-    const { token } = req.body;
+    const token = req.body?.token || req.query?.token;
     if (!token) {
       return res.status(400).json({ success: false, message: 'FCM token is required' });
     }
-    if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Unauthenticated' });
-    }
 
-    const email = req.user.email?.toLowerCase().trim();
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'User email missing' });
-    }
-
-    await User.updateOne(
-      { email, isDeleted: false },
+    await DeviceToken.deleteOne({ token });
+    await User.updateMany(
+      { fcmTokens: token },
       { $pull: { fcmTokens: token } }
     );
 

@@ -16,6 +16,12 @@ export const initFirebase = (): App | null => {
 
     if (fs.existsSync(serviceAccountPath)) {
       const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+      if (serviceAccount && typeof serviceAccount.private_key === 'string') {
+        const rawKey = serviceAccount.private_key.replace(/\\n/g, '\n');
+        const lines = rawKey.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+        const bodyLines = lines.filter((l: string) => !l.includes('-----BEGIN') && !l.includes('-----END'));
+        serviceAccount.private_key = `-----BEGIN PRIVATE KEY-----\n${bodyLines.join('\n')}\n-----END PRIVATE KEY-----\n`;
+      }
       firebaseApp = initializeApp({
         credential: cert(serviceAccount),
       });

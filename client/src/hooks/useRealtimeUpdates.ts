@@ -290,7 +290,8 @@ export const useRealtimeUpdates = (options: UseRealtimeUpdatesOptions = {}) => {
       notifyDataChanged();
       callbacksRef.current.onNotificationUpdate?.(payload);
 
-      if (payload && payload.title) {
+      // Only show browser toast / OS desktop notification if it is an admin/global notification, NOT a user-scoped notification
+      if (payload && payload.title && !payload.userEmail) {
         showNotificationPopup(payload.title, payload.message || '', `notif_${payload._id || payload.id || Date.now()}`);
       }
     };

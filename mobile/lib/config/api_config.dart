@@ -90,6 +90,7 @@ class ApiConfig {
   static String get updateProfile => '$baseUrl/auth/me';
   static String get changePassword => '$baseUrl/auth/change-password';
   static String get uploadImage => '$baseUrl/upload/single';
+  static String get fcmToken => '$baseUrl/users/fcm-token';
 
   static String get packages => '$baseUrl/packages';
   static String packageBySlug(String slug) => '$baseUrl/packages/$slug';

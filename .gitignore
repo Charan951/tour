@@ -37,3 +37,10 @@ test-push.js
 .kotlin/
 *.salive
 
+# Firebase & Google credentials
+*firebase-service-account*.json
+google-services.json
+firebase-debug.log*
+.firebase/
+
+

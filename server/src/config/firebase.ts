@@ -21,7 +21,11 @@ export const initFirebase = (): App | null => {
         serviceAccount = JSON.parse(rawText);
       } catch (jsonErr) {
         const sanitized = rawText.replace(/[\u0000-\u001F]+/g, (match) => (match === '\n' || match === '\r' ? '\\n' : ''));
-        serviceAccount = JSON.parse(sanitized);
+        // Also neutralise invalid backslash escapes (e.g. a stray "\x" inside
+        // the key body), which the control-char pass above does not touch.
+        const escFixed = sanitized.replace(/\\(?!["\\/bfnrtu])/g, '\\n');
+        serviceAccount = JSON.parse(escFixed);
+        console.warn('⚠️ Firebase service account JSON had invalid escape sequences and was auto-repaired; re-download it from the Firebase console if push notifications misbehave.');
       }
       if (serviceAccount && typeof serviceAccount.private_key === 'string') {
         const rawKey = serviceAccount.private_key.replace(/\\n/g, '\n');

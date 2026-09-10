@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 /// Animated Shimmer Widget for Flutter loading states
 class ShimmerBox extends StatefulWidget {
@@ -59,11 +60,17 @@ class _ShimmerBoxState extends State<ShimmerBox>
             gradient: LinearGradient(
               begin: Alignment(_animation.value - 1.0, 0),
               end: Alignment(_animation.value + 1.0, 0),
-              colors: const [
-                Color(0xFFE2E8F0),
-                Color(0xFFF8FAFC),
-                Color(0xFFE2E8F0),
-              ],
+              colors: context.isDark
+                  ? const [
+                      Color(0xFF1E293B),
+                      Color(0xFF273449),
+                      Color(0xFF1E293B),
+                    ]
+                  : const [
+                      Color(0xFFE2E8F0),
+                      Color(0xFFF8FAFC),
+                      Color(0xFFE2E8F0),
+                    ],
               stops: const [0.0, 0.5, 1.0],
             ),
           ),
@@ -88,9 +95,10 @@ class HomeScreenSkeleton extends StatelessWidget {
           // Header Skeleton
           Container(
             padding: const EdgeInsets.fromLTRB(16, 52, 16, 20),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: context.colors.surfaceAlt,
+              borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(28)),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,9 +199,9 @@ class PackageCardSkeleton extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.colors.border),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,

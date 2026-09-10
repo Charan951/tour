@@ -9,8 +9,11 @@ import apiRouter from './routes/api.js';
 
 import compression from 'compression';
 import { getCacheStatus } from './config/redis.js';
+import { assertProductionEnv } from './config/env.js';
+import { razorpayWebhook } from './controllers/paymentController.js';
 
 dotenv.config();
+assertProductionEnv();
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,6 +43,11 @@ app.use(compression());
 app.use(configureSecurityHeaders);
 app.use(configureCORS);
 app.options('*', configureCORS);
+
+// Razorpay webhook needs the RAW body for HMAC verification — must be
+// registered before the JSON body parser.
+app.post('/api/v1/payments/webhook', express.raw({ type: '*/*' }), razorpayWebhook);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

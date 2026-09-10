@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
+import 'config/app_globals.dart';
 import 'providers/auth_provider.dart';
 import 'providers/destination_provider.dart';
 import 'providers/package_provider.dart';
@@ -52,8 +53,10 @@ class HolidayCityApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             title: 'HolidayCity Travel',
+            navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
             home: const SplashScreen(),
             builder: (context, child) {

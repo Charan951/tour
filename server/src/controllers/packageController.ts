@@ -225,6 +225,11 @@ export const createPackage = async (req: AuthRequest, res: Response) => {
         days: Number(payload.duration?.days) || 4
       },
       coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1200&auto=format&fit=crop',
+      gallery: Array.isArray(payload.gallery)
+        ? payload.gallery.filter((u: any) => typeof u === 'string' && u.trim())
+        : (Array.isArray(payload.images)
+            ? payload.images.filter((u: any) => typeof u === 'string' && u.trim())
+            : []),
       overview: payload.overview || '',
       highlights: Array.isArray(payload.highlights) ? payload.highlights : [],
       inclusions: Array.isArray(payload.inclusions) ? payload.inclusions : [],

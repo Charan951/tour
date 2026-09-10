@@ -18,6 +18,7 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -46,7 +47,7 @@ class SectionHeader extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: cs.textPrimary,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -55,9 +56,9 @@ class SectionHeader extends StatelessWidget {
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSecondary,
+                      color: cs.textSecondary,
                     ),
                   ),
                 ],

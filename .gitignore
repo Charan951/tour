@@ -37,6 +37,13 @@ test-push.js
 .kotlin/
 *.salive
 
+# Android / Flutter release signing (NEVER commit these)
+**/android/key.properties
+**/android/local.properties
+*.jks
+*.keystore
+**/upload-keystore.jks
+
 # Firebase & Google credentials
 *firebase-service-account*.json
 google-services.json

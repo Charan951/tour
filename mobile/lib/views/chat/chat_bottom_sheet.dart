@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../config/theme.dart';
 import '../../services/chat_service.dart';
 
 class ChatBottomSheet extends StatefulWidget {
@@ -118,13 +119,15 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    final cs = context.colors;
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
         height: MediaQuery.of(context).size.height * 0.82,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           children: [
@@ -142,8 +145,8 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
             // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: cs.border)),
               ),
               child: Row(
                 children: [
@@ -162,9 +165,9 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                       children: [
                         Row(
                           children: [
-                            const Text(
+                            Text(
                               'Chat Direct Admin',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F172A)),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: cs.textPrimary),
                             ),
                             const SizedBox(width: 6),
                             Container(
@@ -182,7 +185,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                         ),
                         Text(
                           'Ref: ${widget.topicId} ${widget.topicTitle != null ? '• ${widget.topicTitle}' : ''}',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 11, color: cs.textSecondary, fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -209,9 +212,9 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                             children: [
                               Icon(Icons.chat_outlined, size: 48, color: Colors.grey[300]),
                               const SizedBox(height: 12),
-                              const Text(
+                              Text(
                                 'Start Direct Conversation',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                                style: TextStyle(fontWeight: FontWeight.bold, color: cs.textSecondary),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -247,7 +250,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                                 child: Text(
                                   msg.message,
                                   style: TextStyle(
-                                    color: isUser ? Colors.white : const Color(0xFF1E293B),
+                                    color: isUser ? Colors.white : cs.textPrimary,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -262,9 +265,9 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
             SafeArea(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  border: Border(top: BorderSide(color: cs.border)),
                 ),
                 child: Row(
                   children: [
@@ -272,7 +275,7 @@ class _ChatBottomSheetState extends State<ChatBottomSheet> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: cs.surfaceAlt,
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: TextField(

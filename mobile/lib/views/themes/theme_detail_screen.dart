@@ -114,7 +114,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
     final highlights = _buildHighlights(widget.theme.name);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
+      backgroundColor: context.colors.scaffold,
       body: SafeArea(
         child: Stack(
           children: [
@@ -145,8 +145,8 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                         child: IconButton(
                           tooltip: 'Back',
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back_rounded,
-                              color: AppTheme.textPrimary),
+                          icon: Icon(Icons.arrow_back_rounded,
+                              color: context.colors.textPrimary),
                           splashRadius: 20,
                         ),
                       ),
@@ -155,7 +155,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.colors.surface,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -198,7 +198,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: 1.3,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -211,7 +211,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                                         style: GoogleFonts.outfit(
                                           fontSize: 30,
                                           fontWeight: FontWeight.w800,
-                                          color: AppTheme.textPrimary,
+                                          color: context.colors.textPrimary,
                                           height: 1.1,
                                         ),
                                       ),
@@ -229,7 +229,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppTheme.textSecondary,
+                                        color: context.colors.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -239,7 +239,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                                   description,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                     height: 1.7,
                                   ),
                                 ),
@@ -249,7 +249,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
-                                    color: AppTheme.textPrimary,
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -296,7 +296,7 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: context.colors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -335,20 +335,20 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.card_travel,
-                                size: 40, color: AppTheme.textSecondary),
+                            Icon(Icons.card_travel,
+                                size: 40, color: context.colors.textSecondary),
                             const SizedBox(height: 10),
                             Text(
                               'No packages available for this theme right now.',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
-                                color: AppTheme.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           ],

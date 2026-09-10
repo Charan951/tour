@@ -16,6 +16,7 @@ import '../../providers/specialization_theme_provider.dart';
 import '../../widgets/destination_card.dart';
 import '../../widgets/package_card.dart';
 import '../../widgets/section_header.dart';
+import '../../widgets/filter_sheet.dart';
 import '../destinations/destination_detail_screen.dart';
 import '../packages/package_detail_screen.dart';
 import '../packages/package_list_screen.dart';
@@ -195,14 +196,27 @@ class _HomeScreenState extends State<HomeScreen> {
       _BottomNavItem(icon: Icons.person, label: 'Profile', selected: false),
     ];
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+    final cs = context.colors;
+
+    return PopScope(
+      // On the Home tab, let the back gesture close the app. On any other tab,
+      // intercept it and jump back to the Home tab instead.
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness:
+            context.isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness:
+            context.isDark ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: cs.scaffold,
         body: pages[_currentIndex],
         bottomNavigationBar: hideBottomBar
             ? null
@@ -216,15 +230,15 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: AppTheme.borderLight.withValues(alpha: 0.9),
+                  color: cs.border.withValues(alpha: 0.9),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: cs.shadow,
                     offset: const Offset(0, -2),
                     blurRadius: 16,
                   ),
@@ -311,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : Center(
                                     child: Icon(
                                       item.icon,
-                                      color: AppTheme.textSecondary,
+                                      color: cs.textSecondary,
                                       size: 24,
                                     ),
                                   ),
@@ -327,6 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -338,16 +353,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ? user.firstName.trim()
         : 'Explorer';
 
+    final cs = context.colors;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(16, topPadding + 14, 16, 22),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: cs.surfaceAlt,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade300.withValues(alpha: 0.6))),
+        border: Border(bottom: BorderSide(color: cs.border.withValues(alpha: 0.6))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: cs.shadow,
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -369,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 25,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
+                        color: cs.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -405,23 +422,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               width: 42,
                               height: 42,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cs.surface,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: const Color(0xFFCBD5E1),
+                                  color: cs.border,
                                   width: 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
+                                    color: cs.shadow,
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.notifications_outlined,
-                                color: Color(0xFF0F172A),
+                                color: cs.textPrimary,
                                 size: 22,
                               ),
                             ),
@@ -435,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     color: const Color(0xFFEF4444),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: cs.surfaceAlt,
                                       width: 1.5,
                                     ),
                                   ),
@@ -463,145 +480,106 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // Redesigned Greeting Row with Avatar
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF0EA5E9),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    greetingName[0].toUpperCase(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hello, $greetingName 👋',
-                      style: GoogleFonts.outfit(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0F172A),
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Where do you want to travel next?',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Greeting
+          Text(
+            'Hello, $greetingName 👋',
+            style: GoogleFonts.outfit(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: cs.textPrimary,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Where do you want to travel next?',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: cs.textSecondary,
+            ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // Redesigned Floating Search Bar Widget — icon is outside the container
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
+          // Search bar — single clean field with an inline icon (no separate
+          // button, static placeholder).
+          Container(
+            height: 52,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cs.border),
+              boxShadow: [
+                BoxShadow(
+                  color: cs.shadow,
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 14),
+                Icon(Icons.search_rounded, size: 20, color: cs.textSecondary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    textInputAction: TextInputAction.search,
+                    textAlignVertical: TextAlignVertical.center,
+                    onChanged: (val) {
+                      Provider.of<PackageProvider>(context, listen: false)
+                          .setSearchQuery(val);
+                    },
+                    onSubmitted: (val) {
+                      Provider.of<PackageProvider>(context, listen: false)
+                          .setSearchQuery(val);
+                      setState(() => _currentIndex = 3);
+                    },
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: cs.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      filled: false,
+                      isCollapsed: true,
+                      hintText: '',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        color: cs.textFaint,
+                        fontWeight: FontWeight.w400,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          textInputAction: TextInputAction.search,
-                          textAlignVertical: TextAlignVertical.center,
-                          onChanged: (val) {
-                            final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                            packageProvider.setSearchQuery(val);
-                          },
-                          onSubmitted: (val) {
-                            final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                            packageProvider.setSearchQuery(val);
-                            setState(() => _currentIndex = 3);
-                          },
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF0F172A),
-                          ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            errorBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.zero,
-                            isCollapsed: true,
-                            hintText: 'Search destinations by name, state, ...',
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              color: const Color(0xFFADB5BD),
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              // Search icon button — outside the search bar
-              GestureDetector(
-                onTap: () {
-                  final packageProvider = Provider.of<PackageProvider>(context, listen: false);
-                  packageProvider.setSearchQuery(_searchController.text);
-                  setState(() => _currentIndex = 3);
-                },
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.search_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ],
+                if (_searchController.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      Provider.of<PackageProvider>(context, listen: false)
+                          .setSearchQuery('');
+                      setState(() {});
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Icon(Icons.close_rounded,
+                          size: 18, color: cs.textSecondary),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 14),
+              ],
+            ),
           ),
         ],
       ),
@@ -750,9 +728,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchAllData,
-      child: SingleChildScrollView(
+      // CustomScrollView so the Trending Packages list builds its cards
+      // lazily as they scroll into view (the horizontal rails above are
+      // already lazy ListView.builders).
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHomeGradientHeader(),
@@ -764,6 +747,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
               // Hero Banner Slider
               if (bannerProvider.banners.isNotEmpty) ...[
+                const SectionHeader(
+                  title: 'Exclusive Offers',
+                  subtitle: 'Limited-time deals on top tours',
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: SizedBox(
@@ -812,13 +799,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (destinationProvider.destinations.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(32.0),
+              Padding(
+                padding: const EdgeInsets.all(32.0),
                 child: Center(
                   child: Text(
                     'No destinations available.',
                     style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        TextStyle(color: context.colors.textSecondary, fontSize: 13),
                   ),
                 ),
               )
@@ -1001,11 +988,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(
                   child: Text('No packages found matching your criteria.'),
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ),
+          if (!packageProvider.isLoading && packageProvider.packages.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              sliver: SliverList.builder(
                 itemCount: packageProvider.packages.length,
                 itemBuilder: (context, index) {
                   final pkg = packageProvider.packages[index];
@@ -1022,13 +1015,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  ),
-);
+            ),
+        ],
+      ),
+    );
   }
 
   void _handleBannerTap(BannerModel banner) {
@@ -1100,9 +1090,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
 
     final filterOptions = const ['All', 'Popular', 'Domestic', 'International'];
+    final cs = context.colors;
 
     return Scaffold(
-      appBar: AppTheme.gradientAppBar(title: 'All Destinations'),
+      appBar: AppTheme.gradientAppBar(context: context, title: 'All Destinations'),
       body: destinationProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -1115,12 +1106,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         height: 52,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          color: cs.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: cs.border),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: cs.shadow,
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -1128,7 +1119,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Row(
                           children: [
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 14),
+                            Icon(Icons.search_rounded,
+                                size: 20, color: cs.textSecondary),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: TextField(
                                 controller: _destSearchController,
@@ -1138,18 +1132,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF0F172A),
+                                  color: cs.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,
                                   focusedBorder: InputBorder.none,
                                   contentPadding: EdgeInsets.zero,
+                                  filled: false,
                                   isCollapsed: true,
-                                  hintText: 'Search destinations by name, state, country...',
+                                  hintText: '',
                                   hintStyle: GoogleFonts.inter(
                                     fontSize: 13.5,
-                                    color: const Color(0xFFADB5BD),
+                                    color: cs.textFaint,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
@@ -1161,83 +1156,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   _destSearchController.clear();
                                   setState(() {});
                                 },
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  child: Icon(Icons.close_rounded,
+                                      size: 18, color: cs.textSecondary),
                                 ),
                               )
                             else
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 14),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Search button — outside the bar
-                    GestureDetector(
-                      onTap: () => setState(() {}),
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0EA5E9),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.search_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
+                    FilterIconButton(
+                      active: _selectedDestFilter != 'All',
+                      onTap: () async {
+                        final picked = await showFilterSheet(
+                          context,
+                          title: 'Filter destinations',
+                          options: filterOptions,
+                          selected: _selectedDestFilter,
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDestFilter = picked);
+                        }
+                      },
                     ),
                   ],
-                ),
-
-                const SizedBox(height: 14),
-
-                // Category Filter Chips
-                SizedBox(
-                  height: 38,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: filterOptions.length,
-                    itemBuilder: (context, idx) {
-                      final f = filterOptions[idx];
-                      final isSelected = _selectedDestFilter == f;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(f),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() => _selectedDestFilter = f);
-                            }
-                          },
-                          labelStyle: GoogleFonts.outfit(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                            color: isSelected ? Colors.white : const Color(0xFF475569),
-                          ),
-                          selectedColor: const Color(0xFF0EA5E9),
-                          backgroundColor: Colors.white,
-                          elevation: isSelected ? 3 : 0,
-                          pressElevation: 1,
-                          side: BorderSide(
-                            color: isSelected
-                                ? const Color(0xFF0EA5E9)
-                                : const Color(0xFFE2E8F0),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          showCheckmark: false,
-                        ),
-                      );
-                    },
-                  ),
                 ),
 
                 const SizedBox(height: 14),
@@ -1250,7 +1196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF64748B),
+                        color: cs.textSecondary,
                       ),
                     ),
                   ],
@@ -1276,7 +1222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
+                              color: cs.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -1284,7 +1230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             'Try searching with a different term or filter',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              color: cs.textSecondary,
                             ),
                           ),
                         ],
@@ -1332,6 +1278,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     VoidCallback? onTap,
   }) {
+    final cs = context.colors;
     return GestureDetector(
       onTap: onTap ??
           () {
@@ -1344,12 +1291,12 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 170,
         margin: const EdgeInsets.only(right: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: cs.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: cs.shadow,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1405,7 +1352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: AppTheme.textPrimary,
+                        color: cs.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1413,9 +1360,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       location,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.textSecondary,
+                        color: cs.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -1446,12 +1393,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(color: Colors.grey.shade300),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Enquire',
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.textPrimary,
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                               ),

@@ -16,8 +16,15 @@ void main() {
     });
 
     test('Custom host override updates base URL', () {
+      // A bare host (no scheme) is treated as an HTTPS host — production and
+      // any real remote backend are TLS-only.
       ApiConfig.customHost = '192.168.1.100';
+      expect(ApiConfig.baseUrl, equals('https://192.168.1.100/api/v1'));
+
+      // An explicit scheme is preserved as-is (local dev over http).
+      ApiConfig.customHost = 'http://192.168.1.100:5000';
       expect(ApiConfig.baseUrl, equals('http://192.168.1.100:5000/api/v1'));
+
       ApiConfig.customHost = null; // reset
     });
   });

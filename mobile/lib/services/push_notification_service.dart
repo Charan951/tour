@@ -1,16 +1,81 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
+import 'notification_router.dart';
+
+/// The one Android notification channel. Kept as a top-level const so the
+/// background isolate can create it without touching the service singleton.
+const AndroidNotificationChannel kHighImportanceChannel = AndroidNotificationChannel(
+  'high_importance_channel',
+  'High Importance Notifications',
+  description: 'Urgent alerts, bookings, and enquiry notifications.',
+  importance: Importance.max,
+  playSound: true,
+  enableVibration: true,
+);
+
+/// Builds and shows a heads-up / lock-screen notification from an FCM message.
+/// Works in the main isolate AND the background isolate (killed-app delivery),
+/// which is why it lives at top level and takes its own plugin instance.
+Future<void> _displayNotification(RemoteMessage message) async {
+  final n = message.notification;
+  final title = n?.title ?? message.data['title'] ?? message.data['subject'];
+  final body = n?.body ?? message.data['body'] ?? message.data['message'];
+  if (title == null || title.toString().isEmpty) return;
+
+  final plugin = FlutterLocalNotificationsPlugin();
+  await plugin.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    ),
+  );
+  await plugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(kHighImportanceChannel);
+
+  await plugin.show(
+    message.messageId?.hashCode ?? message.hashCode,
+    title.toString(),
+    body?.toString(),
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        kHighImportanceChannel.id,
+        kHighImportanceChannel.name,
+        channelDescription: kHighImportanceChannel.description,
+        icon: '@mipmap/ic_launcher',
+        importance: Importance.max,
+        priority: Priority.high,
+        visibility: NotificationVisibility.public,
+        playSound: true,
+        enableVibration: true,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    ),
+    payload: jsonEncode(message.data),
+  );
+}
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   if (kDebugMode) {
-    print('🌙 Background FCM: ${message.messageId}');
+    print('🌙 Background FCM: ${message.messageId} data=${message.data}');
+  }
+  // Server sends Android data-only messages, so nothing shows unless we render
+  // it here. iOS delivers an aps.alert and is shown by the OS — skip to avoid
+  // a duplicate.
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await _displayNotification(message);
   }
 }
 
@@ -26,19 +91,26 @@ class PushNotificationService {
   String? _fcmToken;
   String? get currentToken => _fcmToken;
 
+  AuthorizationStatus _permission = AuthorizationStatus.notDetermined;
+
+  /// True when the user has actively turned notifications off — the app can
+  /// then surface a "turn these back on in Settings" hint.
+  bool get notificationsDenied => _permission == AuthorizationStatus.denied;
+
+  /// Re-checks the OS permission (e.g. after returning from Settings).
+  Future<void> refreshPermissionStatus() async {
+    try {
+      final s = await _fcm.getNotificationSettings();
+      _permission = s.authorizationStatus;
+    } catch (_) {}
+  }
+
   // Retry timer for token sync
   Timer? _retryTimer;
   int _retryCount = 0;
   static const int _maxRetries = 5;
 
-  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'high_importance_channel',
-    'High Importance Notifications',
-    description: 'Urgent alerts, bookings, and enquiry notifications.',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
+  static const AndroidNotificationChannel _channel = kHighImportanceChannel;
 
   bool _initialized = false;
 
@@ -65,6 +137,7 @@ class PushNotificationService {
         provisional: false,
         sound: true,
       );
+      _permission = settings.authorizationStatus;
       if (kDebugMode) {
         print('🔔 Notification permission: ${settings.authorizationStatus}');
       }
@@ -80,6 +153,7 @@ class PushNotificationService {
         const InitializationSettings(android: androidInit, iOS: iosInit),
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           if (kDebugMode) print('👆 Notification tapped: ${response.payload}');
+          _routeFromPayload(response.payload);
         },
       );
 
@@ -120,12 +194,14 @@ class PushNotificationService {
       // 10. Background → foreground tap
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         if (kDebugMode) print('🚀 Notification tapped from background: ${message.data}');
+        NotificationRouter.handleData(message.data);
       });
 
       // 11. Terminated state launch
       final initialMessage = await _fcm.getInitialMessage();
-      if (initialMessage != null && kDebugMode) {
-        print('🏁 App launched via notification: ${initialMessage.data}');
+      if (initialMessage != null) {
+        if (kDebugMode) print('🏁 App launched via notification: ${initialMessage.data}');
+        NotificationRouter.handleData(initialMessage.data);
       }
     } catch (e) {
       if (kDebugMode) print('❌ PushNotificationService init error: $e');
@@ -222,40 +298,21 @@ class PushNotificationService {
     }
   }
 
+  void _routeFromPayload(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map) {
+        NotificationRouter.handleData(Map<String, dynamic>.from(decoded));
+      }
+    } catch (_) {
+      // Legacy `message.data.toString()` payloads — best-effort type sniff.
+      NotificationRouter.handleData({'type': payload});
+    }
+  }
+
   void _showForegroundNotification(RemoteMessage message) {
-    final title = message.notification?.title ??
-        message.data['title'] ??
-        message.data['subject'];
-    final body = message.notification?.body ??
-        message.data['body'] ??
-        message.data['message'];
-
-    if (title == null || title.isEmpty) return;
-
-    final android = message.notification?.android;
-    _localNotifications.show(
-      message.hashCode,
-      title,
-      body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channel.id,
-          _channel.name,
-          channelDescription: _channel.description,
-          icon: android?.smallIcon ?? '@mipmap/ic_launcher',
-          importance: Importance.max,
-          priority: Priority.high,
-          visibility: NotificationVisibility.public,
-          playSound: true,
-          enableVibration: true,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      payload: message.data.toString(),
-    );
+    // Same renderer as the background isolate — one code path, one look.
+    _displayNotification(message);
   }
 }

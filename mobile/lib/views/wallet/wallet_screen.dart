@@ -88,9 +88,9 @@ class _WalletScreenState extends State<WalletScreen> {
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(bottomSheetContext).size.height * 0.85,
               ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              decoration: BoxDecoration(
+                color: bottomSheetContext.colors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: EdgeInsets.only(
                 left: 20,
@@ -135,7 +135,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary,
+                                  color: bottomSheetContext.colors.textPrimary,
                                 ),
                               ),
                               Text(
@@ -395,17 +395,23 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat('#,##,###');
+    final cs = context.colors;
 
     return Scaffold(
       appBar: AppTheme.gradientAppBar(
+        context: context,
         title: 'My Wallet & Refunds',
       ),
       body: RefreshIndicator(
         onRefresh: () => _fetchWalletData(showLoading: false),
-        child: SingleChildScrollView(
+        // CustomScrollView so transaction rows build lazily on scroll.
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Wallet Balance Gradient Card
@@ -533,7 +539,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: cs.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -548,19 +554,19 @@ class _WalletScreenState extends State<WalletScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cs.surface,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: cs.border),
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.account_balance_wallet_outlined, size: 48, color: Colors.grey.shade400),
+                      Icon(Icons.account_balance_wallet_outlined, size: 48, color: cs.textFaint),
                       const SizedBox(height: 12),
                       Text(
                         'No Wallet Transactions Yet',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                          color: cs.textPrimary,
                           fontSize: 14,
                         ),
                       ),
@@ -568,17 +574,20 @@ class _WalletScreenState extends State<WalletScreen> {
                       Text(
                         'Refunds issued by admin or payments made using wallet balance will appear here.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 12),
+                        style: GoogleFonts.poppins(color: cs.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),
-                )
-              else
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                ),
+                ],
+                ),
+              ),
+            ),
+            if (!_isLoading && _transactions.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverList.builder(
                   itemCount: _transactions.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final tx = _transactions[index];
                     final isCredit = tx['type'] == 'credit';
@@ -588,14 +597,15 @@ class _WalletScreenState extends State<WalletScreen> {
                         : 'Recent';
 
                     return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cs.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(color: cs.border),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: cs.shadow,
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -625,7 +635,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                   style: GoogleFonts.poppins(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
-                                    color: AppTheme.textPrimary,
+                                    color: cs.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -644,7 +654,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 14,
-                                  color: isCredit ? Colors.green.shade700 : AppTheme.textPrimary,
+                                  color: isCredit ? Colors.green.shade700 : cs.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -670,8 +680,8 @@ class _WalletScreenState extends State<WalletScreen> {
                     );
                   },
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

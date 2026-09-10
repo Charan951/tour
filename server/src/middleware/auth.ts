@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { jwtSecret } from '../config/env.js';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -21,8 +22,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
-    const decoded = jwt.verify(token, secret) as { id: string; email: string; role: string };
+    const decoded = jwt.verify(token, jwtSecret()) as { id: string; email: string; role: string };
     
     const normEmail = (decoded.email || '').trim().toLowerCase();
     const isAdminEmail = normEmail === 'admin@holidaycity.com';

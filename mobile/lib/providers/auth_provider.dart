@@ -52,15 +52,19 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
+  /// Fast, offline-only startup used by the splash screen.
+  ///
+  /// Reads the persisted session from local storage only — no network call —
+  /// so the splash never blocks on a slow/absent connection. The server-side
+  /// profile is refreshed afterwards via [refreshCurrentUserInBackground].
   Future<void> initAuth() async {
     _isLoading = true;
     _safeNotifyListeners();
 
     try {
-      final savedUser = await _authService.fetchCurrentUser();
+      final savedUser = await _authService.getSavedUser();
       if (savedUser != null) {
         _user = savedUser;
-        PushNotificationService.instance.syncTokenWithBackend();
       }
     } catch (_) {
       _user = null;
@@ -69,6 +73,20 @@ class AuthProvider extends ChangeNotifier {
       _isInitialized = true;
       _safeNotifyListeners();
     }
+  }
+
+  /// Fire-and-forget refresh of the signed-in user from the server. Safe to
+  /// call after the app is already showing the home screen; updates the UI
+  /// only if something actually changed.
+  void refreshCurrentUserInBackground() {
+    if (_user == null) return;
+    _authService.fetchCurrentUser().then((updatedUser) {
+      if (updatedUser != null) {
+        _user = updatedUser;
+        PushNotificationService.instance.syncTokenWithBackend();
+        _safeNotifyListeners();
+      }
+    }).catchError((_) {});
   }
 
   Future<void> fetchCurrentUser() async {
@@ -188,5 +206,18 @@ class AuthProvider extends ChangeNotifier {
     await _authService.logout();
     _user = null;
     _safeNotifyListeners();
+  }
+
+  /// Permanently deletes the account server-side, then clears local state.
+  /// Returns null on success or an error message on failure.
+  Future<String?> deleteAccount() async {
+    try {
+      await _authService.deleteAccount();
+      _user = null;
+      _safeNotifyListeners();
+      return null;
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    }
   }
 }

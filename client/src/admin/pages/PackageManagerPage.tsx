@@ -86,6 +86,7 @@ export const PackageManagerPage: React.FC = () => {
   const [nights, setNights] = useState(4);
   const [days, setDays] = useState(5);
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1200&auto=format&fit=crop');
+  const [gallery, setGallery] = useState<string[]>([]);
   const [overview, setOverview] = useState('');
   const [highlights, setHighlights] = useState('');
   const [inclusions, setInclusions] = useState('');
@@ -166,6 +167,11 @@ export const PackageManagerPage: React.FC = () => {
     setNights(pkg.duration?.nights || 3);
     setDays(pkg.duration?.days || 4);
     setCoverImage(pkg.coverImage || '');
+    setGallery(
+      Array.isArray(pkg.gallery) && pkg.gallery.length
+        ? pkg.gallery
+        : (Array.isArray(pkg.images) ? pkg.images : [])
+    );
     setOverview(pkg.overview || '');
     setHighlights(pkg.highlights ? pkg.highlights.join(', ') : '');
     setInclusions(pkg.inclusions ? pkg.inclusions.join(', ') : '');
@@ -219,6 +225,7 @@ export const PackageManagerPage: React.FC = () => {
         discountPrice: Number(discountPrice) || undefined,
         duration: { nights: Number(nights), days: Number(days) },
         coverImage,
+        gallery: gallery.filter((u) => u && u.trim()),
         overview,
         highlights: highlights ? highlights.split(',').map((s) => s.trim()) : [],
         inclusions: inclusions ? inclusions.split(',').map((s) => s.trim()) : [],
@@ -275,6 +282,7 @@ export const PackageManagerPage: React.FC = () => {
     setEditingId(null);
     setSelectedRegion('All');
     setThemeName('Honeymoon Tour');
+    setGallery([]);
     setTitle('');
     setPackageCode('');
     setDestinationId('');
@@ -613,6 +621,65 @@ export const PackageManagerPage: React.FC = () => {
                         No image uploaded yet
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* 2b. Gallery images — shown as a carousel on the package detail page */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <h4 className="font-bold text-slate-900 text-xs">Gallery Images (carousel)</h4>
+                    </div>
+                    <span className="text-[10px] text-slate-400">{gallery.length} image{gallery.length === 1 ? '' : 's'}</span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-500 -mt-1">
+                    Add extra photos travellers can swipe through on the package page. The cover image is always shown first.
+                  </p>
+
+                  {gallery.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {gallery.map((url, idx) => (
+                        <div key={`${url}-${idx}`} className="relative rounded-lg overflow-hidden border border-slate-200 h-20 bg-slate-100 group">
+                          <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setGallery((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center opacity-90 hover:opacity-100 cursor-pointer"
+                            aria-label="Remove image"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
+                    <CloudinaryImageUploader
+                      label="Add gallery image"
+                      onUploadSuccess={(url) => setGallery((prev) => (prev.includes(url) ? prev : [...prev, url]))}
+                    />
+                    <div>
+                      <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">…or paste an image URL</label>
+                      <input
+                        type="text"
+                        placeholder="https://res.cloudinary.com/..."
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const v = (e.target as HTMLInputElement).value.trim();
+                            if (v) {
+                              setGallery((prev) => (prev.includes(v) ? prev : [...prev, v]));
+                              (e.target as HTMLInputElement).value = '';
+                            }
+                          }
+                        }}
+                        className="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[10px] focus:bg-white focus:border-ocean-600"
+                      />
+                      <p className="text-[9px] text-slate-400 mt-0.5">Press Enter to add.</p>
+                    </div>
                   </div>
                 </div>
 

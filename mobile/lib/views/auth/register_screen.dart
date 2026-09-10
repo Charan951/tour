@@ -143,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _agreementLine(BuildContext context) {
-    const base = TextStyle(fontSize: 11.5, color: AppTheme.textSecondary, height: 1.4);
+    final base = TextStyle(fontSize: 11.5, color: context.colors.textSecondary, height: 1.4);
     final link = base.copyWith(
         color: AppTheme.primaryColor, fontWeight: FontWeight.w700);
     return Padding(
@@ -197,14 +197,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
                 Text(
                   'Create an account to start booking customized tours',
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: AppTheme.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 28),
@@ -212,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _fullNameController,
                   label: 'Full Name',
-                  hint: 'John Doe',
+                  hint: '',
                   prefixIcon: Icons.person_outline,
                   validator: (value) =>
                       value == null || value.trim().isEmpty ? 'Required' : null,
@@ -222,7 +222,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _emailController,
                   label: 'Email Address',
-                  hint: 'john.doe@example.com',
+                  hint: '',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
@@ -236,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _mobileController,
                   label: 'Mobile Number',
-                  hint: '+91 9876543210',
+                  hint: '',
                   prefixIcon: Icons.phone_android_outlined,
                   keyboardType: TextInputType.phone,
                   validator: (value) => value == null || value.isEmpty
@@ -248,7 +248,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _passwordController,
                   label: 'Password',
-                  hint: '••••••••',
+                  hint: '',
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
@@ -258,7 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       _obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: AppTheme.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -277,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CustomTextField(
                   controller: _confirmPasswordController,
                   label: 'Confirm Password',
-                  hint: '••••••••',
+                  hint: '',
                   prefixIcon: Icons.lock_outline,
                   obscureText: _obscureConfirmPassword,
                   suffixIcon: IconButton(
@@ -288,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       _obscureConfirmPassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: AppTheme.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -317,9 +317,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Already have an account? ',
-                      style: TextStyle(color: AppTheme.textSecondary),
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
@@ -337,10 +337,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: TextButton.icon(
                     onPressed: _showServerIpDialog,
-                    icon: const Icon(Icons.wifi_tethering, size: 14, color: AppTheme.textSecondary),
+                    icon: Icon(Icons.wifi_tethering, size: 14, color: context.colors.textSecondary),
                     label: Text(
                       'Server: ${ApiConfig.baseUrl}',
-                      style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                     ),
                   ),
                 ),

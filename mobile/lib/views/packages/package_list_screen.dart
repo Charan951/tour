@@ -5,6 +5,7 @@ import '../../config/theme.dart';
 import '../../providers/package_provider.dart';
 import '../../widgets/package_card.dart';
 import '../../widgets/app_states.dart';
+import '../../widgets/filter_sheet.dart';
 import 'package_detail_screen.dart';
 
 class PackageListScreen extends StatefulWidget {
@@ -55,9 +56,10 @@ class _PackageListScreenState extends State<PackageListScreen> {
     }
 
     final packages = packageProvider.packages;
+    final cs = context.colors;
 
     return Scaffold(
-      appBar: AppTheme.gradientAppBar(title: 'Explore Packages'),
+      appBar: AppTheme.gradientAppBar(context: context, title: 'Explore Packages'),
       body: RefreshIndicator(
         onRefresh: () => packageProvider.fetchPackages(),
         child: packageProvider.isLoading && packageProvider.allPackages.isEmpty
@@ -72,12 +74,12 @@ class _PackageListScreenState extends State<PackageListScreen> {
                         child: Container(
                           height: 52,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: cs.border),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
+                                color: cs.shadow,
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
@@ -85,7 +87,10 @@ class _PackageListScreenState extends State<PackageListScreen> {
                           ),
                           child: Row(
                             children: [
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 14),
+                              Icon(Icons.search_rounded,
+                                  size: 20, color: cs.textSecondary),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
@@ -95,18 +100,19 @@ class _PackageListScreenState extends State<PackageListScreen> {
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF0F172A),
+                                    color: cs.textPrimary,
                                   ),
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
                                     enabledBorder: InputBorder.none,
                                     focusedBorder: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
+                                    filled: false,
                                     isCollapsed: true,
-                                    hintText: 'Search packages by destination, title...',
+                                    hintText: '',
                                     hintStyle: GoogleFonts.inter(
                                       fontSize: 13.5,
-                                      color: const Color(0xFFADB5BD),
+                                      color: cs.textFaint,
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
@@ -118,85 +124,34 @@ class _PackageListScreenState extends State<PackageListScreen> {
                                     _searchController.clear();
                                     packageProvider.setSearchQuery('');
                                   },
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 10),
-                                    child: Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(Icons.close_rounded,
+                                        size: 18, color: cs.textSecondary),
                                   ),
                                 )
                               else
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 14),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Search button — outside the bar
-                      GestureDetector(
-                        onTap: () {
-                          packageProvider.setSearchQuery(_searchController.text);
+                      FilterIconButton(
+                        active: selectedCategory != 'All',
+                        onTap: () async {
+                          final picked = await showFilterSheet(
+                            context,
+                            title: 'Filter packages',
+                            options: _categories,
+                            selected: selectedCategory,
+                          );
+                          if (picked != null) {
+                            packageProvider.setCategory(picked);
+                          }
                         },
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0EA5E9),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.search_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Horizontal Category Filter Option Chips
-                  SizedBox(
-                    height: 38,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: _categories.length,
-                      itemBuilder: (context, idx) {
-                        final cat = _categories[idx];
-                        final isSelected = selectedCategory == cat;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(cat),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                packageProvider.setCategory(cat);
-                              }
-                            },
-                            labelStyle: GoogleFonts.outfit(
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                              color: isSelected ? Colors.white : const Color(0xFF475569),
-                            ),
-                            selectedColor: const Color(0xFF0EA5E9),
-                            backgroundColor: Colors.white,
-                            elevation: isSelected ? 3 : 0,
-                            pressElevation: 1,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? const Color(0xFF0EA5E9)
-                                  : const Color(0xFFE2E8F0),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            showCheckmark: false,
-                          ),
-                        );
-                      },
-                    ),
                   ),
 
                   const SizedBox(height: 16),
@@ -210,7 +165,7 @@ class _PackageListScreenState extends State<PackageListScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF64748B),
+                          color: cs.textSecondary,
                         ),
                       ),
                       if (selectedCategory != 'All' || packageProvider.searchQuery.isNotEmpty)

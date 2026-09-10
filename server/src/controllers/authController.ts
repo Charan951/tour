@@ -4,6 +4,7 @@ import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { DeviceToken } from '../models/DeviceToken.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { jwtSecret, jwtRefreshSecret } from '../config/env.js';
 
 const getOrCreateRole = async (name: 'Admin' | 'Customer') => {
   let r = await Role.findOne({ name });
@@ -51,10 +52,12 @@ export const login = async (req: Request, res: Response) => {
     } else {
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
-        user.password = password;
-        user.failedAttempts = 0;
-        user.accountLockedUntil = undefined;
+        // SECURITY: a wrong password must be rejected. Previously this branch
+        // silently reset the stored password to whatever was submitted, which
+        // meant any password logged into any existing account.
+        user.failedAttempts = (user.failedAttempts || 0) + 1;
         await user.save();
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }
       // Non-admin user fix: if existing user has Admin role ID, correct it to Customer role ID in DB
       if (!isAdminEmail) {
@@ -78,17 +81,15 @@ export const login = async (req: Request, res: Response) => {
 
     const roleName = isAdminEmail ? 'Admin' : 'Customer';
 
-    const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(
       { id: user._id, email: user.email, role: roleName },
-      secret,
+      jwtSecret(),
       { expiresIn: '24h' }
     );
 
-    const refreshSecret = process.env.JWT_REFRESH_SECRET || 'holidaycity_super_secret_jwt_refresh_key_2026';
     const refreshToken = jwt.sign(
       { id: user._id, email: user.email },
-      refreshSecret,
+      jwtRefreshSecret(),
       { expiresIn: '7d' }
     );
 
@@ -142,10 +143,9 @@ export const register = async (req: Request, res: Response) => {
 
     const roleName = isAdminEmail ? 'Admin' : 'Customer';
 
-    const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
     const accessToken = jwt.sign(
       { id: newUser._id, email: newUser.email, role: roleName },
-      secret,
+      jwtSecret(),
       { expiresIn: '24h' }
     );
 
@@ -295,6 +295,54 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
     await user.save();
 
     return res.status(200).json({ success: true, message: 'Password changed successfully' });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// DELETE /auth/me — user-initiated account deletion (Google Play requirement).
+// Soft-deletes and anonymises the account so it can no longer be used: the
+// email/mobile are scrambled (freeing the unique index), the password is
+// rotated, push tokens are dropped and the session cookie is cleared. Booking
+// and enquiry records are retained in anonymised form for legal/accounting
+// obligations, as stated in the in-app Privacy Policy.
+export const deleteMe = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Unauthenticated' });
+    }
+
+    let user: any = null;
+    if (req.user.id && req.user.id.length === 24) {
+      user = await User.findById(req.user.id).select('+password');
+    }
+    if (!user && req.user.email) {
+      user = await User.findOne({ email: req.user.email.toLowerCase(), isDeleted: false }).select('+password');
+    }
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Account not found' });
+    }
+
+    const origEmail = user.email;
+    const stamp = `${user._id}_${Date.now()}`;
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+    user.status = 'Inactive';
+    user.email = `deleted_${stamp}@account-deleted.invalid`;
+    user.mobile = `deleted_${stamp}`;
+    user.avatar = null;
+    user.fcmTokens = [];
+    user.password = `deleted_${stamp}_${Math.random().toString(36).slice(2)}`;
+    await user.save();
+
+    try {
+      if (origEmail) await DeviceToken.deleteMany({ email: origEmail });
+    } catch (_) {
+      // token cleanup is best-effort
+    }
+
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ success: true, message: 'Your account has been deleted.' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

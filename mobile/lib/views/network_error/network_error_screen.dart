@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/theme.dart';
 import '../../services/connectivity.dart';
 
 class NetworkErrorScreen extends StatefulWidget {
@@ -25,9 +26,10 @@ class _NetworkErrorScreenState extends State<NetworkErrorScreen> {
   @override
   Widget build(BuildContext context) {
     final isChecking = ConnectivityStatus.instance.isChecking;
+    final cs = context.colors;
 
     return Material(
-      color: const Color(0xFFF8FAFC), // Simple light theme background
+      color: cs.scaffold,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -60,11 +62,11 @@ class _NetworkErrorScreenState extends State<NetworkErrorScreen> {
               const SizedBox(height: 24),
 
               // Title
-              const Text(
+              Text(
                 'No Internet Connection',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF0F172A),
+                  color: cs.textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.3,
@@ -74,11 +76,11 @@ class _NetworkErrorScreenState extends State<NetworkErrorScreen> {
               const SizedBox(height: 10),
 
               // Subtitle
-              const Text(
+              Text(
                 'Please check your mobile data or Wi-Fi network and try again.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF64748B),
+                  color: cs.textSecondary,
                   fontSize: 14,
                   height: 1.4,
                 ),
@@ -91,12 +93,12 @@ class _NetworkErrorScreenState extends State<NetworkErrorScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: cs.border),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: cs.shadow,
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -190,8 +192,8 @@ class _TipItem extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Color(0xFF334155),
+            style: TextStyle(
+              color: context.colors.textSecondary,
               fontSize: 13,
             ),
           ),

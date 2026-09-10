@@ -118,7 +118,7 @@ export const MobileDestinationDetailPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F3F3F3] relative pb-28">
+    <div className="min-h-screen bg-[#F3F3F3] relative pb-6">
       {/* Scrollable Content */}
       <div className="p-4 space-y-4">
         {/* Floating Back Button Top Bar */}
@@ -238,19 +238,6 @@ export const MobileDestinationDetailPage: React.FC = () => {
             ))
           )}
         </div>
-      </div>
-
-      {/* ── STICKY BOTTOM BUTTON ── Matches Image 3 "Enquire for TELAGANA Tour" */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#ffffff]/80 backdrop-blur-md border-t border-slate-200 z-30">
-        <button
-          onClick={() => {
-            setModalMode('enquiry');
-            setEnquiryOpen(true);
-          }}
-          className="w-full py-3.5 bg-ocean-600 text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-transform cursor-pointer"
-        >
-          Enquire for {destNameShort} Tour
-        </button>
       </div>
 
       <PackageEnquiryModal

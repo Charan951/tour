@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 
@@ -49,7 +50,7 @@ class ChatService {
         }
       }
     } catch (e) {
-      print('ChatService getMessages error: $e');
+      if (kDebugMode) debugPrint('ChatService getMessages error: $e');
     }
     return [];
   }
@@ -82,7 +83,7 @@ class ChatService {
         return data['success'] == true;
       }
     } catch (e) {
-      print('ChatService sendMessage error: $e');
+      if (kDebugMode) debugPrint('ChatService sendMessage error: $e');
     }
     return false;
   }

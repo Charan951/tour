@@ -1,16 +1,8 @@
-analyzer:
-  exclude:
-    - build/**
-    - android/**
-    - web/**
-    - windows/**
-    - ios/**
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  rules:
-    avoid_print: false
-    prefer_const_constructors: true
-    prefer_const_literals_to_create_immutables: true
-    prefer_final_fields: true
-    unnecessary_string_interpolations: true
+analyzer:
+  errors:
+    # Treat accidental production logging and context misuse as warnings so
+    # they show up in `flutter analyze` output.
+    avoid_print: warning
+    use_build_context_synchronously: warning

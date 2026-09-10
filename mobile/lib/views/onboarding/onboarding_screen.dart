@@ -189,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.textSecondary,
+                                      color: context.colors.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -309,7 +309,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: GoogleFonts.outfit(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -318,7 +318,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            color: AppTheme.textSecondary,
+                            color: context.colors.textSecondary,
                             height: 1.4,
                           ),
                         ),
@@ -346,7 +346,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? AppTheme.primaryColor
-                              : const Color(0xFFCBD5E1),
+                              : context.colors.border,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

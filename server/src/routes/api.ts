@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { login, register, forgotPassword, getMe, updateMe, changePassword, saveFcmToken, removeFcmToken } from '../controllers/authController.js';
+import jwt from 'jsonwebtoken';
+import { jwtSecret } from '../config/env.js';
+import { login, register, forgotPassword, getMe, updateMe, changePassword, deleteMe, saveFcmToken, removeFcmToken } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getActivities, getActivityBySlug, createActivity, updateActivity, deleteActivity } from '../controllers/activityController.js';
@@ -17,7 +19,7 @@ import { getBanners, createBanner, updateBanner, deleteBanner } from '../control
 import { getThemeBanners, upsertThemeBanner, deleteThemeBanner } from '../controllers/themeBannerController.js';
 import { getSitemapXML } from '../controllers/sitemapController.js';
 import { createBooking, getAdminBookings, getUserBookings, updateBookingStatus, deleteBooking, payRemainingBalance } from '../controllers/bookingController.js';
-import { getRazorpayKey, createRazorpayOrder, verifyRazorpayPayment } from '../controllers/paymentController.js';
+import { getRazorpayKey, getPaymentConfig, createRazorpayOrder, verifyRazorpayPayment } from '../controllers/paymentController.js';
 import { getUserWallet, requestWithdrawal, applyWalletPayment } from '../controllers/walletController.js';
 import { sendChatMessage, getTopicMessages, getAdminConversations, markTopicAsRead } from '../controllers/chatController.js';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, clearAllNotifications, getUserNotifications, markUserNotificationRead, markAllUserNotificationsRead, deleteUserNotification } from '../controllers/notificationController.js';
@@ -34,9 +36,7 @@ const optionalAuth = (req: any, res: any, next: any) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (token) {
     try {
-      const secret = process.env.JWT_SECRET || 'holidaycity_super_secret_jwt_access_key_2026';
-      const jwt = require('jsonwebtoken');
-      req.user = jwt.verify(token, secret);
+      req.user = jwt.verify(token, jwtSecret());
     } catch (_) { /* invalid token — ignore, allow unauthenticated */ }
   }
   next();
@@ -76,6 +76,7 @@ router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
 // Signed-in user managing their own account (any authenticated role).
 router.get('/auth/me', authenticateToken, getMe);
 router.patch('/auth/me', authenticateToken, updateMe);
+router.delete('/auth/me', authenticateToken, deleteMe);
 router.post('/auth/change-password', authRateLimiter, authenticateToken, changePassword);
 
 // FCM Push Notification Token Management
@@ -117,6 +118,7 @@ router.patch('/bookings/:id/pay-remaining', payRemainingBalance);
 router.post('/bookings/:id/pay-remaining', payRemainingBalance);
 
 // Razorpay Payment Gateway Routes
+router.get('/payments/config', getPaymentConfig);
 router.get('/payments/razorpay-key', getRazorpayKey);
 router.post('/payments/create-order', createRazorpayOrder);
 router.post('/payments/verify', verifyRazorpayPayment);

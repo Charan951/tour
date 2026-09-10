@@ -1,6 +1,9 @@
 @import "tailwindcss";
 /* Urbanist is loaded via <link> in index.html (avoids a render-blocking CSS @import) */
 
+/* Dark mode is class-based: <html class="dark"> is toggled by ThemeContext. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================================
    Design tokens — "The Glass Concierge" (see DESIGN.md).
    Tailwind v4 reads @theme and generates utilities: bg-ocean-600, text-ink,
@@ -403,6 +406,103 @@
   }
   .shimmer-sheen::after { display: none; }
 }
+
+/* ============================================================================
+   DARK MODE
+   Class-based (`<html class="dark">`). Strategy: re-point the neutral design
+   tokens so every semantic utility (bg-canvas, text-ink, border-line, bg-fill…)
+   flips for free, then override the raw Tailwind greys / bg-white that ~50
+   components hardcode. Brand colours (ocean/aqua/gold), images and gradients
+   are left untouched.
+   ============================================================================ */
+.dark {
+  color-scheme: dark;
+
+  /* Neutral token re-map */
+  --color-ink: #E8EDF5;
+  --color-slate-body: #B7C2D0;
+  --color-slate-muted: #94A3B4;
+  --color-slate-faint: #64707F;
+  --color-line: #26313F;
+  --color-fill: #1B2635;
+  --color-sand: #131C2A;
+  --color-canvas: #0B1120;
+  --color-ocean-100: #10263C;   /* faint ocean tint surfaces */
+
+  /* Elevation reads as depth on dark, not an ocean glow */
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.45), 0 4px 12px -2px rgba(0, 0, 0, 0.35);
+  --shadow-raised: 0 24px 48px -12px rgba(0, 0, 0, 0.55), 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  --shadow-glass: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Surfaces — the workhorse override for the many hardcoded `bg-white` */
+.dark .bg-white { background-color: #131C2A !important; }
+/* Translucent white (bg-white/80, /90, /95 …) used on overlays & sticky bars */
+.dark [class*="bg-white/"] { background-color: rgba(19, 28, 42, 0.88) !important; }
+.dark .bg-slate-50,
+.dark .bg-gray-50,
+.dark .bg-slate-100,
+.dark .bg-gray-100,
+.dark .bg-neutral-50,
+.dark .bg-neutral-100,
+.dark [class*="bg-slate-50/"],
+.dark [class*="bg-slate-100/"] { background-color: #1B2635 !important; }
+.dark .bg-slate-200,
+.dark .bg-gray-200 { background-color: #26313F !important; }
+/* Hover states on the greys */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-gray-100:hover { background-color: #1F2A3A !important; }
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-gray-200:hover { background-color: #2A3646 !important; }
+
+/* Text greys */
+.dark .text-black,
+.dark .text-slate-900,
+.dark .text-gray-900,
+.dark .text-slate-800,
+.dark .text-gray-800 { color: #E8EDF5 !important; }
+.dark .text-slate-700,
+.dark .text-gray-700,
+.dark .text-slate-600,
+.dark .text-gray-600 { color: #B7C2D0 !important; }
+.dark .text-slate-500,
+.dark .text-gray-500,
+.dark .text-slate-400,
+.dark .text-gray-400 { color: #94A3B4 !important; }
+
+/* Borders & dividers (incl. translucent variants like border-slate-200/80) */
+.dark .border-slate-100,
+.dark .border-gray-100,
+.dark .border-slate-200,
+.dark .border-gray-200,
+.dark .border-slate-300,
+.dark .border-gray-300,
+.dark [class*="border-slate-100/"],
+.dark [class*="border-gray-100/"],
+.dark [class*="border-slate-200/"],
+.dark [class*="border-gray-200/"] { border-color: #26313F !important; }
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #26313F !important; }
+
+/* Custom design-system surfaces */
+.dark html,
+.dark body { background-color: var(--color-canvas); color: var(--color-ink); }
+.dark .glass-card-solid { background: #131C2A; border-color: #26313F; }
+.dark .glass-card { background: rgba(19, 28, 42, 0.85); border-color: rgba(87, 208, 201, 0.14); }
+.dark .glass-nav { background: rgba(11, 17, 32, 0.92); border-bottom-color: rgba(38, 49, 63, 0.9); }
+.dark .glass-pill-premium {
+  background: linear-gradient(135deg, rgba(27, 38, 53, 0.95) 0%, rgba(16, 38, 60, 0.85) 100%);
+  border-color: rgba(87, 208, 201, 0.18);
+}
+.dark .premium-card-shadow:hover { box-shadow: var(--shadow-raised); }
+.dark ::selection { background-color: var(--color-aqua-500); color: #06263C; }
+.dark input::placeholder,
+.dark textarea::placeholder { color: #64707F; }
+.dark [class*="shadow-"] { --tw-shadow-color: rgba(0, 0, 0, 0.5); }
 
 /* ============================================================================
    Hidden scrollbars — content still scrolls, the bar is not painted

@@ -40,7 +40,7 @@ class OfflineQueue {
       'ts': DateTime.now().toIso8601String(),
     });
     await _write(items);
-    debugPrint('📥 Offline queue: ${items.length} pending');
+    if (kDebugMode) debugPrint('📥 Offline queue: ${items.length} pending');
   }
 
   /// Send pending items oldest-first. Stops at the first failure so order and

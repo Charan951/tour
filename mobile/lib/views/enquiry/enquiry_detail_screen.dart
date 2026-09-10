@@ -63,7 +63,7 @@ class EnquiryDetailScreen extends StatelessWidget {
     final displayStatus = enquiry.status.isNotEmpty ? enquiry.status : 'New';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8FC),
+      backgroundColor: context.colors.scaffold,
       appBar: AppBar(
         title: const Text(
           'Enquiry Details',
@@ -127,7 +127,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -143,14 +143,14 @@ class EnquiryDetailScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.access_time, size: 12, color: AppTheme.textSecondary),
+                              Icon(Icons.access_time, size: 12, color: context.colors.textSecondary),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   enquiry.formattedCreatedDateTime,
                                   style: GoogleFonts.inter(
                                     fontSize: 11,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                     fontWeight: FontWeight.w500,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -170,7 +170,7 @@ class EnquiryDetailScreen extends StatelessWidget {
               _getStatusDescription(enquiry.status),
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: context.colors.textSecondary,
                 height: 1.6,
               ),
             ),
@@ -225,7 +225,7 @@ class EnquiryDetailScreen extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 10),
@@ -233,9 +233,9 @@ class EnquiryDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.colors.border),
               ),
               child: Row(
                 children: [
@@ -259,7 +259,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -272,7 +272,7 @@ class EnquiryDetailScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildDetailCard(
+                  child: _buildDetailCard(context,
                     icon: Icons.calendar_today_outlined,
                     label: 'Travel Date',
                     value: enquiry.travelDate,
@@ -280,7 +280,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildDetailCard(
+                  child: _buildDetailCard(context,
                     icon: Icons.people_outline,
                     label: 'Travelers',
                     value: '${enquiry.travelers}',
@@ -297,7 +297,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -305,15 +305,15 @@ class EnquiryDetailScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: context.colors.border),
                 ),
                 child: Text(
                   enquiry.message,
                   style: GoogleFonts.inter(
                     fontSize: 13.5,
-                    color: AppTheme.textPrimary,
+                    color: context.colors.textPrimary,
                     height: 1.7,
                   ),
                 ),
@@ -326,24 +326,24 @@ class EnquiryDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
               decoration: BoxDecoration(
-                color: const Color(0xFFEAF3F9),
+                color: context.colors.surfaceAlt,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: const Color(0xFFDDEAF4)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(
+                  _buildInfoRow(context,
                     label: 'Enquiry ID',
                     value: (enquiry.id ?? 'N/A').substring(0, 8).toUpperCase(),
                   ),
                   const SizedBox(height: 10),
-                  _buildInfoRow(
+                  _buildInfoRow(context,
                     label: 'Submitted On',
                     value: enquiry.formattedCreatedDateTime.isNotEmpty ? enquiry.formattedCreatedDateTime : (enquiry.createdAt.isNotEmpty ? enquiry.createdAt : 'N/A'),
                   ),
                   const SizedBox(height: 10),
-                  _buildInfoRow(
+                  _buildInfoRow(context,
                     label: 'Email',
                     value: enquiry.email,
                   ),
@@ -397,7 +397,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                           'Our team will review your enquiry and contact you soon with personalized travel options and pricing.',
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
-                            color: AppTheme.textSecondary,
+                            color: context.colors.textSecondary,
                             height: 1.6,
                           ),
                         ),
@@ -413,7 +413,7 @@ class EnquiryDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailCard({
+  Widget _buildDetailCard(BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
@@ -421,9 +421,9 @@ class EnquiryDetailScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,7 +450,7 @@ class EnquiryDetailScreen extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ],
@@ -461,7 +461,7 @@ class EnquiryDetailScreen extends StatelessWidget {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ],
@@ -469,7 +469,7 @@ class EnquiryDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow({
+  Widget _buildInfoRow(BuildContext context, {
     required String label,
     required String value,
   }) {
@@ -483,7 +483,7 @@ class EnquiryDetailScreen extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppTheme.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
         ),
@@ -495,7 +495,7 @@ class EnquiryDetailScreen extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ),

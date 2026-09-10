@@ -50,15 +50,17 @@ class PackageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormatter =
         NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final cs = context.colors;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: cs.shadow,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -162,23 +164,22 @@ class PackageCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           package.destination,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: cs.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.access_time,
-                          size: 16, color: AppTheme.textSecondary),
+                      Icon(Icons.access_time, size: 16, color: cs.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         package.duration,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: cs.textSecondary,
                         ),
                       ),
                     ],
@@ -186,10 +187,10 @@ class PackageCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     package.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                      color: cs.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -201,10 +202,10 @@ class PackageCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Starting from',
                             style: TextStyle(
-                                fontSize: 11, color: AppTheme.textSecondary),
+                                fontSize: 11, color: cs.textSecondary),
                           ),
                           Row(
                             children: [

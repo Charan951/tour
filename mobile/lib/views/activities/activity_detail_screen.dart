@@ -105,7 +105,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
     final formattedImage = ApiConfig.formatImageUrl(activity.coverImage);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.scaffold,
       body: CustomScrollView(
         slivers: [
           // Sliver AppBar with Image Header
@@ -120,7 +120,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_back, color: AppTheme.textPrimary, size: 20),
+                child: Icon(Icons.arrow_back, color: context.colors.textPrimary, size: 20),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -298,12 +298,12 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   if (activity.overview.isNotEmpty) ...[
                     Text(
                       'Overview',
-                      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       activity.overview,
-                      style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
+                      style: TextStyle(fontSize: 13, color: context.colors.textSecondary, height: 1.5),
                     ),
                     const SizedBox(height: 20),
                   ],
@@ -312,7 +312,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   if (activity.highlights.isNotEmpty) ...[
                     Text(
                       'Activity Highlights',
-                      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
                     ),
                     const SizedBox(height: 10),
                     Column(
@@ -332,7 +332,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                             Expanded(
                               child: Text(
                                 hl,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
                               ),
                             ),
                           ],
@@ -444,7 +444,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -469,7 +469,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                               width: 165,
                               margin: const EdgeInsets.only(right: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: context.colors.surface,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(color: Colors.grey.shade200),
                                 boxShadow: [
@@ -506,7 +506,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                             style: GoogleFonts.outfit(
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold,
-                                              color: AppTheme.textPrimary,
+                                              color: context.colors.textPrimary,
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -552,7 +552,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
       bottomSheet: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           border: Border(top: BorderSide(color: Colors.grey.shade200)),
           boxShadow: [
             BoxShadow(

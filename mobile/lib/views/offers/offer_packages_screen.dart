@@ -134,18 +134,18 @@ class _OfferPackagesScreenState extends State<OfferPackagesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
+      backgroundColor: context.colors.scaffold,
       appBar: AppBar(
         title: Text(
           widget.offerTitle,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.colors.surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
+        iconTheme: IconThemeData(color: context.colors.textPrimary),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -156,7 +156,7 @@ class _OfferPackagesScreenState extends State<OfferPackagesScreen> {
                     child: Text(
                       'No offer packages available for ${widget.offerTitle} right now.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(color: AppTheme.textSecondary),
+                      style: GoogleFonts.inter(color: context.colors.textSecondary),
                     ),
                   ),
                 )

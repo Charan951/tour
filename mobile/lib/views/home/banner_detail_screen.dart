@@ -190,7 +190,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
     final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.scaffold,
       body: CustomScrollView(
         slivers: [
           // App Bar Header with Banner Image
@@ -329,7 +329,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: AppTheme.textPrimary,
+                                      color: context.colors.textPrimary,
                                     ),
                                   ),
                                 ],
@@ -367,7 +367,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
+                                color: context.colors.textPrimary,
                               ),
                             ),
                             Container(
@@ -422,7 +422,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textPrimary,
+                              color: context.colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -514,7 +514,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary,
+                                  color: context.colors.textPrimary,
                                 ),
                               ),
                             ],
@@ -578,7 +578,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                                                   style: GoogleFonts.outfit(
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.bold,
-                                                    color: AppTheme.textPrimary,
+                                                    color: context.colors.textPrimary,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
@@ -621,7 +621,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.colors.surface,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -687,7 +687,7 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],

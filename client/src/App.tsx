@@ -19,6 +19,7 @@ const ContactPage = lazy(() => import('./pages/Contact/ContactPage').then(m => (
 const BlogsPage = lazy(() => import('./pages/Blogs/BlogsPage').then(m => ({ default: m.BlogsPage })));
 const BlogDetailPage = lazy(() => import('./pages/Blogs/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
 const FaqPage = lazy(() => import('./pages/Faq/FaqPage').then(m => ({ default: m.FaqPage })));
+const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
 const ThemeCatalogPage = lazy(() => import('./pages/Themes/ThemeCatalogPage').then(m => ({ default: m.ThemeCatalogPage })));
 const UserDashboardPage = lazy(() => import('./pages/User/UserDashboardPage').then(m => ({ default: m.UserDashboardPage })));
 
@@ -186,6 +187,9 @@ export const App: React.FC = () => {
             <Route path="/blog/:slug" element={getPublicRouteElement(<BlogDetailPage />)} />
             <Route path="/blogs/:slug" element={getPublicRouteElement(<BlogDetailPage />)} />
             <Route path="/faq" element={getPublicRouteElement(<FaqPage />)} />
+            {/* Legal pages must be reachable without auth (login link, app stores, Razorpay) */}
+            <Route path="/terms" element={<LegalPage doc="terms" />} />
+            <Route path="/privacy" element={<LegalPage doc="privacy" />} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
             <Route path="/login" element={isAdmin ? <Navigate to="/admin/dashboard" replace /> : <UserDashboardPage />} />

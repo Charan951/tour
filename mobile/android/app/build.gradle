@@ -25,6 +25,19 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+// Release signing: create android/key.properties (git-ignored) from
+// key.properties.example and point it at your upload keystore. If it's
+// absent (local dev / CI without secrets) the build falls back to the
+// debug key so `flutter run --release` still works.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+def hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystorePropertiesFile.withReader('UTF-8') { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
     namespace "com.holidaycity.mobile"
     compileSdk 36
@@ -48,9 +61,28 @@ android {
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile keystoreProperties['storeFile'] ? rootProject.file(keystoreProperties['storeFile']) : null
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+
+            // Code/resource shrinking. proguard-rules.pro already carries the
+            // Razorpay + Flutter keeps. Kept OFF by default because a shrunk
+            // release build must be smoke-tested (payments, push, image
+            // picker) before shipping — flip to true once verified.
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

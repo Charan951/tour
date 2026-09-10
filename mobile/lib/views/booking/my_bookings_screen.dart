@@ -93,10 +93,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () => _fetchBookings(showLoading: false),
-        child: SingleChildScrollView(
+        // CustomScrollView so the booking cards build lazily as they scroll
+        // into view instead of all at once.
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Metrics Row Card
@@ -138,12 +143,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
-              const Text(
+              Text(
                 'Live status updates from admin & pay remaining balance due',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(
+                    fontSize: 12, color: context.colors.textSecondary),
               ),
               const SizedBox(height: 12),
 
@@ -159,19 +165,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       'Book a package from the home screen or catalog and track it here.',
                   actionLabel: 'Refresh',
                   onAction: () => _fetchBookings(),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _bookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = _bookings[index];
-                    return _buildBookingCard(booking, currencyFormatter);
-                  },
                 ),
-            ],
-          ),
+                ],
+                ),
+              ),
+            ),
+            if (!_isLoading && _bookings.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverList.builder(
+                  itemCount: _bookings.length,
+                  itemBuilder: (context, index) =>
+                      _buildBookingCard(_bookings[index], currencyFormatter),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -205,12 +213,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     final isApproved = status.toLowerCase() == 'confirmed' || status.toLowerCase() == 'completed' || isAdvPaid;
     final totalPrice = (b['totalPrice'] as num?)?.toDouble() ?? 0.0;
 
+    final cs = context.colors;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cs.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -313,7 +322,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: cs.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -330,18 +339,18 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         const SizedBox(width: 4),
                         Text(
                           b['travelDate'] != null ? b['travelDate'].toString().substring(0, 10) : 'Flexible Date',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 12, color: cs.textSecondary),
                         ),
                       ],
                     ),
                     Text(
                       '₹${formatter.format(totalPrice)}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.textPrimary),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, color: cs.border),
                 const SizedBox(height: 8),
 
                 // Footer View Details Link

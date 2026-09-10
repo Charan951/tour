@@ -9,16 +9,12 @@ import '../../models/activity_model.dart';
 import '../../models/destination_model.dart';
 import '../../models/package_model.dart';
 import '../../models/theme_model.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/package_provider.dart';
 import '../../providers/specialization_theme_provider.dart';
 import '../../services/activity_service.dart';
 import '../../services/package_service.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/package_card.dart';
 import '../activities/activity_detail_screen.dart';
-import '../auth/login_screen.dart';
-import '../enquiry/enquiry_bottom_sheet.dart';
 import '../packages/package_detail_screen.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
@@ -181,38 +177,12 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     });
   }
 
-  Future<void> _openEnquirySheet() async {
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    if (auth.user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please log in to submit an enquiry'),
-          backgroundColor: AppTheme.primaryColor,
-        ),
-      );
-      final loggedIn = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
-      );
-      if (loggedIn != true || !mounted) return;
-    }
-    if (!mounted) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => EnquiryBottomSheet(
-        defaultDestination: widget.destination.name,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final destNameShort = widget.destination.name.split(',')[0];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
+      backgroundColor: context.colors.scaffold,
       body: SafeArea(
         child: Stack(
           children: [
@@ -244,8 +214,8 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         child: IconButton(
                           tooltip: 'Back',
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back_rounded,
-                              color: AppTheme.textPrimary),
+                          icon: Icon(Icons.arrow_back_rounded,
+                              color: context.colors.textPrimary),
                           splashRadius: 20,
                         ),
                       ),
@@ -256,7 +226,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.colors.surface,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -306,7 +276,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: AppTheme.textSecondary,
+                                          color: context.colors.textSecondary,
                                         ),
                                       ),
                                     ),
@@ -318,7 +288,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w800,
-                                    color: AppTheme.textPrimary,
+                                    color: context.colors.textPrimary,
                                     height: 1.1,
                                   ),
                                 ),
@@ -328,7 +298,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: AppTheme.textPrimary,
+                                    color: context.colors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -336,7 +306,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                   widget.destination.description,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                     height: 1.6,
                                   ),
                                 ),
@@ -351,7 +321,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary,
+                                        color: context.colors.textPrimary,
                                       ),
                                     ),
                                     Expanded(
@@ -382,7 +352,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -501,7 +471,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
+                                color: context.colors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -609,7 +579,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                               style: GoogleFonts.outfit(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
-                                                color: AppTheme.textPrimary,
+                                                color: context.colors.textPrimary,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
@@ -617,7 +587,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                               act.duration,
                                               style: GoogleFonts.inter(
                                                 fontSize: 11,
-                                                color: AppTheme.textSecondary,
+                                                color: context.colors.textSecondary,
                                               ),
                                             ),
                                             const SizedBox(height: 6),
@@ -641,7 +611,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                                       style: GoogleFonts.inter(
                                                         fontSize: 11,
                                                         fontWeight: FontWeight.bold,
-                                                        color: AppTheme.textPrimary,
+                                                        color: context.colors.textPrimary,
                                                       ),
                                                     ),
                                                   ],
@@ -674,7 +644,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 19,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: context.colors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -715,20 +685,20 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.card_travel,
-                                size: 40, color: AppTheme.textSecondary),
+                            Icon(Icons.card_travel,
+                                size: 40, color: context.colors.textSecondary),
                             const SizedBox(height: 10),
                             Text(
                               'No packages available for $_selectedTheme at $destNameShort right now.',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
-                                color: AppTheme.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                             ),
                           ],
@@ -760,32 +730,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                       ),
                   ],
                 ),
-              ),
-            ),
-            Positioned(
-              left: 18,
-              right: 18,
-              bottom: 18,
-              child: CustomButton(
-                text: 'Enquire for ${widget.destination.name} Tour',
-                onPressed: () async {
-                  final auth = Provider.of<AuthProvider>(context, listen: false);
-                  if (auth.user == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please log in to submit an enquiry'),
-                        backgroundColor: AppTheme.primaryColor,
-                      ),
-                    );
-                    final loggedIn = await Navigator.push<bool>(
-                      context,
-                                    MaterialPageRoute(builder: (_) => const LoginScreen(isBookingPrompt: true)),
-                    );
-                    if (loggedIn != true) return;
-                  }
-
-                  _openEnquirySheet();
-                },
               ),
             ),
           ],

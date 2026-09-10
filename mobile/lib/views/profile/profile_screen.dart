@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/enquiry_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/package_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../services/enquiry_service.dart';
 import '../legal/legal_screen.dart';
 import '../../services/booking_service.dart';
@@ -155,9 +156,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Specify host IP address if testing on physical mobile device:',
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -228,8 +229,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     final displayAddress =
         user.city.isNotEmpty ? user.city : 'Add address';
 
+    final cs = context.colors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: cs.scaffold,
       body: RefreshIndicator(
         onRefresh: _loadUserData,
         color: AppTheme.primaryColor,
@@ -305,9 +308,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         width: double.infinity,
                         clipBehavior: Clip.antiAlias,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cs.surface,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: cs.border),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF0A6FB5)
@@ -324,16 +327,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 14),
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFFEBF5FF),
-                                    Color(0xFFF4F9FF),
-                                    Color(0xFFE0F2FE),
-                                  ],
-                                ),
+                              decoration: BoxDecoration(
+                                color: context.isDark ? cs.surfaceAlt : null,
+                                gradient: context.isDark
+                                    ? null
+                                    : const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFFEBF5FF),
+                                          Color(0xFFF4F9FF),
+                                          Color(0xFFE0F2FE),
+                                        ],
+                                      ),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -382,7 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           style: GoogleFonts.outfit(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w900,
-                                            color: AppTheme.textPrimary,
+                                            color: context.isDark
+                                                ? cs.textPrimary
+                                                : context.colors.textPrimary,
                                             height: 1.1,
                                           ),
                                         ),
@@ -392,7 +400,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
-                                            color: AppTheme.textSecondary,
+                                            color: context.isDark
+                                                ? cs.textSecondary
+                                                : context.colors.textSecondary,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -401,28 +411,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
+                                            color: context.isDark
+                                                ? cs.surface
+                                                : const Color(0xFFF1F5F9),
                                             borderRadius:
                                                 BorderRadius.circular(999),
-                                            border: Border.all(
-                                                color: const Color(0xFFE2E8F0)),
+                                            border: Border.all(color: cs.border),
                                           ),
-                                          child: const Row(
+                                          child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(
                                                 Icons.check_circle_rounded,
                                                 size: 12,
-                                                color: Color(0xFF475569),
+                                                color: cs.textSecondary,
                                               ),
-                                              SizedBox(width: 3),
+                                              const SizedBox(width: 3),
                                               Text(
                                                 'VERIFIED',
                                                 style: TextStyle(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w900,
                                                   letterSpacing: 0.5,
-                                                  color: Color(0xFF475569),
+                                                  color: cs.textSecondary,
                                                 ),
                                               ),
                                             ],
@@ -442,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     ),
                                     label: const Text('Edit Profile'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: cs.surface,
                                       foregroundColor: AppTheme.primaryColor,
                                       elevation: 1,
                                       shadowColor: Colors.black
@@ -456,8 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(12),
-                                        side: const BorderSide(
-                                            color: Color(0xFFCBD5E1)),
+                                        side: BorderSide(color: cs.border),
                                       ),
                                     ),
                                   ),
@@ -478,11 +488,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     label: 'Phone Number',
                                     value: displayPhone,
                                   ),
-                                  const Padding(
+                                  Padding(
                                     padding:
-                                        EdgeInsets.symmetric(vertical: 2),
-                                    child: Divider(
-                                        height: 1, color: Color(0xFFF1F5F9)),
+                                        const EdgeInsets.symmetric(vertical: 2),
+                                    child: Divider(height: 1, color: cs.border),
                                   ),
                                   _detailRowTile(
                                     icon: Icons.location_on_rounded,
@@ -607,6 +616,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildSectionHeader('Account'),
                       const SizedBox(height: 8),
                       _buildGroupedCard([
+                        _buildThemeToggleRow(),
                         _buildRow(
                           icon: Icons.support_agent_rounded,
                           iconBgColor: const Color(0xFFDBEAFE),
@@ -695,6 +705,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                             }
                           },
                         ),
+                        _buildRow(
+                          icon: Icons.delete_forever_rounded,
+                          iconBgColor: const Color(0xFFFEE2E2),
+                          iconColor: AppTheme.errorColor,
+                          title: 'Delete account',
+                          subtitle:
+                              'Permanently delete your account and personal data',
+                          titleColor: AppTheme.errorColor,
+                          onTap: () => _confirmDeleteAccount(context, authProvider),
+                        ),
                       ]),
                     ],
                   ),
@@ -704,6 +724,59 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _confirmDeleteAccount(
+      BuildContext context, AuthProvider authProvider) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete account?'),
+        content: const Text(
+          'This permanently deletes your HolidayCity account and personal '
+          'profile data. Your existing booking and enquiry records are kept in '
+          'anonymised form where the law requires it. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    final error = await authProvider.deleteAccount();
+    if (!context.mounted) return;
+    Navigator.pop(context); // dismiss the spinner
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: AppTheme.errorColor),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Your account has been deleted.')),
+    );
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
     );
   }
 
@@ -724,7 +797,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           style: GoogleFonts.outfit(
             fontSize: 15,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
       ],
@@ -732,20 +805,21 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildGroupedCard(List<Widget> rows) {
+    final cs = context.colors;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cs.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: cs.shadow,
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(18),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -753,11 +827,54 @@ class _ProfileScreenState extends State<ProfileScreen>
             for (var i = 0; i < rows.length; i++) ...[
               rows[i],
               if (i != rows.length - 1)
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, color: cs.border),
             ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildThemeToggleRow() {
+    final cs = context.colors;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isEffectivelyDark(context);
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: cs.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+          color: isDark ? const Color(0xFFFACC15) : const Color(0xFFF59E0B),
+          size: 18,
+        ),
+      ),
+      title: Text(
+        'Dark mode',
+        style: GoogleFonts.outfit(
+          fontWeight: FontWeight.bold,
+          fontSize: 13.5,
+          color: cs.textPrimary,
+        ),
+      ),
+      subtitle: Text(
+        isDark ? 'On' : 'Off',
+        style: TextStyle(fontSize: 11, color: cs.textSecondary),
+      ),
+      trailing: Switch.adaptive(
+        value: isDark,
+        activeThumbColor: AppTheme.primaryColor,
+        onChanged: (v) => themeProvider
+            .setThemeMode(v ? ThemeMode.dark : ThemeMode.light),
+      ),
+      onTap: () => themeProvider
+          .setThemeMode(isDark ? ThemeMode.light : ThemeMode.dark),
     );
   }
 
@@ -772,13 +889,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     Color? badgeColor,
     required VoidCallback onTap,
   }) {
+    final cs = context.colors;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       leading: Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: iconBgColor,
+          color: context.isDark
+              ? Color.alphaBlend(iconColor.withValues(alpha: 0.18), cs.surface)
+              : iconBgColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: iconColor, size: 18),
@@ -791,7 +911,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
                 fontSize: 13.5,
-                color: titleColor ?? AppTheme.textPrimary,
+                color: titleColor ?? cs.textPrimary,
               ),
             ),
           ),
@@ -819,15 +939,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppTheme.textSecondary,
+                color: cs.textSecondary,
               ),
             )
           : null,
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right_rounded,
-        color: Color(0xFF94A3B8),
+        color: cs.textSecondary,
         size: 18,
       ),
       onTap: onTap,
@@ -842,6 +962,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     required String value,
     VoidCallback? onTap,
   }) {
+    final cs = context.colors;
     final content = Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       child: Row(
@@ -850,7 +971,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: iconBgColor,
+              color: context.isDark
+                  ? Color.alphaBlend(
+                      iconColor.withValues(alpha: 0.18), cs.surface)
+                  : iconBgColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 18),
@@ -862,10 +986,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF94A3B8),
+                    color: cs.textFaint,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -875,7 +999,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: cs.textPrimary,
                   ),
                 ),
               ],
@@ -905,15 +1029,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     required Color ctaColor,
     required VoidCallback onTap,
   }) {
+    final cs = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cs.border),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0A6FB5).withValues(alpha: 0.05),
+            color: cs.shadow,
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -949,18 +1074,18 @@ class _ProfileScreenState extends State<ProfileScreen>
             style: GoogleFonts.outfit(
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              color: AppTheme.textPrimary,
+              color: cs.textPrimary,
               height: 1,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.6,
-              color: AppTheme.textSecondary,
+              color: cs.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

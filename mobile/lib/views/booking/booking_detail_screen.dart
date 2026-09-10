@@ -150,15 +150,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final pct = totalPrice > 0 ? (targetAdv / totalPrice * 100).round() : 25;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.scaffold,
       appBar: AppBar(
         title: Text(
           'Booking Details',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 18),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: context.colors.textPrimary, fontSize: 18),
         ),
         elevation: 0,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
+        backgroundColor: context.colors.surface,
+        iconTheme: IconThemeData(color: context.colors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -169,9 +169,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: context.colors.border),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
@@ -321,7 +321,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 children: [
                   Text(
                     b['packageName'] ?? 'Tour Package',
-                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                    style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -331,7 +331,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       Expanded(
                         child: Text(
                           b['destinationName'] ?? b['destination']?['name'] ?? 'Destination',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -345,7 +345,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       const SizedBox(width: 4),
                       Text(
                         'Travel Date: ${b['travelDate'] != null ? b['travelDate'].toString().substring(0, 10) : "TBD"}',
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                       ),
                     ],
                   ),
@@ -476,7 +476,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 icon: Icons.notes_outlined,
                 child: Text(
                   '"${b['specialRequests']}"',
-                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: context.colors.textSecondary),
                 ),
               ),
               const SizedBox(height: 14),
@@ -592,9 +592,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.colors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -612,7 +612,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: context.colors.textPrimary),
               ),
             ],
           ),
@@ -627,12 +627,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        Text(label, style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
             value,
-            style: TextStyle(fontSize: 12, fontWeight: isBold ? FontWeight.bold : FontWeight.w600, color: AppTheme.textPrimary),
+            style: TextStyle(fontSize: 12, fontWeight: isBold ? FontWeight.bold : FontWeight.w600, color: context.colors.textPrimary),
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.right,
           ),
@@ -645,15 +645,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: context.colors.surfaceAlt,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: context.colors.border),
       ),
       child: Column(
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+          Text(label, style: TextStyle(fontSize: 10, color: context.colors.textSecondary)),
           const SizedBox(height: 2),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: context.colors.textPrimary)),
         ],
       ),
     );

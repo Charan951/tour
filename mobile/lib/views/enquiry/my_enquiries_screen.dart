@@ -117,22 +117,23 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
       return s == 'responded' || s == 'quoted' || s == 'replied' || s == 'confirmed';
     }).length;
 
+    final cs = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: cs.scaffold,
       appBar: AppBar(
         title: Text(
           'My Enquiries & Quotes',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 18),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: cs.textPrimary, fontSize: 18),
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: cs.surface,
       ),
       body: Column(
         children: [
           // Filter control bar — sits directly below the AppBar
           Container(
-            color: Colors.white,
+            color: cs.surface,
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: Row(
               children: [
@@ -166,9 +167,9 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                       const SizedBox(width: 8),
                       Text(
                         '${_filteredEnquiries.length} result${_filteredEnquiries.length == 1 ? '' : 's'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppTheme.textSecondary,
+                          color: cs.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -184,12 +185,12 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                     decoration: BoxDecoration(
                       color: _showFilters
                           ? AppTheme.primaryColor
-                          : const Color(0xFFF1F5F9),
+                          : cs.surfaceAlt,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: _showFilters
                             ? AppTheme.primaryColor
-                            : const Color(0xFFE2E8F0),
+                            : cs.border,
                       ),
                     ),
                     child: Row(
@@ -198,7 +199,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                         Icon(
                           Icons.tune_rounded,
                           size: 14,
-                          color: _showFilters ? Colors.white : AppTheme.textSecondary,
+                          color: _showFilters ? Colors.white : cs.textSecondary,
                         ),
                         const SizedBox(width: 5),
                         Text(
@@ -206,7 +207,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: _showFilters ? Colors.white : AppTheme.textSecondary,
+                            color: _showFilters ? Colors.white : cs.textSecondary,
                           ),
                         ),
                       ],
@@ -223,7 +224,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
             curve: Curves.easeInOut,
             child: _showFilters
                 ? Container(
-                    color: Colors.white,
+                    color: cs.surface,
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Row(
                       children: [
@@ -238,7 +239,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                 : const SizedBox.shrink(),
           ),
 
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: cs.border),
 
           // Main Enquiries List View
           Expanded(
@@ -286,16 +287,17 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
 
   Widget _buildFilterChip(String filterName, int count) {
     final isSelected = _activeFilter == filterName;
+    final cs = context.colors;
     return GestureDetector(
       onTap: () => setState(() => _activeFilter = filterName),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : const Color(0xFFF1F5F9),
+          color: isSelected ? AppTheme.primaryColor : cs.surfaceAlt,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : const Color(0xFFE2E8F0),
+            color: isSelected ? AppTheme.primaryColor : cs.border,
           ),
         ),
         child: Row(
@@ -305,14 +307,16 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : AppTheme.textSecondary,
+                color: isSelected ? Colors.white : cs.textSecondary,
               ),
             ),
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.white,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : cs.surface,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -320,7 +324,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : AppTheme.textSecondary,
+                  color: isSelected ? Colors.white : cs.textSecondary,
                 ),
               ),
             ),
@@ -331,6 +335,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
   }
 
   Widget _buildEnquiryCard(EnquiryModel enquiry) {
+    final cs = context.colors;
     final statusColor = _getStatusColor(enquiry.status);
     final statusLabel = _formatStatusLabel(enquiry.status);
 
@@ -359,12 +364,12 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: cs.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: cs.shadow,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -430,7 +435,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
+                          color: cs.textPrimary,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -464,14 +469,14 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                     const SizedBox(width: 4),
                     Text(
                       enquiry.travelDate.isNotEmpty ? enquiry.travelDate : 'Flexible Date',
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      style: TextStyle(fontSize: 12, color: cs.textSecondary),
                     ),
                     const SizedBox(width: 14),
                     const Icon(Icons.people_outline_rounded, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
                       travelersText,
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 12, color: cs.textSecondary, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -482,16 +487,16 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: cs.surfaceAlt,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: cs.border),
                     ),
                     child: Text(
                       '"${enquiry.message}"',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         fontStyle: FontStyle.italic,
-                        color: AppTheme.textSecondary,
+                        color: cs.textSecondary,
                         height: 1.4,
                       ),
                       maxLines: 2,

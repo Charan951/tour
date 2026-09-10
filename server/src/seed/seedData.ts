@@ -27,7 +27,7 @@ const seed = async () => {
       description: 'System & Business Administrator',
       isSystemRole: true
     });
-    await Role.create({
+    const customerRole = await Role.create({
       name: 'Customer',
       description: 'Standard Customer Account',
       isSystemRole: true
@@ -43,6 +43,20 @@ const seed = async () => {
       password: 'Holiday@2026',
       role: adminRole._id,
       department: 'Management',
+      status: 'Active'
+    });
+
+    // 2b. Google Play review / QA test account.
+    // Stable credentials handed to the Play Console reviewer so they can sign
+    // in to the login-gated app. Password is hashed by the User pre-save hook.
+    await User.create({
+      firstName: 'Play',
+      lastName: 'Reviewer',
+      email: 'verification@gmail.com',
+      mobile: '+91 90000 00000',
+      password: 'verify@123',
+      role: customerRole._id,
+      department: 'Sales',
       status: 'Active'
     });
 

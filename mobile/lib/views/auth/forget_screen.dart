@@ -79,7 +79,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
             style: GoogleFonts.outfit(
               fontSize: 26,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -87,7 +87,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
             'Enter your registered email address and we will send you instructions to reset your password.',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppTheme.textSecondary,
+              color: context.colors.textSecondary,
               height: 1.5,
             ),
           ),
@@ -137,7 +137,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
           style: GoogleFonts.outfit(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -146,7 +146,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: AppTheme.textSecondary,
+            color: context.colors.textSecondary,
             height: 1.5,
           ),
         ),

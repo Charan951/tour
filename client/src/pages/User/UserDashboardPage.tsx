@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { SEO } from '../../components/common/SEO';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import { ChatModal } from '../../components/chat/ChatModal';
+import { RazorpayPaymentModal } from '../../components/payments/RazorpayPaymentModal';
 import { useRealtimeUpdates } from '../../hooks/useRealtimeUpdates';
 import { initWebPushNotifications } from '../../services/firebaseService';
 import toast from 'react-hot-toast';
@@ -547,162 +549,15 @@ export const UserDashboardPage: React.FC = () => {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const handleDirectDemoPayment = async (booking: any, isAdvance: boolean) => {
-    try {
-      const bookingIdStr = booking._id || booking.bookingId;
-      toast.loading('Processing Payment...', { id: 'demopay' });
-      const { data: res } = await apiClient.patch(`/bookings/${bookingIdStr}/pay-remaining`, {
-        isAdvancePayment: isAdvance,
-        paymentMethod: 'Razorpay',
-        transactionId: `PAY-SUCCESS-${Date.now().toString().slice(-6)}`
-      });
-      toast.dismiss('demopay');
-      if (res.success) {
-        toast.success(isAdvance ? '🎉 Advance Payment Verified Successfully!' : '🎉 Full Payment Verified Successfully!');
-        fetchUserData();
-        setSelectedBooking(null);
-      } else {
-        toast.error(res.message || 'Payment update failed');
-      }
-    } catch (err: any) {
-      toast.dismiss('demopay');
-      toast.error(err?.response?.data?.message || err.message || 'Payment error');
-    }
+  // Razorpay checkout + result screens live in <RazorpayPaymentModal />.
+  const [payFlow, setPayFlow] = useState<{ booking: any; isAdvance: boolean } | null>(null);
+  const openPayFlow = (booking: any, isAdvance: boolean) => setPayFlow({ booking, isAdvance });
+  const handlePaymentDone = (updated: any) => {
+    fetchUserData();
+    if (updated) setSelectedBooking((prev: any) => (prev ? { ...prev, ...updated } : prev));
   };
 
-  const handleRazorpayPayment = async (booking: any, isAdvance: boolean) => {
-    try {
-      if (!(window as any).Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        document.body.appendChild(script);
-        await new Promise((resolve) => (script.onload = resolve));
-      }
-
-      const bookingIdStr = booking._id || booking.bookingId;
-      const paymentAmount = isAdvance
-        ? (Number(booking.advanceAmount) || Math.round(Number(booking.totalPrice) * 0.25))
-        : (Number(booking.remainingBalance) || (Number(booking.totalPrice) - Number(booking.advanceAmount || 0)));
-
-      toast.loading('Initializing Razorpay Order...', { id: 'razorpay' });
-
-      let orderRes: any = null;
-      try {
-        const { data } = await apiClient.post('/payments/create-order', {
-          amount: paymentAmount,
-          currency: 'INR',
-          bookingId: bookingIdStr,
-          notes: {
-            customerName: booking.customerName || currentUser?.fullName || '',
-            email: booking.email || currentUser?.email || '',
-            mobile: booking.mobile || currentUser?.mobile || ''
-          }
-        });
-        orderRes = data;
-      } catch (_) {}
-
-      toast.dismiss('razorpay');
-
-      if (!orderRes?.success || !orderRes?.data) {
-        // Fallback to instant direct payment success if order creation fails
-        await handleDirectDemoPayment(booking, isAdvance);
-        return;
-      }
-
-      const orderData = orderRes.data;
-      const keyId = orderData.key || 'rzp_test_TZpr4ebY4Qvo8k';
-      let paymentHandled = false;
-
-      const options = {
-        key: keyId,
-        amount: orderData.amount,
-        currency: 'INR',
-        name: 'HolidayCity Tours',
-        description: `${isAdvance ? 'Advance Payment' : 'Remaining Balance'} - #${booking.bookingId || 'BK-TOUR'}`,
-        order_id: orderData.id,
-        prefill: {
-          name: booking.customerName || currentUser?.fullName || '',
-          email: booking.email || currentUser?.email || '',
-          contact: booking.mobile || currentUser?.mobile || '',
-          method: 'upi'
-        },
-        theme: { color: '#0A6FB5' },
-        modal: {
-          ondismiss: async function () {
-            if (!paymentHandled) {
-              paymentHandled = true;
-              toast.success('⚡ Skip OTP / Test Payment Confirmed Successfully!', { id: 'razorpay' });
-              await handleDirectDemoPayment(booking, isAdvance);
-            }
-          }
-        },
-        handler: async function (response: any) {
-          paymentHandled = true;
-          try {
-            toast.loading('Verifying Payment Signature...', { id: 'verify' });
-            const { data: verifyRes } = await apiClient.post('/payments/verify', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              bookingId: bookingIdStr,
-              isAdvancePayment: isAdvance
-            });
-            toast.dismiss('verify');
-
-            if (verifyRes.success) {
-              toast.success(isAdvance ? '🎉 Advance Payment Verified Successfully!' : '🎉 Full Payment Verified Successfully!');
-              fetchUserData();
-              setSelectedBooking(null);
-            } else {
-              await handleDirectDemoPayment(booking, isAdvance);
-            }
-          } catch (err: any) {
-            toast.dismiss('verify');
-            await handleDirectDemoPayment(booking, isAdvance);
-          }
-        }
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-
-      const originalOpen = window.open;
-      window.open = function (...args: any[]) {
-        const win = originalOpen.apply(window, args as any);
-        if (win) {
-          setTimeout(() => {
-            try { win.close(); } catch (_) {}
-          }, 150);
-        }
-        if (!paymentHandled) {
-          paymentHandled = true;
-          toast.success('⚡ Skip OTP / Test Payment Confirmed Successfully!', { id: 'razorpay' });
-          setTimeout(() => {
-            window.open = originalOpen;
-            handleDirectDemoPayment(booking, isAdvance);
-          }, 300);
-        }
-        return win;
-      };
-
-      rzp.on('payment.failed', async function (response: any) {
-        window.open = originalOpen;
-        if (!paymentHandled) {
-          paymentHandled = true;
-          toast.success('⚡ Skip OTP / Test Payment Confirmed Successfully!', { id: 'razorpay' });
-          await handleDirectDemoPayment(booking, isAdvance);
-        }
-      });
-
-      rzp.open();
-      setTimeout(() => {
-        window.open = originalOpen;
-      }, 15000);
-      toast('💡 Test Mode: Click "Skip OTP" on screen to complete payment successfully.', { duration: 8000, icon: '⚡' });
-    } catch (err: any) {
-      toast.dismiss('razorpay');
-      await handleDirectDemoPayment(booking, isAdvance);
-    }
-  };
+  // (Razorpay flow moved into <RazorpayPaymentModal />, opened via openPayFlow.)
 
   const handleLogout = () => {
     localStorage.removeItem('hc_user');
@@ -867,9 +722,12 @@ export const UserDashboardPage: React.FC = () => {
     );
 
     const handleContinueAsGuest = () => {
-      localStorage.removeItem('hc_guest_mode');
-      sessionStorage.setItem('hc_guest_mode', 'true');
+      // App.tsx's route guard reads these from localStorage — keep them in sync
+      // or "/" bounces back to "/login".
+      localStorage.setItem('hc_guest_mode', 'true');
+      localStorage.setItem('hc_guest', 'true');
       window.dispatchEvent(new Event('hc_user_updated'));
+      toast.success('Exploring as guest');
       navigate('/');
     };
 
@@ -1125,6 +983,13 @@ export const UserDashboardPage: React.FC = () => {
               </div>
             )}
 
+            <p className="mt-5 text-center text-[0.6875rem] leading-relaxed text-slate-muted">
+              By continuing you agree to our{' '}
+              <Link to="/terms" className="font-bold text-ocean-600 hover:underline">Terms &amp; Conditions</Link>
+              {' '}and{' '}
+              <Link to="/privacy" className="font-bold text-ocean-600 hover:underline">Privacy Policy</Link>.
+            </p>
+
           </div>
         </div>
       </div>
@@ -1266,6 +1131,9 @@ export const UserDashboardPage: React.FC = () => {
                 {/* Account */}
                 <div className="animate-fade-up" style={{ animationDelay: '260ms' }}>
                   <h2 className="px-1 mb-2.5 font-display font-black text-[0.9375rem] text-ink">Account</h2>
+                  <div className="mb-3">
+                    <ThemeToggle variant="row" />
+                  </div>
                   <div className="bg-white rounded-2xl2 shadow-card divide-y divide-line overflow-hidden">
                     <Link to="/contact" className="w-full flex items-center gap-3.5 px-4 py-4 transition active:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ocean-600/40 focus-visible:bg-slate-50">
                       <span className="w-11 h-11 rounded-2xl2 bg-ocean-600/10 text-ocean-600 grid place-items-center shrink-0">
@@ -1747,25 +1615,13 @@ export const UserDashboardPage: React.FC = () => {
                           <ul className="list-disc pl-4 space-y-1 text-[10.5px]">
                             <li><strong>UPI / GPay:</strong> Select UPI &amp; enter <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">success@razorpay</code> or <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">gpay@upi</code></li>
                             <li><strong>Card:</strong> Enter test card <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">4111 1111 1111 1111</code> (Expiry: 12/28, CVV: 123)</li>
-                            <li><strong>Skip OTP:</strong> Click <em>"Skip OTP"</em> on screen to auto-succeed!</li>
                           </ul>
                         </div>
 
                         <div className="grid grid-cols-1 gap-2">
-
-
                           <button
                             type="button"
-                            onClick={() => handleDirectDemoPayment(selectedBooking, true)}
-                            className="w-full py-3 px-4 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            <span>⚡ 1-Click Instant Payment (Skip OTP)</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRazorpayPayment(selectedBooking, true)}
+                            onClick={() => openPayFlow(selectedBooking, true)}
                             className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition cursor-pointer"
                           >
                             <CreditCard className="w-4 h-4" />
@@ -1787,25 +1643,13 @@ export const UserDashboardPage: React.FC = () => {
                           <ul className="list-disc pl-4 space-y-1 text-[10.5px]">
                             <li><strong>UPI / GPay:</strong> Select UPI &amp; enter <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">success@razorpay</code> or <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">gpay@upi</code></li>
                             <li><strong>Card:</strong> Enter test card <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">4111 1111 1111 1111</code> (Expiry: 12/28, CVV: 123)</li>
-                            <li><strong>Skip OTP:</strong> Click <em>"Skip OTP"</em> on screen to auto-succeed!</li>
                           </ul>
                         </div>
 
                         <div className="grid grid-cols-1 gap-2">
-
-
                           <button
                             type="button"
-                            onClick={() => handleDirectDemoPayment(selectedBooking, false)}
-                            className="w-full py-3 px-4 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            <span>⚡ 1-Click Instant Balance (Skip OTP)</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRazorpayPayment(selectedBooking, false)}
+                            onClick={() => openPayFlow(selectedBooking, false)}
                             className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition cursor-pointer"
                           >
                             <CreditCard className="w-4 h-4" />
@@ -1820,6 +1664,14 @@ export const UserDashboardPage: React.FC = () => {
             </div>
           )}
         </div>
+        {payFlow && (
+          <RazorpayPaymentModal
+            booking={payFlow.booking}
+            isAdvance={payFlow.isAdvance}
+            onPaid={handlePaymentDone}
+            onClose={() => setPayFlow(null)}
+          />
+        )}
       </>
     );
   }
@@ -2080,29 +1932,17 @@ export const UserDashboardPage: React.FC = () => {
                       <ul className="list-disc pl-4 space-y-1 text-[10.5px]">
                         <li><strong>UPI / GPay:</strong> Enter test UPI <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">success@razorpay</code> or <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">gpay@upi</code></li>
                         <li><strong>Card:</strong> Enter test card <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">4111 1111 1111 1111</code> (Expiry: 12/28, CVV: 123)</li>
-                        <li><strong>OTP Verification:</strong> Click <em>"Skip OTP"</em> on the OTP screen if prompted!</li>
                       </ul>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleDirectDemoPayment(selectedBooking, true)}
-                        className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>⚡ 1-Click Instant Payment</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRazorpayPayment(selectedBooking, true)}
-                        className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition cursor-pointer"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pay ₹{Number(selectedBooking.advanceAmount || Math.round(selectedBooking.totalPrice * 0.25)).toLocaleString()} via Razorpay</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openPayFlow(selectedBooking, true)}
+                      className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition cursor-pointer"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Pay ₹{Number(selectedBooking.advanceAmount || Math.round(selectedBooking.totalPrice * 0.25)).toLocaleString()} via Razorpay</span>
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3 pt-2">
@@ -2118,23 +1958,13 @@ export const UserDashboardPage: React.FC = () => {
                       <ul className="list-disc pl-4 space-y-1 text-[10.5px]">
                         <li><strong>UPI / GPay:</strong> Enter test UPI <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">success@razorpay</code> or <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">gpay@upi</code></li>
                         <li><strong>Card:</strong> Enter test card <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-ocean-700">4111 1111 1111 1111</code> (Expiry: 12/28, CVV: 123)</li>
-                        <li><strong>OTP Verification:</strong> Click <em>"Skip OTP"</em> on the OTP screen if prompted!</li>
                       </ul>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       <button
                         type="button"
-                        onClick={() => handleDirectDemoPayment(selectedBooking, false)}
-                        className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:bg-emerald-700 active:scale-[0.98] transition cursor-pointer"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>⚡ 1-Click Instant Balance</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRazorpayPayment(selectedBooking, false)}
+                        onClick={() => openPayFlow(selectedBooking, false)}
                         className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] transition cursor-pointer"
                       >
                         <CreditCard className="w-4 h-4" />
@@ -2159,6 +1989,15 @@ export const UserDashboardPage: React.FC = () => {
           customerName={displayName || currentUser?.firstName || currentUser?.name || 'Naveen Kumar'}
           customerEmail={email || currentUser?.email || 'naveenkumar@gmail.com'}
         />
+
+        {payFlow && (
+          <RazorpayPaymentModal
+            booking={payFlow.booking}
+            isAdvance={payFlow.isAdvance}
+            onPaid={handlePaymentDone}
+            onClose={() => setPayFlow(null)}
+          />
+        )}
       </div>
     </>
   );

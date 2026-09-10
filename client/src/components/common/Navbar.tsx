@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogIn, LogOut } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { NotificationBell } from './NotificationBell';
+import { ThemeToggle } from './ThemeToggle';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -136,6 +137,8 @@ export const Navbar: React.FC = () => {
                 );
               })}
 
+              <ThemeToggle className="ml-2 shrink-0" />
+
               {/* Sign In / Account CTA -> Admin Panel for admins, My Profile for users */}
               {!currentUser ? (
                 <Link
@@ -179,6 +182,7 @@ export const Navbar: React.FC = () => {
             {/* Mobile Actions & Hamburger Button */}
             <div className="lg:hidden flex items-center gap-2">
               {currentUser && <NotificationBell />}
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

@@ -1,11 +1,16 @@
 class ApiConfig {
-  /// Toggle between Production (`true`) and Localhost (`false`)
-  static bool isProduction = false;
+  /// Backend selector:
+  ///   true  -> production backend (https://tour.speshway.site)
+  ///   false -> localhost backend  (http://localhost:5000)
+  static bool isProduction = true;
 
   // Endpoint URLs
   static const String productionHost = 'https://tour.speshway.site';
   static String localHost = 'http://localhost:5000';
-  static String hostIp = '192.168.1.20';
+
+  /// Kept for the connectivity / candidate-URL fallback logic in
+  /// `services/api_service.dart` and `services/connectivity.dart`.
+  static String hostIp = '';
   static String? customHost;
 
   static String get serverHost {
@@ -17,19 +22,17 @@ class ApiConfig {
       return 'https://$host';
     }
 
-    if (isProduction) {
-      return productionHost;
-    }
-
-    if (hostIp.isNotEmpty && hostIp != 'localhost' && hostIp != '127.0.0.1') {
-      return 'http://$hostIp:5000';
-    }
-
-    return localHost;
+    return isProduction ? productionHost : localHost;
   }
 
   // Centralized Base API URL
   static String get baseUrl => '$serverHost/api/v1';
+
+  /// Public marketing site (same host as the API deploy). The mobile app shows
+  /// Terms / Privacy in-app via `LegalScreen`; these URLs are the web equivalents.
+  static String get webUrl => serverHost;
+  static String get termsUrl => '$webUrl/terms';
+  static String get privacyUrl => '$webUrl/privacy';
 
   static String get socketUrl {
     final host = serverHost;
@@ -93,6 +96,7 @@ class ApiConfig {
   static String get me => '$baseUrl/auth/me';
   static String get updateProfile => '$baseUrl/auth/me';
   static String get changePassword => '$baseUrl/auth/change-password';
+  static String get deleteAccount => '$baseUrl/auth/me';
   static String get uploadImage => '$baseUrl/upload/single';
   static String get fcmToken => '$baseUrl/users/fcm-token';
 

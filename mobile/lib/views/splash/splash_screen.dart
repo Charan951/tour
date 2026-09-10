@@ -82,10 +82,13 @@ class _SplashScreenState extends State<SplashScreen>
     final startTime = DateTime.now();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Local-only: reads the saved session from storage, never hits the network,
+    // so the splash can't hang on a slow connection when the app is reopened.
     await authProvider.initAuth();
 
+    // Keep the splash just long enough for the logo animation to land.
     final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-    const minSplashDuration = 1000;
+    const minSplashDuration = 1100;
     if (elapsed < minSplashDuration) {
       await Future.delayed(Duration(milliseconds: minSplashDuration - elapsed));
     }
@@ -106,16 +109,39 @@ class _SplashScreenState extends State<SplashScreen>
     _initialTimer?.cancel();
 
     if (authProvider.canAccessApp) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      // Signed-in (or guest) users go straight to Home; the server profile
+      // refreshes quietly behind the already-visible UI.
+      authProvider.refreshCurrentUserInBackground();
+      Navigator.pushReplacement(context, _logoTransitionTo(const HomeScreen()));
     } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
     }
+  }
+
+  /// Fade + gentle scale so the splash logo appears to settle into the
+  /// home screen rather than a hard cut.
+  PageRouteBuilder _logoTransitionTo(Widget page) {
+    return PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 550),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (_, __, ___) => page,
+      transitionsBuilder: (_, animation, __, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 1.06, end: 1.0).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   @override

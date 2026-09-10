@@ -198,7 +198,7 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.scaffold,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -234,13 +234,13 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
                       ),
                     ),
                     Material(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: IconButton(
                         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary, size: 20),
+                        icon: Icon(Icons.close_rounded, color: context.colors.textPrimary, size: 20),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -313,7 +313,7 @@ class _EnquiryBottomSheetState extends State<EnquiryBottomSheet> {
                                   Expanded(
                                     child: Text(
                                       'Location Activity Add-Ons',
-                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textPrimary),
+                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: context.colors.textPrimary),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),

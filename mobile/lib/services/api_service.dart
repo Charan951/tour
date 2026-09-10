@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'connectivity.dart';
@@ -20,7 +19,10 @@ class _ApiException implements Exception {
 }
 
 class ApiService {
-  static const int timeoutDuration = 3;
+  // Remote HTTPS server: allow for DNS + TLS handshake + response on slow
+  // mobile-data / weak-Wi-Fi links. 3s was far too aggressive and made every
+  // request fail on anything but a fast connection.
+  static const int timeoutDuration = 20;
   static final http.Client _client = http.Client();
   static String? _workingHost;
   static String? _cachedToken;
@@ -37,11 +39,6 @@ class ApiService {
       }
     }
     return NetworkImage(ApiConfig.formatImageUrl(clean));
-  }
-
-  static Future<String> uploadImageFile(XFile file) async {
-    final bytes = await file.readAsBytes();
-    return uploadImageBytes(bytes, filename: file.name);
   }
 
   static Future<String> uploadImageBytes(Uint8List bytes, {String? filename}) async {
@@ -79,7 +76,7 @@ class ApiService {
         }
       } catch (e) {
         lastError = e;
-        debugPrint('Upload image error ($targetUrl): $e');
+        if (kDebugMode) debugPrint('Upload image error ($targetUrl): $e');
       }
     }
 
@@ -140,26 +137,37 @@ class ApiService {
     try {
       final uri = Uri.parse(originalUrl);
       final host = uri.host;
+      final isLocalTarget = host == 'localhost' ||
+          host == '127.0.0.1' ||
+          host == '10.0.2.2' ||
+          host.startsWith('192.168.') ||
+          host.startsWith('10.') ||
+          host.startsWith('172.');
 
-      // Android Emulator host loopback candidate
-      final altEmulator = originalUrl.replaceAll(host, '10.0.2.2');
-      if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
+      // Local dev fallbacks ONLY make sense when we're already pointing at a
+      // local/LAN host. Never append them for a real remote host (e.g.
+      // production) — a dead local candidate just burns a full timeout window
+      // and makes the app look broken on mobile data / other Wi-Fi.
+      if (isLocalTarget) {
+        final altEmulator = originalUrl.replaceAll(host, '10.0.2.2');
+        if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
 
-      // Local LAN Wi-Fi IP candidate
-      if (ApiConfig.hostIp.isNotEmpty) {
-        final altLan = originalUrl.replaceAll(host, ApiConfig.hostIp);
-        if (!candidates.contains(altLan)) candidates.add(altLan);
-      }
+        if (ApiConfig.hostIp.isNotEmpty) {
+          final altLan = originalUrl.replaceAll(host, ApiConfig.hostIp);
+          if (!candidates.contains(altLan)) candidates.add(altLan);
+        }
 
-      // Localhost candidate (ADB reverse)
-      final altLocal = originalUrl.replaceAll(host, '127.0.0.1');
-      if (!candidates.contains(altLocal)) candidates.add(altLocal);
+        final altLocal = originalUrl.replaceAll(host, '127.0.0.1');
+        if (!candidates.contains(altLocal)) candidates.add(altLocal);
 
-      // Production fallback if local development host is unreachable (e.g. Wi-Fi turned off on phone)
-      if (ApiConfig.productionHost.isNotEmpty) {
-        final prodUri = Uri.parse(ApiConfig.productionHost);
-        final altProd = originalUrl.replaceAll(host, prodUri.host).replaceAll('http://', 'https://');
-        if (!candidates.contains(altProd)) candidates.add(altProd);
+        // Last resort: production, if the local host is unreachable.
+        if (ApiConfig.productionHost.isNotEmpty) {
+          final prodUri = Uri.parse(ApiConfig.productionHost);
+          final altProd = originalUrl
+              .replaceAll(host, prodUri.host)
+              .replaceAll('http://', 'https://');
+          if (!candidates.contains(altProd)) candidates.add(altProd);
+        }
       }
     } catch (_) {}
 
@@ -175,7 +183,7 @@ class ApiService {
         _workingHost = uri.host;
         if (uri.host != 'localhost' && uri.host != '127.0.0.1') {
           ApiConfig.hostIp = uri.host;
-          debugPrint('🚀 Cached working host IP: ${uri.host}');
+          if (kDebugMode) debugPrint('🚀 Cached working host IP: ${uri.host}');
           if (oldHost == null || oldHost == 'localhost' || oldHost == '127.0.0.1') {
             RealtimeService.instance.reconnect();
           }
@@ -190,8 +198,10 @@ class ApiService {
 
     for (final targetUrl in candidateUrls) {
       try {
-        debugPrint('========== API REQUEST (GET) ==========');
-        debugPrint('URL: $targetUrl');
+        if (kDebugMode) {
+          debugPrint('========== API REQUEST (GET) ==========');
+          debugPrint('URL: $targetUrl');
+        }
         final headers = await _getHeaders();
         final response = await _client
             .get(Uri.parse(targetUrl), headers: headers)
@@ -203,7 +213,7 @@ class ApiService {
         rethrow;
       } catch (e) {
         lastError = e;
-        debugPrint('GET ERROR ($targetUrl): $e');
+        if (kDebugMode) debugPrint('GET ERROR ($targetUrl): $e');
       }
     }
 
@@ -216,9 +226,11 @@ class ApiService {
 
     for (final targetUrl in candidateUrls) {
       try {
-        debugPrint('========== API REQUEST (POST) ==========');
-        debugPrint('URL: $targetUrl');
-        debugPrint('BODY: $body');
+        if (kDebugMode) {
+          // Never log the request body: it can contain passwords / payment data.
+          debugPrint('========== API REQUEST (POST) ==========');
+          debugPrint('URL: $targetUrl');
+        }
         final headers = await _getHeaders();
         final response = await _client
             .post(
@@ -234,7 +246,7 @@ class ApiService {
         rethrow;
       } catch (e) {
         lastError = e;
-        debugPrint('POST ERROR ($targetUrl): $e');
+        if (kDebugMode) debugPrint('POST ERROR ($targetUrl): $e');
       }
     }
 
@@ -333,113 +345,13 @@ class ApiService {
 
   static Future<dynamic> _handleOfflineFallback(
       String method, String url, Map<String, dynamic>? body, Object error) async {
-    debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
+    if (kDebugMode) debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
     ConnectivityStatus.instance.report(false);
 
-    final uri = Uri.parse(url);
-    final path = uri.path;
-
-    if (method == 'POST') {
-      if (path.contains('/enquiries') || path.contains('/contact')) {
-        return {
-          'success': true,
-          'message':
-              'Enquiry submitted successfully! Our travel expert will contact you shortly.',
-          'data': {
-            '_id': 'eq_${DateTime.now().millisecondsSinceEpoch}',
-            'enquiryId':
-                'HC-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-            'fullName': body?['fullName'] ?? body?['name'] ?? 'Traveler',
-            'email': body?['email'] ?? '',
-            'mobile': body?['mobile'] ?? body?['phone'] ?? '',
-            'destination': body?['destination'] ?? 'General Query',
-            'travelers': body?['adults'] ?? body?['travelers'] ?? 2,
-            'travelDate': body?['travelDate'] ?? '',
-            'status': 'New',
-            'createdAt': DateTime.now().toIso8601String(),
-          }
-        };
-      }
-
-      // NOTE: no offline fallback for /auth/login or /auth/register. Fabricating
-      // a "successful" sign-in with a name derived from the email address is
-      // what showed users as "<email-prefix> Traveler". A failed auth request
-      // must surface a real error, not a fake session.
-      if (path.contains('/auth/login') || path.contains('/auth/register')) {
-        return {
-          'success': false,
-          'data': null,
-          'message':
-              'Cannot reach the server. Check your connection and try again.',
-        };
-      }
-    }
-
-    if (path.contains('/auth/me')) {
-      final prefs = await SharedPreferences.getInstance();
-      final userStr = prefs.getString('hc_user_data');
-      Map<String, dynamic> userMap = {
-        'firstName': body?['firstName'] ?? 'Traveler',
-        'lastName': body?['lastName'] ?? '',
-        'email': 'user@example.com',
-        'mobile': body?['mobile'] ?? '+91 98765 43210',
-        'city': body?['city'] ?? '',
-        'avatar': body?['avatar'],
-        'role': 'User',
-      };
-      if (userStr != null) {
-        try {
-          final existing = jsonDecode(userStr);
-          if (existing is Map<String, dynamic>) {
-            userMap.addAll(existing);
-          }
-        } catch (_) {}
-      }
-      if (body != null) {
-        if (body.containsKey('firstName') && body['firstName'] != null) userMap['firstName'] = body['firstName'];
-        if (body.containsKey('lastName') && body['lastName'] != null) userMap['lastName'] = body['lastName'];
-        if (body.containsKey('mobile') && body['mobile'] != null) userMap['mobile'] = body['mobile'];
-        if (body.containsKey('city') && body['city'] != null) userMap['city'] = body['city'];
-        if (body.containsKey('avatar') && body['avatar'] != null) userMap['avatar'] = body['avatar'];
-        if (body.containsKey('language') || body.containsKey('currency')) {
-          final existingPref = (userMap['preferences'] is Map) ? userMap['preferences'] : {};
-          userMap['preferences'] = {
-            'language': body['language'] ?? existingPref['language'] ?? 'English',
-            'currency': body['currency'] ?? existingPref['currency'] ?? 'INR',
-          };
-        }
-      }
-
-      return {
-        'success': true,
-        'message': 'Profile updated',
-        'data': {
-          'user': userMap,
-        }
-      };
-    }
-
-    if (path.contains('/auth/change-password')) {
-      return {
-        'success': true,
-        'message': 'Password changed successfully',
-      };
-    }
-
-    if (path.contains('/pay-remaining')) {
-      return {
-        'success': true,
-        'message': 'Remaining balance payment recorded successfully!',
-        'data': {
-          'paymentStatus': 'Full Paid',
-          'advancePaid': true,
-          'remainingBalance': 0,
-          'paymentMethod': body?['paymentMethod'] ?? 'UPI / Online',
-          'transactionId': body?['transactionId'] ?? 'REM-PAY-SUCCESS',
-        }
-      };
-    }
-
+    // No fabricated success responses. Every write that never reached the
+    // server must surface an honest failure so the UI shows an error / retry
+    // state instead of telling the user an enquiry, profile change, password
+    // change or payment succeeded when it did not.
     return {
       'success': false,
       'data': null,

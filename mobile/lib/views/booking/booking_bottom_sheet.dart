@@ -299,9 +299,10 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat('#,##,###');
+    final cs = context.colors;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: cs.scaffold,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -343,7 +344,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                       child: IconButton(
                         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary, size: 20),
+                        icon: Icon(Icons.close_rounded, color: cs.textPrimary, size: 20),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -367,14 +368,14 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                           children: [
                             Text(
                               widget.package.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: cs.textPrimary),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Destination: ${widget.package.destination} • Code: ${widget.package.packageCode.isNotEmpty ? widget.package.packageCode : 'HC-TOUR'}',
-                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                              style: TextStyle(fontSize: 11, color: cs.textSecondary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -480,8 +481,8 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
-                                  const Text('Age 12+', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: cs.textPrimary)),
+                                  Text('Age 12+', style: TextStyle(fontSize: 10, color: cs.textSecondary)),
                                 ],
                               ),
                             ),
@@ -531,8 +532,8 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
-                                  const Text('Age 2-11', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: cs.textPrimary)),
+                                  Text('Age 2-11', style: TextStyle(fontSize: 10, color: cs.textSecondary)),
                                 ],
                               ),
                             ),
@@ -640,7 +641,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                                   Expanded(
                                     child: Text(
                                       'Location Activity Add-Ons',
-                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary),
+                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: cs.textPrimary),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),

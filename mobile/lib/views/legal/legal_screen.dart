@@ -14,7 +14,7 @@ class LegalScreen extends StatelessWidget {
 
   factory LegalScreen.privacy() => const LegalScreen._(
         title: 'Privacy Policy',
-        updated: 'Last updated: August 2026',
+        updated: 'Last updated: September 2026',
         sections: [
           LegalSection('Who we are', [
             'HolidayCity Pvt. Ltd. is a travel-planning service. This policy explains what personal information we collect when you use the HolidayCity app, why we collect it, and the choices you have.',
@@ -36,17 +36,21 @@ class LegalScreen extends StatelessWidget {
             'We keep enquiry and booking records for as long as needed to serve you and meet legal obligations, then delete or anonymise them. Data is transmitted over encrypted connections.',
           ]),
           LegalSection('Your choices', [
-            'You can view and edit your profile in the app, ask us to correct or delete your data, and opt out of marketing messages at any time.',
+            'You can view and edit your profile in the app and opt out of marketing messages at any time.',
+          ]),
+          LegalSection('Deleting your account', [
+            'You can permanently delete your account from Profile → Delete account. This removes your login and personal profile data. Booking and enquiry records are retained in anonymised form only where accounting or legal rules require it, then deleted.',
+            'You can also request deletion by writing to us through the in-app support chat.',
           ]),
           LegalSection('Contact', [
-            'Questions about this policy? Reach us through the in-app support chat or the contact details on holidaycity.com.',
+            'Questions about this policy? Reach us through the in-app support chat or the contact details on tour.speshway.site.',
           ]),
         ],
       );
 
   factory LegalScreen.terms() => const LegalScreen._(
         title: 'Terms & Conditions',
-        updated: 'Last updated: August 2026',
+        updated: 'Last updated: September 2026',
         sections: [
           LegalSection('Using the app', [
             'By creating an account or continuing as a guest you agree to these terms. If you do not agree, please do not use the app.',
@@ -74,37 +78,37 @@ class LegalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: cs.scaffold,
       appBar: AppBar(
         title: Text(title),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: AppTheme.textPrimary,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.textPrimary,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         children: [
           Text(updated,
-              style: const TextStyle(
-                  fontSize: 12, color: AppTheme.textSecondary)),
+              style: TextStyle(fontSize: 12, color: cs.textSecondary)),
           const SizedBox(height: 20),
           for (final s in sections) ...[
             Text(s.heading,
                 style: GoogleFonts.outfit(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary)),
+                    color: cs.textPrimary)),
             const SizedBox(height: 8),
             for (final p in s.paragraphs)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
                   p,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13.5,
                       height: 1.5,
-                      color: AppTheme.textSecondary),
+                      color: cs.textSecondary),
                 ),
               ),
             const SizedBox(height: 14),

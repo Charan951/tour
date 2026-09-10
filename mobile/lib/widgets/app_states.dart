@@ -33,8 +33,8 @@ class AppLoading extends StatelessWidget {
                 const SizedBox(height: 14),
                 Text(
                   label!,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppTheme.textSecondary),
+                  style: TextStyle(
+                      fontSize: 13, color: context.colors.textSecondary),
                 ),
               ],
             ],
@@ -71,6 +71,9 @@ class _SkeletonState extends State<Skeleton>
 
   @override
   Widget build(BuildContext context) {
+    final dark = context.isDark;
+    final a = dark ? const Color(0xFF1E293B) : const Color(0xFFE8EDF3);
+    final b = dark ? const Color(0xFF273449) : const Color(0xFFF3F6FA);
     return ExcludeSemantics(
       child: AnimatedBuilder(
         animation: _c,
@@ -78,8 +81,7 @@ class _SkeletonState extends State<Skeleton>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: Color.lerp(const Color(0xFFE8EDF3), const Color(0xFFF3F6FA),
-                _c.value),
+            color: Color.lerp(a, b, _c.value),
             borderRadius: BorderRadius.circular(widget.radius),
           ),
         ),
@@ -104,9 +106,9 @@ class AppSkeletonList extends StatelessWidget {
       itemBuilder: (_, __) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.borderLight),
+          border: Border.all(color: context.colors.border),
         ),
         child: const Row(
           children: [
@@ -171,14 +173,16 @@ class AppEmptyState extends StatelessWidget {
               style: GoogleFonts.outfit(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary),
+                  color: context.colors.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 13, height: 1.45, color: AppTheme.textSecondary),
+              style: TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: context.colors.textSecondary),
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
@@ -226,8 +230,9 @@ class AppErrorState extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: const BoxDecoration(
-                  color: Color(0xFFFEECEC), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                  color: AppTheme.errorColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle),
               child: const Icon(Icons.cloud_off_rounded,
                   size: 34, color: AppTheme.errorColor),
             ),
@@ -237,14 +242,16 @@ class AppErrorState extends StatelessWidget {
               style: GoogleFonts.outfit(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary),
+                  color: context.colors.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 13, height: 1.45, color: AppTheme.textSecondary),
+              style: TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: context.colors.textSecondary),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(

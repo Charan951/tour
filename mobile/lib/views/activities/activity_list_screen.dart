@@ -10,6 +10,8 @@ import '../../config/theme.dart';
 import '../../models/activity_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/activity_service.dart';
+import '../../widgets/app_states.dart';
+import '../../widgets/filter_sheet.dart';
 import '../auth/login_screen.dart';
 import 'activity_detail_screen.dart';
 import 'activity_booking_bottom_sheet.dart';
@@ -28,6 +30,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
 
   List<ActivityModel> _activities = [];
   bool _isLoading = true;
+  bool _loadFailed = false;
   String _selectedCategory = 'All';
 
   final List<Map<String, String>> _categories = const [
@@ -53,25 +56,76 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   }
 
   Future<void> _loadActivities() async {
-    setState(() => _isLoading = true);
-    final data = await _activityService.fetchActivities(
-      category: _selectedCategory,
-      search: _searchController.text,
-    );
-    if (mounted) {
-      setState(() {
-        _activities = data;
-        _isLoading = false;
-      });
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
+    try {
+      final data = await _activityService.fetchActivities(
+        category: _selectedCategory,
+        search: _searchController.text,
+      );
+      if (mounted) {
+        setState(() {
+          _activities = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadFailed = _activities.isEmpty;
+        });
+      }
     }
+  }
+
+  Future<bool> _ensureLoggedIn(String action) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.user != null) return true;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Please log in to $action'),
+        backgroundColor: AppTheme.primaryColor,
+      ),
+    );
+    final loggedIn = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    return loggedIn == true && mounted;
+  }
+
+  Future<void> _openEnquire(ActivityModel act) async {
+    if (!await _ensureLoggedIn('submit an activity enquiry')) return;
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ActivityEnquiryBottomSheet(activity: act),
+    );
+  }
+
+  Future<void> _openBooking(ActivityModel act) async {
+    if (!await _ensureLoggedIn('make an activity booking')) return;
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ActivityBookingBottomSheet(activity: act),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat('#,##,###');
+    final cs = context.colors;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: cs.scaffold,
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -89,7 +143,7 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
         children: [
           // Search & Filter Header Container
           Container(
-            color: Colors.white,
+            color: cs.surface,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               children: [
@@ -98,22 +152,25 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: cs.surfaceAlt,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: cs.border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, color: Colors.grey, size: 20),
+                      Icon(Icons.search, color: cs.textSecondary, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
                           onSubmitted: (_) => _loadActivities(),
-                          decoration: const InputDecoration(
-                            hintText: 'Search activities, location, sports...',
-                            hintStyle: TextStyle(fontSize: 13, color: Colors.grey),
+                          style: TextStyle(color: cs.textPrimary),
+                          decoration: InputDecoration(
+                            hintText: '',
+                            hintStyle:
+                                TextStyle(fontSize: 13, color: cs.textFaint),
                             border: InputBorder.none,
+                            filled: false,
                             isDense: true,
                           ),
                         ),
@@ -126,51 +183,32 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           },
                           child: const Icon(Icons.clear, color: Colors.grey, size: 18),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Category Filter Pills
-                SizedBox(
-                  height: 38,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final cat = _categories[index];
-                      final isSelected = _selectedCategory == cat['name'];
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() => _selectedCategory = cat['name']!);
-                          _loadActivities();
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () async {
+                          final names = _categories
+                              .map((c) => c['name']!)
+                              .toList();
+                          final picked = await showFilterSheet(
+                            context,
+                            title: 'Filter activities',
+                            options: names,
+                            selected: _selectedCategory,
+                          );
+                          if (picked != null && picked != _selectedCategory) {
+                            setState(() => _selectedCategory = picked);
+                            _loadActivities();
+                          }
                         },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(cat['icon']!, style: const TextStyle(fontSize: 12)),
-                              const SizedBox(width: 6),
-                              Text(
-                                cat['name']!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected ? Colors.white : AppTheme.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
+                        child: Icon(
+                          Icons.tune_rounded,
+                          size: 20,
+                          color: _selectedCategory != 'All'
+                              ? AppTheme.primaryColor
+                              : cs.textSecondary,
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -180,30 +218,21 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
           // Main Activities List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _activities.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.bolt, size: 48, color: Colors.grey),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No activities found',
-                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey.shade700),
-                            ),
-                            const SizedBox(height: 6),
-                            ElevatedButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _selectedCategory = 'All');
-                                _loadActivities();
-                              },
-                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
-                              child: const Text('Reset Search', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
+                ? const AppSkeletonList(count: 4)
+                : _loadFailed
+                    ? AppErrorState(onRetry: _loadActivities)
+                    : _activities.isEmpty
+                    ? AppEmptyState(
+                        icon: Icons.bolt_outlined,
+                        title: 'No activities found',
+                        message:
+                            'Try a different search term or category filter.',
+                        actionLabel: 'Reset',
+                        onAction: () {
+                          _searchController.clear();
+                          setState(() => _selectedCategory = 'All');
+                          _loadActivities();
+                        },
                       )
                     : RefreshIndicator(
                         onRefresh: _loadActivities,
@@ -214,6 +243,9 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                             final act = _activities[index];
                             final formattedImage = ApiConfig.formatImageUrl(act.coverImage);
 
+                            // Same card design as the home screen's activity
+                            // scroller: image + category pill top-left, white
+                            // body with title, location, price and Enquire/Book.
                             return GestureDetector(
                               onTap: () {
                                 Navigator.push(
@@ -226,216 +258,127 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                               child: Container(
                                 margin: const EdgeInsets.only(bottom: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  color: cs.surface,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: cs.border),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.04),
+                                      color: cs.shadow,
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(18),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Image Header
                                       Stack(
                                         children: [
                                           SizedBox(
-                                            height: 160,
+                                            height: 150,
                                             width: double.infinity,
                                             child: CachedNetworkImage(
                                               imageUrl: formattedImage,
                                               fit: BoxFit.cover,
-                                              placeholder: (context, url) => Container(color: Colors.grey[300]),
-                                              errorWidget: (context, url, error) => Image.network(
-                                                'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop',
-                                                fit: BoxFit.cover,
-                                              ),
+                                              placeholder: (context, url) => Container(color: Colors.grey[200]),
+                                              errorWidget: (context, url, error) => Container(color: Colors.blueGrey),
                                             ),
                                           ),
                                           Positioned(
-                                            top: 12,
-                                            left: 12,
+                                            top: 10,
+                                            left: 10,
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withValues(alpha: 0.9),
-                                                borderRadius: BorderRadius.circular(10),
+                                                color: AppTheme.primaryColor,
+                                                borderRadius: BorderRadius.circular(8),
                                               ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(Icons.bolt, color: Colors.amber, size: 14),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    act.category,
-                                                    style: GoogleFonts.outfit(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 11,
-                                                      color: AppTheme.primaryColor,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 12,
-                                            right: 12,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.7),
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(Icons.star, color: Colors.amber, size: 12),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '${act.rating}',
-                                                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                                                  ),
-                                                ],
+                                              child: Text(
+                                                act.category,
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
-
-                                      // Content Details
                                       Padding(
-                                        padding: const EdgeInsets.all(14.0),
+                                        padding: const EdgeInsets.all(12.0),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               act.title,
-                                              style: GoogleFonts.outfit(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppTheme.textPrimary,
-                                              ),
-                                              maxLines: 2,
+                                              maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.outfit(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15,
+                                                color: cs.textPrimary,
+                                              ),
                                             ),
-                                            const SizedBox(height: 6),
-
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.primaryColor),
-                                                const SizedBox(width: 4),
-                                                Expanded(
-                                                  child: Text(
-                                                    act.location.isNotEmpty ? act.location : act.destinationName,
-                                                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                const Icon(Icons.access_time, size: 14, color: Colors.amber),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  act.duration,
-                                                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
-                                                ),
-                                              ],
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              act.location.isNotEmpty ? act.location : act.destinationName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: 11, color: cs.textSecondary),
                                             ),
-                                            const SizedBox(height: 12),
-
+                                            const SizedBox(height: 10),
                                             Row(
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
-                                                Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text('Starting From', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                                    Text(
-                                                      '₹${currencyFormatter.format(act.price)}',
-                                                      style: GoogleFonts.outfit(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: AppTheme.primaryColor,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                Text(
+                                                  '₹${currencyFormatter.format(act.price)}',
+                                                  style: GoogleFonts.outfit(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 15,
+                                                    color: AppTheme.primaryColor,
+                                                  ),
                                                 ),
                                                 Row(
                                                   children: [
-                                                    OutlinedButton(
-                                                      onPressed: () async {
-                                                        final auth = Provider.of<AuthProvider>(context, listen: false);
-                                                        if (auth.user == null) {
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text('Please log in to submit an activity enquiry'),
-                                                              backgroundColor: AppTheme.primaryColor,
-                                                            ),
-                                                          );
-                                                          final loggedIn = await Navigator.push<bool>(
-                                                            context,
-                                                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                                          );
-                                                          if (loggedIn != true || !context.mounted) return;
-                                                        }
-                                                        if (!context.mounted) return;
-                                                        showModalBottomSheet(
-                                                          context: context,
-                                                          isScrollControlled: true,
-                                                          backgroundColor: Colors.transparent,
-                                                          builder: (_) => ActivityEnquiryBottomSheet(activity: act),
-                                                        );
-                                                      },
-                                                      style: OutlinedButton.styleFrom(
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                                        side: const BorderSide(color: AppTheme.primaryColor),
-                                                      ),
-                                                      child: const Text(
-                                                        'Enquire',
-                                                        style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 11),
+                                                    GestureDetector(
+                                                      onTap: () => _openEnquire(act),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                        decoration: BoxDecoration(
+                                                          color: cs.surfaceAlt,
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          border: Border.all(color: cs.border),
+                                                        ),
+                                                        child: Text(
+                                                          'Enquire',
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: cs.textPrimary,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                     const SizedBox(width: 6),
-                                                    ElevatedButton(
-                                                      onPressed: () async {
-                                                        final auth = Provider.of<AuthProvider>(context, listen: false);
-                                                        if (auth.user == null) {
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text('Please log in to make an activity booking'),
-                                                              backgroundColor: AppTheme.primaryColor,
-                                                            ),
-                                                          );
-                                                          final loggedIn = await Navigator.push<bool>(
-                                                            context,
-                                                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                                          );
-                                                          if (loggedIn != true || !context.mounted) return;
-                                                        }
-                                                        if (!context.mounted) return;
-                                                        showModalBottomSheet(
-                                                          context: context,
-                                                          isScrollControlled: true,
-                                                          backgroundColor: Colors.transparent,
-                                                          builder: (_) => ActivityBookingBottomSheet(activity: act),
-                                                        );
-                                                      },
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor: AppTheme.primaryColor,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                        elevation: 0,
-                                                      ),
-                                                      child: const Text(
-                                                        'Book Now',
-                                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                                    GestureDetector(
+                                                      onTap: () => _openBooking(act),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                                        decoration: BoxDecoration(
+                                                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: const Text(
+                                                          'Book',
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: AppTheme.primaryColor,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ],

@@ -104,10 +104,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 field(current, 'Current Password'),
                 field(next, 'New Password'),
                 field(confirm, 'Confirm New Password'),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Use at least 6 characters.',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary)),
                 ),
               ],
             ),
@@ -157,7 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: context.colors.scaffold,
         body: Column(
           children: [
             Container(
@@ -226,7 +226,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         filled: true,
                         trailing: _verifiedPill(),
                         child: Text(user?.email ?? '—',
-                            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+                            style: TextStyle(fontSize: 14, color: context.colors.textSecondary)),
                       ),
                       const SizedBox(height: 12),
                       _fieldCard(
@@ -313,7 +313,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           onPressed: () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.primaryColor,
-                            side: const BorderSide(color: AppTheme.borderLight),
+                            side: BorderSide(color: context.colors.border),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
@@ -339,25 +339,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
   Widget _sectionTitle(String t) => Text(t,
-      style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textPrimary));
+      style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w800, color: context.colors.textPrimary));
 
-  Widget _verifiedPill() => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.verified_user, size: 12, color: Color(0xFF475569)),
-            SizedBox(width: 4),
-            Text('VERIFIED',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF475569))),
-          ],
-        ),
-      );
+  Widget _verifiedPill() {
+    final cs = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: cs.surfaceAlt,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: cs.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.verified_user, size: 12, color: cs.textSecondary),
+          const SizedBox(width: 4),
+          Text('VERIFIED',
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: cs.textSecondary)),
+        ],
+      ),
+    );
+  }
 
   Widget _fieldCard({
     required String label,
@@ -365,12 +368,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     Widget? trailing,
     bool filled = false,
   }) {
+    final cs = context.colors;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
-        color: filled ? const Color(0xFFF1F5F9) : Colors.white,
+        color: filled ? cs.surfaceAlt : cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderLight),
+        border: Border.all(color: cs.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,9 +383,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 10, fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5, color: AppTheme.textSecondary)),
+                      letterSpacing: 0.5, color: cs.textSecondary)),
               if (trailing != null) trailing,
             ],
           ),
@@ -398,13 +402,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final cs = context.colors;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderLight),
+        border: Border.all(color: cs.border),
       ),
       child: Material(
-        color: Colors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: ListTile(
@@ -416,9 +421,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             child: const Icon(Icons.lock_outline, color: AppTheme.primaryColor, size: 20),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-          trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+          title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: cs.textPrimary)),
+          subtitle: Text(subtitle, style: TextStyle(fontSize: 11, color: cs.textSecondary)),
+          trailing: Icon(Icons.chevron_right, color: cs.textSecondary, size: 20),
           onTap: onTap,
         ),
       ),

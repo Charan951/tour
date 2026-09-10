@@ -59,25 +59,24 @@ export const sendPushNotification = async (
   }
 
   try {
+    // Android: DATA-ONLY. The Flutter client renders every notification through
+    // flutter_local_notifications (foreground + background isolate), which is
+    // the only way to get reliable lock-screen delivery when the app is killed
+    // on aggressive-OEM Android. iOS keeps an `aps.alert` so the OS shows it.
     const message: Message = {
       token,
-      notification: { title, body },
-      data,
+      data: { ...data, title, body },
       android: {
         priority: 'high',
-        notification: {
-          channelId: 'high_importance_channel',
-          sound: 'default',
-          priority: 'high',
-          visibility: 'public',
-        },
       },
       apns: {
+        headers: { 'apns-priority': '10' },
         payload: {
           aps: {
             alert: { title, body },
             sound: 'default',
             badge: 1,
+            'content-available': 1,
           },
         },
       },
@@ -108,25 +107,22 @@ export const sendMulticastPushNotification = async (
   }
 
   try {
+    // See sendPushNotification — Android is data-only (client renders it),
+    // iOS keeps an aps.alert so the OS shows it.
     const message: MulticastMessage = {
       tokens,
-      notification: { title, body },
-      data,
+      data: { ...data, title, body },
       android: {
         priority: 'high',
-        notification: {
-          channelId: 'high_importance_channel',
-          sound: 'default',
-          priority: 'high',
-          visibility: 'public',
-        },
       },
       apns: {
+        headers: { 'apns-priority': '10' },
         payload: {
           aps: {
             alert: { title, body },
             sound: 'default',
             badge: 1,
+            'content-available': 1,
           },
         },
       },

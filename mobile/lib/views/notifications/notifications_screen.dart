@@ -5,20 +5,24 @@ import 'package:intl/intl.dart';
 import '../../config/theme.dart';
 import '../../models/notification_model.dart';
 import '../../providers/notification_provider.dart';
+import '../../services/notification_router.dart';
+import '../../services/push_notification_service.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: cs.scaffold,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: cs.surface,
         elevation: 0.5,
         scrolledUnderElevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: cs.textPrimary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -26,7 +30,7 @@ class NotificationsScreen extends StatelessWidget {
           style: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: cs.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -58,12 +62,30 @@ class NotificationsScreen extends StatelessWidget {
       body: Consumer<NotificationProvider>(
         builder: (context, provider, child) {
           final allList = provider.notifications;
+          final denied = PushNotificationService.instance.notificationsDenied;
 
-          if (allList.isEmpty) {
-            return _buildEmptyState(context);
-          }
+          final content = allList.isEmpty
+              ? _buildEmptyState(context)
+              : _buildList(context, provider, allList);
 
-          return RefreshIndicator(
+          if (!denied) return content;
+          return Column(
+            children: [
+              _PermissionBanner(),
+              Expanded(child: content),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildList(
+    BuildContext context,
+    NotificationProvider provider,
+    List<NotificationModel> allList,
+  ) {
+    return RefreshIndicator(
             onRefresh: () => provider.checkForUpdates(),
             color: const Color(0xFF0EA5E9),
             child: ListView.builder(
@@ -105,13 +127,11 @@ class NotificationsScreen extends StatelessWidget {
                 );
               },
             ),
-          );
-        },
-      ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final cs = context.colors;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -137,7 +157,7 @@ class NotificationsScreen extends StatelessWidget {
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F172A),
+                color: cs.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -146,7 +166,7 @@ class NotificationsScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: const Color(0xFF64748B),
+                color: cs.textSecondary,
                 height: 1.4,
               ),
             ),
@@ -158,6 +178,7 @@ class NotificationsScreen extends StatelessWidget {
 
   Widget _buildNotificationCard(
       BuildContext context, NotificationModel item, NotificationProvider provider) {
+    final cs = context.colors;
     IconData iconData;
     Color iconColor;
     Color iconBg;
@@ -187,17 +208,21 @@ class NotificationsScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: item.isRead ? Colors.white : const Color(0xFFF0F9FF),
+        color: item.isRead
+            ? cs.surface
+            : (context.isDark
+                ? const Color(0xFF0EA5E9).withValues(alpha: 0.12)
+                : const Color(0xFFF0F9FF)),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: item.isRead
-              ? const Color(0xFFE2E8F0)
+              ? cs.border
               : const Color(0xFF0EA5E9).withValues(alpha: 0.35),
           width: item.isRead ? 1 : 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: cs.shadow,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -212,6 +237,7 @@ class NotificationsScreen extends StatelessWidget {
             if (!item.isRead) {
               provider.markAsRead(item.id);
             }
+            NotificationRouter.handleType(item.type);
           },
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -244,7 +270,7 @@ class NotificationsScreen extends StatelessWidget {
                               style: GoogleFonts.outfit(
                                 fontSize: 15,
                                 fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
-                                color: AppTheme.textPrimary,
+                                color: cs.textPrimary,
                               ),
                             ),
                           ),
@@ -267,8 +293,8 @@ class NotificationsScreen extends StatelessWidget {
                           fontSize: 13,
                           fontWeight: item.isRead ? FontWeight.w400 : FontWeight.w500,
                           color: item.isRead
-                              ? AppTheme.textSecondary
-                              : const Color(0xFF1E293B),
+                              ? cs.textSecondary
+                              : cs.textPrimary,
                           height: 1.35,
                         ),
                       ),
@@ -348,5 +374,56 @@ class NotificationsScreen extends StatelessWidget {
     } else {
       return DateFormat('MMM d, h:mm a').format(dt);
     }
+  }
+}
+
+/// Shown at the top of the Notifications screen when the OS notification
+/// permission has been denied.
+class _PermissionBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.notifications_off_rounded,
+              color: Color(0xFFB45309), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Push notifications are turned off',
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: cs.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'You still see updates here, but not on your lock screen. '
+                  'Turn them on in Settings → Apps → HolidayCity → Notifications.',
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    height: 1.4,
+                    color: cs.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

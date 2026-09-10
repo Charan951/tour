@@ -23,6 +23,167 @@ Entry format:
 
 ## Entries (newest first)
 
+### 2026-09-10 — Play Store production audit (pass 2) — P0/P1/P2 remediation
+- Status: In progress. `flutter analyze` clean; server `tsc` clean; `flutter test` / release AAB pending.
+- Request: full Play Store production-readiness audit against `PLAY_STORE_PRODUCTION_CHECKLIST.md`, then implement safe P0/P1/P2 fixes (no app-id / signing-key / Firebase-project / payment-architecture changes; stop-and-ask on decisions).
+- Findings & fixes this pass:
+  - **P1 build tooling:** deleted `mobile/android/settings.gradle.kts` (conflicted with `settings.gradle`; bogus AGP 9.0.1 / Kotlin 2.3.20, missing google-services plugin).
+  - **P1 signing hygiene:** root `.gitignore` now ignores `**/android/key.properties`, `**/android/local.properties`, `*.jks`, `*.keystore` (were unprotected).
+  - **P1 security — credential logging:** `api_service.dart` no longer logs request bodies at all; every `debugPrint` in `api_service.dart` / `chat_service.dart` / `realtime_service.dart` now gated behind `kDebugMode` (`debugPrint` is NOT stripped in release).
+  - **P1 security — cleartext:** new `android/app/src/main/res/xml/network_security_config.xml` (base cleartext=false; localhost/10.0.2.2/10.0.3.2 allowed for dev). Manifest `usesCleartextTraffic="true"` → `networkSecurityConfig`.
+  - **P1 permissions:** removed unused `CAMERA` / `READ_EXTERNAL_STORAGE` / `WRITE_EXTERNAL_STORAGE` / `READ_MEDIA_IMAGES` from the manifest; removed unused `image_picker` + `image_cropper` deps and the dead `uploadImageFile(XFile)` method.
+  - **P0/P1 offline fabrication:** `ApiService._handleOfflineFallback` no longer fabricates `success:true` for `/enquiries`, `/contact`, `/auth/me`, `/auth/change-password`, `/pay-remaining` — all offline writes now return an honest failure.
+  - **P0 payments:** `pay_remaining_bottom_sheet.dart` is now **Razorpay-only** — removed the UPI/Card/Bank/Cash dropdown, `_submitDirectPayment()` (client-fabricated transaction id, no verification), raw card-number/CVV capture, and all "Demo" UI. Server-verified create-order → gateway → /payments/verify flow unchanged. (Matches [[razorpay-payment-flow]] intended state.)
+  - **P1 account deletion (Play requirement):** NEW `DELETE /api/v1/auth/me` (`deleteMe` in `authController.ts`) — soft-delete + anonymise email/mobile, rotate password, clear FCM/DeviceTokens, clear refresh cookie. Client: `ApiConfig.deleteAccount`, `AuthService.deleteAccount()`, `AuthProvider.deleteAccount()`, and a "Delete account" row (confirm dialog) in `profile_screen.dart`. Privacy Policy updated with a deletion section; contact domain `holidaycity.com` → `tour.speshway.site`.
+  - **P2 tests:** fixed the wrong `api_service_test.dart` custom-host assertion; `skip:true` on the two `widget_test.dart` tests that hit the live API / use stale finders (were timing out the suite). NEW `mobile/analysis_options.yaml` (flutter_lints).
+- Deferred by user decision: Crashlytics (skipped this pass). Still on the user: upload keystore + Play App Signing, rotate leaked SMTP credential, host public privacy/terms + account-deletion web URL, Data Safety declaration, store listing, set prod env, deploy server with the new route.
+- Follow-up (same day, user-approved): **P0 backend auth fix** — `authController.ts` `login` no longer resets an existing user's password on a wrong-password attempt; it now increments `failedAttempts` and returns 401 "Invalid email or password". Auto-registration on an unknown email is intentionally kept (existing frictionless-onboarding behaviour; removing it would be a business-logic change). `seedData.ts` — added a Google Play reviewer account `verification@gmail.com` / `verify@123` (Customer role, hashed via pre-save hook) right after the admin seed. Server `tsc` clean.
+
+### 2026-09-10 — Fix: /terms & /privacy bounced to /login
+- Status: Done. client `tsc` clean.
+- Cause: the `/terms` and `/privacy` routes were wrapped in `getPublicRouteElement()`, which does `<Navigate to="/login" replace />` for any non-logged-in visitor — so clicking the legal links on the login page just redirected back to /login (web + mobile-responsive).
+- Fix: `client/src/App.tsx` — render `<LegalPage doc=.../>` directly for `/terms` and `/privacy` (like `/login` / `/admin/login`), no auth wrapper. `client/src/pages/Legal/LegalPage.tsx` — "Back to home" `<Link to="/">` (which would itself bounce a logged-out user) replaced with a `navigate(-1)` button (falls back to `/`).
+### 2026-09-10 — Production hardening (pass 1) — JWT secrets, Razorpay webhook, Android signing, lazy lists
+- Status: In progress. server/client `tsc` + `flutter analyze` clean; server boots clean.
+- Request: "make it production good" + "each mobile screen should render up to where it's scrolled".
+- Server:
+  - NEW `server/src/config/env.ts` — single source for `jwtSecret()` / `jwtRefreshSecret()`; both throw in production if unset or equal to the repo-committed placeholder strings (`holidaycity_super_secret_*`). `assertProductionEnv()` (called in `index.ts` right after `dotenv.config()`) hard-exits a production boot on missing `MONGODB_URI` / weak JWT secret, warns on missing `CLIENT_URL` / test Razorpay key / missing `RAZORPAY_WEBHOOK_SECRET` / Cloudinary. Dev keeps working (falls back, warns if placeholder in use).
+  - Removed the 5 scattered `process.env.JWT_SECRET || '<hardcoded>'` fallbacks in `middleware/auth.ts`, `routes/api.ts` (also killed a bogus `require('jsonwebtoken')` in ESM `optionalAuth`), `controllers/authController.ts` (×3) → all use `config/env.ts`.
+  - NEW `POST /api/v1/payments/webhook` (`razorpayWebhook` in `paymentController.ts`, mounted in `index.ts` with `express.raw` BEFORE `express.json`). HMAC-verifies `x-razorpay-signature` with `RAZORPAY_WEBHOOK_SECRET`, acks 200 immediately, then on `payment.captured`/`order.paid` reconciles the booking (idempotent via `transactionId` / `Full Paid` guard; infers advance-vs-full by amount) so a booking still gets marked paid if the app/browser dies before `/payments/verify`. Returns 503 when the secret isn't configured.
+- Mobile (Android release):
+  - `android/app/build.gradle` — real `signingConfigs.release` driven by a git-ignored `android/key.properties` (falls back to debug key when absent so `flutter run --release` still works). NEW `android/key.properties.example` with keytool instructions. `proguardFiles` wired + NEW `android/app/proguard-rules.pro` (Flutter + Razorpay + @Keep + Firebase keeps) but `minifyEnabled`/`shrinkResources` left **false** (a shrunk build must be smoke-tested first — comment says so).
+  - Deleted stray `android/app/build.gradle.kts` (Flutter-template leftover, wrong namespace `com.holidaycity.holidaycity_mobile`; the active Groovy `build.gradle` uses `com.holidaycity.mobile`).
+- Mobile (lazy render-on-scroll): converted `my_bookings_screen`, `wallet_screen`, and `home_screen` from `SingleChildScrollView > Column > shrinkWrap ListView.builder/.separated` to `CustomScrollView` — `SliverToBoxAdapter` header(s) + `SliverList.builder` for the repeating cards, so list items build lazily as scrolled into view. `home_screen`: only the vertical "Trending Tour Packages" list was the eager one (the banner PageView + India/International/Themes/Activities rails were already lazy `ListView.builder`s); it's now a `SliverList.builder` after the adapter. `my_enquiries_screen` was already fine (`Expanded > ListView.builder`, no shrinkWrap) — left as-is. Forms/bottom-sheets/detail screens left — small bounded content.
+- REMAINING (not done this pass):
+  - Only the user can: rotate the leaked secrets, set real prod env vars (incl. `NODE_ENV=production`, `CLIENT_URL`=real domain, live `rzp_live_*` keys, `RAZORPAY_WEBHOOK_SECRET`), create the upload keystore, register the webhook URL in Razorpay dashboard, smoke-test a release build + a real test-mode payment.
+  - Lazy-list sweep: DONE for the list screens (`my_bookings`, `wallet`, `home`; `my_enquiries` was already lazy). Detail screens + forms/bottom-sheets intentionally left (bounded content). All still need a device/visual check since the scroll structure changed.
+### 2026-09-10 — Push notifications broken when app closed/killed — data-only + client render
+- Status: Done. `flutter analyze` + server `tsc` clean. Needs redeploy of server + fresh APK.
+- Request: notifications only arrive with the app open; nothing on lock screen / background / killed.
+- Diagnosis: server sent proper `notification` FCM messages, manifest/channel/token all correct — but Android background/killed delivery of OS-rendered notification messages is unreliable on aggressive OEMs, and the client's background handler only `print`ed. What the user saw "when open" was the socket-driven in-app list + the foreground local notification.
+- Fix (production pattern — client renders every notification):
+  - server/src/config/firebase.ts: `sendPushNotification` + `sendMulticastPushNotification` now send **Android data-only** (`data: {...data, title, body}`, `android.priority: 'high'`, no top-level `notification` / `android.notification`). iOS keeps `apns.payload.aps.alert` + `content-available: 1` + `apns-priority: 10` so the OS still shows it.
+  - mobile/lib/services/push_notification_service.dart: NEW top-level `kHighImportanceChannel` + `_displayNotification(RemoteMessage)` used by BOTH the foreground handler and the background isolate. `_firebaseMessagingBackgroundHandler` now initializes flutter_local_notifications, creates the channel, and shows the notification (Android only — iOS is OS-rendered, skip to avoid a duplicate). Tap payload stays `jsonEncode(message.data)` → routes via NotificationRouter.
+- Not fixable in code: if the OS has force-stopped the app (some OEMs do this on swipe-away), FCM won't deliver until it's reopened — user must disable battery optimization / enable autostart for HolidayCity.
+
+### 2026-09-10 — Mobile login: remove phone/OTP dead-end
+- Status: Done. `flutter analyze` clean.
+- Request: OTP/phone login was a dead end (routed to a fake "code sent" screen that rejected every code).
+- Files/areas: mobile/lib/views/auth/login_screen.dart
+- Outcome: `_handleIdentifierContinue` phone branch no longer navigates to `_LoginStep.otp` — it shows an inline error ("Phone sign-in isn't available yet — please sign in with your email address"). Identifier field relabelled 'Email address', helper copy updated. `_resolvedPhone` made `final ''`. The `_buildOtpStep` / `_handleVerifyOtp` code is left in place (unreachable now; the NOTE comment explains) rather than ripped out mid-concurrent-edit.
+
+### 2026-09-10 — Mobile: notification deep-linking + Activities error state
+- Status: Done. `flutter analyze` clean.
+- Request: close audit gaps — tapping a push/notification did nothing; some screens had no error/retry.
+- Files/areas: NEW mobile/lib/config/app_globals.dart (`navigatorKey`), NEW mobile/lib/services/notification_router.dart, mobile/lib/main.dart, mobile/lib/services/push_notification_service.dart, mobile/lib/views/notifications/notifications_screen.dart, mobile/lib/views/activities/activity_list_screen.dart.
+- Outcome:
+  - `NotificationRouter` maps notification `type` -> screen: booking/payment -> MyBookings, enquiry/quote/lead -> MyEnquiries, unknown-from-push -> Notifications list, unknown-in-app -> no-op. Uses global `navigatorKey`, defers a frame so terminated-launch works.
+  - Wired into `push_notification_service`: `onMessageOpenedApp`, `getInitialMessage`, local-notification tap. Local-notif payload now `jsonEncode(data)` (was `data.toString()`).
+  - In-app notification rows navigate on tap for booking/enquiry types (plus mark-read).
+  - Activities list: `AppSkeletonList` (loading) / `AppErrorState(onRetry)` (fetch threw + empty) / `AppEmptyState` (no results); added `_loadFailed` + try/catch.
+  - Left as-is by design: Home / Destination detail / Wallet / Notifications already fall back to cached/bundled data or poll, so a hard error screen would flicker.
+
+### 2026-09-10 — Package multiple images — admin gallery uploader + mobile carousel
+- Status: Done. server `tsc` + client `tsc` + `flutter analyze` clean; e2e API test passed.
+- Request: confirm packages accept multiple images (admin) + show a carousel on the mobile package detail; implement + test if missing.
+- Findings: server `Package` schema already had `coverImage` (required) + `gallery: [String]`. `updatePackage` persisted `gallery` (spreads `payload`), but `createPackage` whitelisted fields and dropped it. Admin UI only had a single cover-image uploader. Mobile detail showed only `package.mainImage` (no carousel). Mobile `PackageModel` already merges coverImage+gallery+images into `images`. Web `PackageDetailPage` already reads `pkg.images || pkg.gallery`.
+- Files/areas:
+  - server/src/controllers/packageController.ts — `createPackage` now persists `gallery` (falls back to `payload.images`), filtered to non-empty strings.
+  - client/src/admin/pages/PackageManagerPage.tsx — new `gallery: string[]` state; "Gallery Images (carousel)" card with thumbnail grid + per-image remove, a `CloudinaryImageUploader` that appends, and an Enter-to-add URL input; loaded from `pkg.gallery` (or `pkg.images`) on edit, reset on new, sent in create + update payloads.
+  - mobile/lib/views/packages/package_detail_screen.dart — `_PackageDetailScreenState` gains `PageController _imgController` + `_imgIndex` + `_galleryImages` (dedup of `package.images`, single-image fallback); SliverAppBar `FlexibleSpaceBar` background swapped from one `CachedNetworkImage` to a `PageView.builder` carousel with an animated dots indicator (hidden when 1 image). Kept the dark gradient + CODE badge.
+- Test: booted dev server, logged in as admin@holidaycity.com, `PATCH /admin/packages/:id {gallery:[3 urls]}` → `success:true`; `GET /packages/:slug` returned the 3-item `gallery`; reverted the test package's gallery to `[]` afterward.
+### 2026-09-10 — Destination detail — remove "Enquire for <destination> Tour" button
+- Status: Done. `flutter analyze` + client `tsc` clean.
+- Request: no enquire button on the destination detail screen.
+- Files/areas: mobile/lib/views/destinations/destination_detail_screen.dart, client/src/pages/Destinations/MobileDestinationDetailPage.tsx
+- Outcome: removed the fixed/sticky bottom "Enquire for {name} Tour" button on both the Flutter screen and its responsive-web twin. Flutter: also removed the now-unused `_openEnquirySheet` + 4 imports (custom_button, auth_provider, login_screen, enquiry_bottom_sheet). Web: kept `PackageEnquiryModal` + enquiry state (still used by package-card booking + post-login auto-open); `pb-28` → `pb-6`. Per-package Enquire/Book on the package cards is unchanged; desktop `DestinationDetailPage.tsx` had no such button.
+### 2026-09-10 — Web dark mode (client/) — infra + full site first pass
+- Status: In progress. `vite build` green (had to `npm install firebase --no-save` — it was in package.json but missing from node_modules; pre-existing, unrelated).
+- Request: full dark mode across the whole web bundle (marketing + dashboard + admin); toggle in navbar and dashboard settings; default to device setting.
+- Files/areas: client/src/styles/globals.css (`@custom-variant dark` + `.dark` token remap + raw-grey/`bg-white` utility overrides), client/src/context/ThemeContext.tsx (NEW — mode light|dark|system, persists `hc_theme`, tracks OS changes, sets `.dark` on <html> + theme-color meta), client/src/components/common/ThemeToggle.tsx (NEW — `icon` + `row` variants), client/src/main.tsx (ThemeProvider wrap), client/index.html (pre-paint FOUC script), client/src/components/common/Navbar.tsx (icon toggle desktop + mobile actions), client/src/pages/User/UserDashboardPage.tsx (row toggle at top of Account).
+- Approach: Tailwind v4 class-based dark. The neutral `@theme` tokens (`--color-canvas/ink/line/fill/sand/slate-*`, shadows) are re-pointed under `.dark`, so every semantic utility (`bg-canvas`, `text-ink`, `border-line`…) flips for free. The ~50 components that hardcode `bg-white` / `text-slate-900` / `border-gray-200` (and `/opacity` variants) are caught by `.dark .bg-white { … !important }` style global overrides. Brand colours (ocean/aqua/gold), images and gradients untouched. Custom classes (`glass-card-solid`, `glass-nav`, `glass-pill-premium`, selection) get explicit `.dark` rules.
+- Remaining: spot-fixes for `bg-[#hex]` literals, gradient hero sections with baked light text, and admin-dashboard-specific surfaces — iterate from screenshots.
+
+### 2026-09-10 — Mobile Themes + Activities list — match home card design
+- Status: Done. `flutter analyze` clean.
+- Request: Themes tab and Activities list screen cards should look like their home-screen equivalents.
+- Files/areas: mobile/lib/views/themes/theme_screen.dart, mobile/lib/views/activities/activity_list_screen.dart
+- Outcome:
+  - Themes (`theme_screen.dart`): replaced the image-on-top + white panel ("★ Top pick") grid card with the home-style full-bleed `CachedNetworkImage` + top→bottom black gradient + bold white `theme.name` overlaid at the bottom (`Stack`/`ClipRRect`, radius 18, soft shadow). 2-col `GridView` kept; `childAspectRatio` 0.82 → 0.75.
+  - Activities (`activity_list_screen.dart`): reshaped the list card to match the home `_buildActivityQuickCard` — 150h image with a single solid `primaryColor` category pill top-left (dropped the white category pill + black rating pill), then white body: bold title (1 line), location (1 line), and a price row with small `Enquire` (surfaceAlt + border) / `Book` (primary@10%) pills instead of the OutlinedButton/ElevatedButton pair. Auth-gated enquiry/booking handlers extracted to `_ensureLoggedIn` / `_openEnquire` / `_openBooking`. Dropped the "Starting From" label and duration row.
+
+### 2026-09-10 — Razorpay payments — real gateway flow + result screens (server + web + mobile)
+- Status: In progress (code + `tsc`/`flutter analyze` clean; needs live test with real checkout)
+- Request: payments "not working" in prod (checkout won't open / opens then errors / pays but booking not updated). Build proper processing/success/error/timeout screens on all surfaces; must work for BOTH Razorpay test and live keys.
+- Root causes found: (1) web `handleRazorpayPayment` monkey-patched `window.open` to force-close the checkout popup ~150ms after opening and fake success; `modal.ondismiss` + `payment.failed` also faked success. (2) web + mobile fell back to a hardcoded test key `rzp_test_TZpr4ebY4Qvo8k` when the server response lacked `key` → key/order mismatch → verify always failed. (3) mobile `_handleRazorpayError`/`_handleExternalWallet` called `_submitDirectPayment()` (fake success on ANY error). (4) server silently capped test amounts to ₹15k and returned generic 500s.
+- Server (`server/src/controllers/paymentController.ts`, `routes/api.ts`): rewritten. `resolveRazorpay()` auto-detects test vs live from key prefix (same code path). New `GET /payments/config` (+ `razorpay-key` alias) → `{configured,key,mode}`. `create-order`: 503 `PAYMENT_NOT_CONFIGURED` when keys absent, clear `AMOUNT_TOO_LARGE_FOR_TEST` (₹5,00,000 test ceiling) instead of silent cap, returns `key`+`mode`. `verify`: HMAC check → then `razorpay.payments.fetch` to confirm `captured`/`authorized` (auto-captures authorized), order-id match, and amount-due cross-check; structured error codes (`SIGNATURE_INVALID`, `ORDER_MISMATCH`, `PAYMENT_NOT_CAPTURED`, `AMOUNT_MISMATCH`). No fake-success path anywhere. Server `.env` currently has TEST keys (`rzp_test_TZpr4ebY4Qvo8k`); swapping to `rzp_live_…` needs no code change.
+- Web: NEW `client/src/components/payments/RazorpayPaymentModal.tsx` — self-contained state machine (loading→checkout→verifying→success/failed/timeout/cancelled) with TEST-MODE badge, real `handler`+`/payments/verify`, 6-min timeout, retry. `UserDashboardPage.tsx`: deleted `handleRazorpayPayment` (window.open patch) + `handleDirectDemoPayment` + all "⚡ 1-Click Instant / Skip OTP" buttons and guide bullets; Pay buttons now `openPayFlow()` → modal in both mobile-layout and desktop-layout returns.
+- Mobile: NEW `mobile/lib/views/payment/payment_result_view.dart` (`PaymentResultView` — processing/success/failed/timeout/cancelled). `pay_remaining_bottom_sheet.dart`: `_Phase` state machine renders `PaymentResultView` in place of the form; real `Timer(330s)` timeout backstop; `_handleRazorpayError` maps `Razorpay.PAYMENT_CANCELLED`→cancelled else failed (no more auto `_submitDirectPayment`); `_handleExternalWallet` no longer fakes success; removed the "⚡ Skip OTP & Confirm Payment (100% Success)" button and hardcoded key fallback. Non-Razorpay methods (UPI/Card/Cash manual record via `/bookings/:id/pay-remaining`) unchanged.
+- Not done / notes: Android `minifyEnabled` is off so no Razorpay proguard rules needed yet (add keeps if R8 is enabled later). Stray `mobile/android/app/build.gradle.kts` (template leftover, wrong namespace) coexists with the active `build.gradle` — untouched. No webhook endpoint added. Secrets were pasted in chat — advised rotation.
+
+### 2026-09-10 — Legal pages — Terms & Conditions + Privacy Policy on login (web + mobile)
+- Status: Done
+- Request: add Terms & Conditions + Privacy Policy to the login screen/page in frontend and mobile; use url_launcher on mobile; content tailored to HolidayCity.
+- Files/areas: client/src/pages/Legal/LegalPage.tsx (new), client/src/App.tsx (/terms, /privacy routes), client/src/pages/User/UserDashboardPage.tsx (login "By continuing…" line), client/src/components/common/Footer.tsx (footer links), mobile/pubspec.yaml (url_launcher ^6.3.1), mobile/lib/config/api_config.dart (webUrl/termsUrl/privacyUrl), mobile/lib/views/auth/login_screen.dart (_buildLegalNote + _openUrl via url_launcher), mobile/android/app/src/main/AndroidManifest.xml (<queries> https VIEW intent).
+- Outcome: web LegalPage renders terms/privacy from shared static content mirroring mobile legal_screen.dart. Mobile login shows a tappable legal note opening `${ApiConfig.serverHost}/terms` and `/privacy` externally. `flutter analyze` clean.
+  - Also fixed: search fields on every mobile screen (home search, home destinations tab, Explore Packages, Themes, Activities) showed an unwanted filled inner rectangle in dark mode — the global `InputDecorationTheme` (`filled: true` / `fillColor: surfaceAlt`) leaked into the borderless search TextFields. Added `filled: false` to each search field's `InputDecoration`. Files: home_screen.dart (x2), package_list_screen.dart, theme_screen.dart, activity_list_screen.dart.
+
+### 2026-09-10 — Mobile: replace inline filter chips with a filter sheet
+- Status: Done. `flutter analyze` clean (12 pre-existing warnings in pay_remaining_bottom_sheet are a concurrent session's WIP, not this change).
+- Request: Destinations / Themes / Packages screens — drop the inline chip row (All / Popular / …) and use a right-side "three-line" filter button that opens a filter panel.
+- Files/areas: NEW mobile/lib/widgets/filter_sheet.dart (`FilterIconButton` + `showFilterSheet`), mobile/lib/views/home/home_screen.dart (`_buildDestinationsGridTab`), mobile/lib/views/themes/theme_screen.dart, mobile/lib/views/packages/package_list_screen.dart.
+- Outcome: `FilterIconButton` (tune icon, 52px, shows a dot when a non-default filter is active) sits to the right of the search field on Destinations / Themes / Packages. Tapping it opens `showFilterSheet` — a themed single-select bottom sheet listing the same options; the pick updates the existing filter state (`_selectedDestFilter` / `_selectedFilter` / `packageProvider.setCategory`). Activities screen also switched over (inline `Icons.tune_rounded` in its search-field header, since its layout differs) — chip pill row removed, `_selectedCategory` driven from the sheet.
+
+### 2026-09-10 — Fix url_launcher channel-error on login legal links
+- Status: Done. `flutter analyze` clean.
+- Request: `PlatformException(channel-error … url_launcher_android … launchUrl)` when tapping Terms/Privacy on the login screen.
+- Cause: `url_launcher` native plugin not registered (half-installed / no clean rebuild after the dependency was added).
+- Fix: `login_screen.dart` `_buildLegalNote` no longer uses `url_launcher` — the Terms & Conditions / Privacy Policy links now `Navigator.push` the existing in-app `LegalScreen.terms()` / `LegalScreen.privacy()` (themed, works offline). Removed the `url_launcher` import + `_openUrl`. `pubspec.yaml` dependency left in place but unused; `ApiConfig.termsUrl/privacyUrl/webUrl` kept as web equivalents.
+
+### 2026-09-10 — Mobile dark mode pass 3 — detail screens + bottom sheets
+- Status: Done. `flutter analyze` clean.
+- Converted the 12 files reverted in pass 2, with targeted line edits (no regex): the 6 `*_detail_screen.dart` (package/activity/destination/booking/enquiry/banner), the 6 `*_bottom_sheet.dart` (booking/pay_remaining/enquiry/chat/activity_booking/activity_enquiry), plus `offer_packages_screen`, `theme_detail_screen`, and residual text colours in home/profile/edit_profile/onboarding. All now use `context.colors` for scaffolds, surfaces, borders, and text. `enquiry_detail_screen` helpers `_buildDetailCard`/`_buildInfoRow` gained a `BuildContext context` param. Tinted semantic info-panels (pastel blue/green boxes) intentionally left as-is.
+- Mobile dark mode is now feature-complete across all screens. Web (`client/`) still pending.
+
+### 2026-09-10 — Mobile dark mode pass 2 + nav/login tweaks
+- Status: Done (detail screens finished in pass 3). `flutter analyze` clean.
+- `AppTheme.gradientAppBar` now takes `context` and is theme-aware: brand gradient + white text in light, flat `surface` + themed text in dark. Callers updated (home destinations tab, package_list, theme_screen, wallet).
+- Home back behaviour: `PopScope` in `home_screen` — back/gesture on the Home tab closes the app; on any other tab it returns to the Home tab (`_currentIndex = 0`).
+- Search placeholders removed (`hintText: ''`) on home (both bars), package_list, theme_screen, activity_list; login + register field hints emptied too.
+- Login screen: removed the "Explore as Guest" button under Register (hero "Guest" pill kept); made the sheet + fields + prompts theme-aware; shared `_registerPrompt()` helper; tightened sheet spacing.
+- Converted to `context.colors`: legal_screen, forget_screen, onboarding, network_error_screen, edit_profile_screen, register_screen (+ earlier: theme infra, home, profile+toggle, section_header, package_card, app_states, custom_text_field, skeleton_loader, package_list, theme_screen, notifications, my_enquiries, my_bookings, activity_list, wallet).
+- NOTE: a regex bulk-edit on the 6 detail screens + 6 bottom sheets corrupted formatting and was reverted (`git checkout`). Those 12 files are still light-only for hardcoded colors (they inherit themed Scaffold/AppBar/Card/BottomSheet from ThemeData, so not broken, just imperfect in dark). Redo with targeted Edits, not regex.
+
+### 2026-09-10 — Mobile home tweaks + app-wide dark mode (Flutter, pass 1)
+- Status: superseded by pass 2 above
+- Request: remove "N" avatar on home; redesign search box with static placeholder; add heading for offers carousel; full light/dark theme for the whole app with a toggle in Profile > Account; default to the phone's mode on fresh install.
+- Files/areas: mobile/lib/config/theme.dart, providers/theme_provider.dart, main.dart, views/home/home_screen.dart, views/profile/profile_screen.dart, widgets/{section_header,package_card,app_states,custom_text_field,skeleton_loader}.dart, views/{packages/package_list,themes/theme_screen,notifications/notifications_screen,enquiry/my_enquiries_screen,booking/my_bookings_screen,activities/activity_list_screen,wallet/wallet_screen}.dart
+- Outcome:
+  - Theme infra: NEW `AppColors` (semantic tokens) + `context.colors` / `context.isDark` extension in theme.dart. `AppTheme.lightTheme` + NEW `AppTheme.darkTheme` built from one `_build(AppColors, Brightness)` — Scaffold/AppBar/Card/BottomSheet/Dialog/Input/Chip/Divider/PopupMenu all theme automatically. `main.dart` wires `darkTheme`.
+  - `ThemeProvider`: now persists choice to SharedPreferences (`hc_theme_mode`), **defaults to `ThemeMode.system`** (fresh install follows the phone; explicit toggle then wins). New `isEffectivelyDark(context)` resolves system against device brightness.
+  - Profile: new **Dark mode** row (Switch) at top of Account group.
+  - Home quick fixes: removed the circular "N"/initial avatar in the greeting; search bar rebuilt as a single field with an inline leading icon + static hint "Search destinations and tours" (no separate blue button); added `SectionHeader('Exclusive Offers', 'Limited-time deals on top tours')` above the banner carousel.
+  - Converted to `context.colors`: full home (header, bottom nav, both search bars, activity card), full profile (all helpers + toggle), section_header, package_card, app_states, custom_text_field, skeleton_loader, and screens: package_list, theme_screen, notifications, my_enquiries, my_bookings, activity_list, wallet.
+  - `flutter analyze` clean. Web dark mode = separate follow-up (user chose "mobile Flutter first").
+- Batch 2 (remaining hardcoded colours): detail screens (package/activity/destination/booking/enquiry/banner _detail), bottom sheets (booking, enquiry, chat, activity_booking, activity_enquiry, pay_remaining), auth (login/register/forget), edit_profile, onboarding, legal, network_error. These still render (theme-level surfaces adapt) but have light patches / low-contrast text in dark mode until converted.
+
+### 2026-09-10 — Mobile splash — Stop blocking splash on network / add transition
+- Status: Done. `flutter analyze` clean.
+- Request: On reopen, splash shows too long; want logo->home animation for logged-in users.
+- Files/areas: mobile/lib/providers/auth_provider.dart, mobile/lib/views/splash/splash_screen.dart
+- Outcome: `AuthProvider.initAuth()` was awaiting `fetchCurrentUser()` (network `/auth/me`) — with the new 20s API timeout that froze the splash for up to ~20s on a slow link. Now `initAuth()` is local-only (`getSavedUser()` from SharedPreferences); new `refreshCurrentUserInBackground()` does the `/auth/me` refresh fire-and-forget after Home is already shown. Splash min duration 1000->1100ms. Splash->Home now uses a 550ms fade+scale `PageRouteBuilder` (`_logoTransitionTo`) instead of a hard `MaterialPageRoute` cut. Onboarding path unchanged.
+
+### 2026-09-10 — Mobile release APK build — JDK + google-services.json
+- Status: Done
+- Files/areas: mobile/android/gradle.properties, mobile/android/app/google-services.json (restored, stays gitignored)
+- Outcome: `org.gradle.java.home` pointed at a missing Adoptium path -> repointed to Android Studio JBR. `google-services.json` (gitignored since 20573bc) restored from git `aa73b5c` (project tour-1a8a9, pkg com.holidaycity.mobile). `flutter build apk --release` OK -> build/app/outputs/flutter-apk/app-release.apk (55.8MB, exceeds 30MB send limit).
+
+### 2026-09-10 — Mobile release APK — Fix network-dependent API host
+- Status: Done
+- Request: Release APK only works on one WiFi network, fails on others.
+- Files/areas: mobile/lib/config/api_config.dart, mobile/lib/services/api_service.dart
+- Outcome: Two root causes. (1) Config: release build shipped `isProduction = false` + `hostIp = '192.168.1.20'` -> LAN IP only reachable on dev Wi-Fi. Now a plain toggle: `isProduction = true` -> `https://tour.speshway.site`, `false` -> `http://localhost:5000`; `hostIp` LAN branch removed from `serverHost`. (2) Networking: `ApiService.timeoutDuration` was **3s** — a remote HTTPS call already takes ~2s from a wired line, so it timed out on mobile data / weaker Wi-Fi every time. Raised to 20s. Also `_generateCandidateUrls` now only appends emulator/localhost/LAN fallbacks when the target is already a local host, so a remote request no longer burns extra timeout windows on dead local candidates. `flutter analyze` clean. Ship APK with `isProduction = true`.
+
 ### 2026-08-31 — /impeccable enhance — Flutter login layout
 - Status: Done. `flutter analyze lib` ✅.
 - The two-`Spacer` sheet (flex 3 + flex 4) left two large voids with the field floating in the middle. Rebuilt: grab handle → (22) → ocean micro-label → (8) → **contextual helper line** (step-aware) → (26) → field + primary button (natural flow, upper-third), then **one** `Spacer()` → "Don't have an account? Register" pinned to the bottom.

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -28,15 +29,16 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF334155),
+            color: cs.textSecondary,
           ),
         ),
         const SizedBox(height: 6),
@@ -47,10 +49,10 @@ class CustomTextField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937)),
+          style: TextStyle(fontSize: 15, color: cs.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(prefixIcon, color: const Color(0xFF94A3B8), size: 20),
+            prefixIcon: Icon(prefixIcon, color: cs.textFaint, size: 20),
             suffixIcon: suffixIcon,
           ),
         ),

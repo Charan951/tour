@@ -140,6 +140,23 @@ class AuthService {
     return prefs.containsKey(tokenKey) && prefs.getString(tokenKey)!.isNotEmpty;
   }
 
+  /// DELETE /auth/me — permanently delete the signed-in user's account, then
+  /// clear the local session. Throws with the server message on failure.
+  Future<void> deleteAccount() async {
+    final response = await ApiService.delete(ApiConfig.deleteAccount);
+    if (response is Map && response['success'] == true) {
+      await PushNotificationService.instance.removeTokenFromBackend();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(tokenKey);
+      await prefs.remove(userKey);
+      ApiService.setToken(null);
+      return;
+    }
+    throw Exception(
+      (response is Map ? response['message'] : null) ?? 'Could not delete your account',
+    );
+  }
+
   Future<void> logout() async {
     await PushNotificationService.instance.removeTokenFromBackend();
     final prefs = await SharedPreferences.getInstance();

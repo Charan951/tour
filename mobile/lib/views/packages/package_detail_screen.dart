@@ -26,6 +26,28 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
   int _expandedDayIndex = 0;
   bool _showInclusions = true;
 
+  final PageController _imgController = PageController();
+  int _imgIndex = 0;
+
+  /// Cover image + gallery, de-duplicated. Falls back to a single image.
+  List<String> get _galleryImages {
+    final seen = <String>{};
+    final list = <String>[];
+    for (final u in widget.package.images) {
+      final t = u.trim();
+      if (t.isEmpty || !seen.add(t)) continue;
+      list.add(t);
+    }
+    if (list.isEmpty) list.add(widget.package.mainImage);
+    return list;
+  }
+
+  @override
+  void dispose() {
+    _imgController.dispose();
+    super.dispose();
+  }
+
   Future<void> _openEnquirySheet() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     if (auth.user == null) {
@@ -91,15 +113,17 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
     final currencyFormatter =
         NumberFormat.currency(symbol: '₹', decimalDigits: 0);
     final package = widget.package;
+    final images = _galleryImages;
     final tiers = package.pricingTiers;
     final activeTier = tiers.isNotEmpty && _selectedTierIndex < tiers.length
         ? tiers[_selectedTierIndex]
         : null;
 
     return Scaffold(
+      backgroundColor: context.colors.scaffold,
       body: CustomScrollView(
         slivers: [
-          // Sliver App Bar with Main Cover Image
+          // Sliver App Bar — swipeable image carousel
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
@@ -107,17 +131,22 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 800),
-                    fit: BoxFit.cover,
-                    memCacheWidth: 800,
-                    fadeInDuration: const Duration(milliseconds: 150),
-                    placeholder: (context, url) =>
-                        Container(color: const Color(0xFFF1F5F9)),
-                    errorWidget: (context, url, error) => Container(
-                      color: const Color(0xFFF1F5F9),
-                      child: const Icon(Icons.terrain,
-                          size: 64, color: Colors.grey),
+                  PageView.builder(
+                    controller: _imgController,
+                    itemCount: images.length,
+                    onPageChanged: (i) => setState(() => _imgIndex = i),
+                    itemBuilder: (context, i) => CachedNetworkImage(
+                      imageUrl: ApiConfig.formatImageUrl(images[i], width: 800),
+                      fit: BoxFit.cover,
+                      memCacheWidth: 800,
+                      fadeInDuration: const Duration(milliseconds: 150),
+                      placeholder: (context, url) =>
+                          Container(color: const Color(0xFFF1F5F9)),
+                      errorWidget: (context, url, error) => Container(
+                        color: const Color(0xFFF1F5F9),
+                        child: const Icon(Icons.terrain,
+                            size: 64, color: Colors.grey),
+                      ),
                     ),
                   ),
                   Container(
@@ -133,6 +162,28 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       ),
                     ),
                   ),
+                  if (images.length > 1)
+                    Positioned(
+                      bottom: 14,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(images.length, (i) {
+                          final active = i == _imgIndex;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: active ? 18 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: active ? Colors.white : Colors.white54,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   if (package.packageCode.isNotEmpty)
                     Positioned(
                       bottom: 16,
@@ -206,7 +257,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -219,20 +270,20 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       Expanded(
                         child: Text(
                           package.destination,
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 13),
+                          style: TextStyle(
+                              color: context.colors.textSecondary, fontSize: 13),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.access_time,
-                          size: 18, color: AppTheme.textSecondary),
+                      Icon(Icons.access_time,
+                          size: 18, color: context.colors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         package.duration,
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 13),
+                        style: TextStyle(
+                            color: context.colors.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
@@ -246,13 +297,13 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary),
+                        color: context.colors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Select package tier based on hotel style & comfort',
                     style: GoogleFonts.inter(
-                        fontSize: 12, color: AppTheme.textSecondary),
+                        fontSize: 12, color: context.colors.textSecondary),
                   ),
                   const SizedBox(height: 12),
 
@@ -301,7 +352,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                       fontSize: 13,
                                       color: isSelected
                                           ? Colors.white
-                                          : AppTheme.textPrimary,
+                                          : context.colors.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -329,9 +380,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: context.colors.surfaceAlt,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: context.colors.border),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +395,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                   style: GoogleFonts.outfit(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15,
-                                      color: AppTheme.textPrimary),
+                                      color: context.colors.textPrimary),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -370,9 +421,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text('Stay: ${activeTier.hotel}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 13,
-                                          color: AppTheme.textPrimary,
+                                          color: context.colors.textPrimary,
                                           fontWeight: FontWeight.w500)),
                                 ),
                               ],
@@ -385,9 +436,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text('Meals: ${activeTier.meal}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 13,
-                                          color: AppTheme.textPrimary,
+                                          color: context.colors.textPrimary,
                                           fontWeight: FontWeight.w500)),
                                 ),
                               ],
@@ -401,9 +452,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                 Expanded(
                                   child: Text(
                                       'Transfer: ${activeTier.transport}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 13,
-                                          color: AppTheme.textPrimary,
+                                          color: context.colors.textPrimary,
                                           fontWeight: FontWeight.w500)),
                                 ),
                               ],
@@ -430,7 +481,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                         : 'Embark on an unforgettable vacation tailored with premium stays, guided sightseeing tours, and seamless local transport.',
                     style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: AppTheme.textSecondary,
+                        color: context.colors.textSecondary,
                         height: 1.6),
                   ),
                   const SizedBox(height: 20),
@@ -452,9 +503,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                                 child: Text(h,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 13,
-                                        color: AppTheme.textPrimary))),
+                                        color: context.colors.textPrimary))),
                           ],
                         ),
                       ),
@@ -485,10 +536,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: context.colors.border),
                         ),
                         child: Material(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(12),
                           clipBehavior: Clip.antiAlias,
                           child: ExpansionTile(
@@ -518,7 +569,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                             style: GoogleFonts.outfit(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary),
+                                color: context.colors.textPrimary),
                           ),
                           children: [
                             Padding(
@@ -527,7 +578,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                 dayDesc,
                                 style: GoogleFonts.inter(
                                     fontSize: 13,
-                                    color: AppTheme.textSecondary,
+                                    color: context.colors.textSecondary,
                                     height: 1.5),
                               ),
                             ),
@@ -596,9 +647,9 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: context.colors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +715,7 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.colors.surface,
           boxShadow: [
             BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -682,8 +733,8 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                   activeTier != null
                       ? '${activeTier.category} Plan'
                       : 'Starting Price',
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11),
+                  style: TextStyle(
+                      color: context.colors.textSecondary, fontSize: 11),
                 ),
                 Text(
                   currencyFormatter.format(

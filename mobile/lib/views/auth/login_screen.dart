@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -14,6 +15,7 @@ import '../../providers/specialization_theme_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../home/home_screen.dart';
+import '../legal/legal_screen.dart';
 import 'forget_screen.dart';
 import 'register_screen.dart';
 
@@ -43,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   String _identifierError = '';
   String _resolvedEmail = '';
-  String _resolvedPhone = '';
+  final String _resolvedPhone = ''; // phone/OTP sign-in not wired to a backend
 
   Timer? _resendTimer;
   int _otpResendIn = 0;
@@ -118,17 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
         _step = _LoginStep.password;
       });
     } else if (isPhone) {
-      setState(() {
-        _resolvedPhone = digits;
-        _otpController.clear();
-        _step = _LoginStep.otp;
-      });
-      _startResendCountdown();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('We sent a 6-digit code to $_resolvedPhone')),
-      );
+      // Phone / OTP sign-in has no backend yet (server only exposes
+      // /auth/login, /auth/register, /auth/forgot-password). Say so plainly
+      // instead of routing to a code screen that can't verify anything.
+      setState(() => _identifierError =
+          'Phone sign-in isn’t available yet — please sign in with your email address.');
     } else {
-      setState(() => _identifierError = 'Enter a valid email address or phone number.');
+      setState(() => _identifierError = 'Enter a valid email address.');
     }
   }
 
@@ -228,10 +226,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ? 'Enter the password for $_resolvedEmail.'
         : _step == _LoginStep.otp
             ? 'We sent a 6-digit code to $_resolvedPhone.'
-            : 'Enter your registered phone number or email to continue.';
+            : 'Enter your registered email address to continue.';
+
+    final cs = context.colors;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: cs.scaffold,
       body: Column(
         children: [
           // ── Blue hero: travel-image carousel behind an ocean tint ──
@@ -351,25 +351,25 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // ── White sheet lifting over the blue ──
+          // ── Sheet lifting over the blue ──
           Expanded(
             child: Transform.translate(
               offset: const Offset(0, -24),
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(32)),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(32)),
                   boxShadow: [
                     BoxShadow(
-                        color: Color(0x22063B6D),
+                        color: cs.shadow,
                         blurRadius: 30,
-                        offset: Offset(0, -8)),
+                        offset: const Offset(0, -8)),
                   ],
                 ),
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(24, 16, 24,
-                      24 + MediaQuery.of(context).viewInsets.bottom),
+                  padding: EdgeInsets.fromLTRB(24, 18, 24,
+                      28 + MediaQuery.of(context).viewInsets.bottom),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -380,12 +380,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 40,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
+                              color: cs.border,
                               borderRadius: BorderRadius.circular(999),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 22),
                         Text(sheetLabel,
                             style: const TextStyle(
                                 fontSize: 11,
@@ -394,17 +394,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: AppTheme.primaryColor)),
                         const SizedBox(height: 6),
                         Text(sheetHelper,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 13,
                                 height: 1.45,
-                                color: AppTheme.textSecondary)),
-                        const SizedBox(height: 22),
+                                color: cs.textSecondary)),
+                        const SizedBox(height: 24),
                         if (_step == _LoginStep.identifier)
                           ..._buildIdentifierStep(),
                         if (_step == _LoginStep.password)
                           ..._buildPasswordStep(authProvider),
                         if (_step == _LoginStep.otp)
                           ..._buildOtpStep(),
+                        const SizedBox(height: 20),
+                        _buildLegalNote(),
                       ],
                     ),
                   ),
@@ -421,8 +423,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return [
       CustomTextField(
         controller: _identifierController,
-        label: 'Phone number or email',
-        hint: 'name@example.com  ·  98765 43210',
+        label: 'Email address',
+        hint: '',
         prefixIcon: Icons.alternate_email_rounded,
         keyboardType: TextInputType.emailAddress,
       ),
@@ -444,63 +446,47 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      const SizedBox(height: 20),
+      const SizedBox(height: 24),
       CustomButton(text: 'Continue', onPressed: _handleIdentifierContinue),
-      const SizedBox(height: 20),
-      Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Don't have an account? ",
-                style: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const RegisterScreen()),
-              ),
-              child: const Text('Register',
-                  style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 12),
-      Center(
-        child: TextButton(
-          onPressed: () {
-            final authProvider = Provider.of<AuthProvider>(context, listen: false);
-            authProvider.continueAsGuest();
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
-            );
-          },
-          child: const Text(
-            'Explore as Guest →',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
+      const SizedBox(height: 24),
+      _registerPrompt(),
     ];
   }
 
+  Widget _registerPrompt() {
+    final cs = context.colors;
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Don't have an account? ",
+              style: TextStyle(
+                  color: cs.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500)),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+            ),
+            child: const Text('Register',
+                style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildPasswordStep(AuthProvider authProvider) {
+    final cs = context.colors;
     return [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: cs.surfaceAlt,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -511,7 +497,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 _resolvedEmail,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: cs.textPrimary),
               ),
             ),
             TextButton(
@@ -530,7 +519,7 @@ class _LoginScreenState extends State<LoginScreen> {
       CustomTextField(
         controller: _passwordController,
         label: 'Password',
-        hint: '••••••••',
+        hint: '',
         prefixIcon: Icons.lock_outline,
         obscureText: _obscurePassword,
         suffixIcon: IconButton(
@@ -568,39 +557,17 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: _handlePasswordLogin,
       ),
       const SizedBox(height: 20),
-      Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Don't have an account? ",
-                style: TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500)),
-            GestureDetector(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const RegisterScreen()),
-              ),
-              child: const Text('Register',
-                  style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-            ),
-          ],
-        ),
-      ),
+      _registerPrompt(),
     ];
   }
 
   List<Widget> _buildOtpStep() {
+    final cs = context.colors;
     return [
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: cs.surfaceAlt,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -611,7 +578,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 _resolvedPhone,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: cs.textPrimary),
               ),
             ),
             TextButton(
@@ -628,9 +598,10 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       const SizedBox(height: 16),
-      const Text(
+      Text(
         '6-digit code',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+        style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.w600, color: cs.textSecondary),
       ),
       const SizedBox(height: 6),
       TextField(
@@ -641,8 +612,12 @@ class _LoginScreenState extends State<LoginScreen> {
           LengthLimitingTextInputFormatter(6),
         ],
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
-        decoration: const InputDecoration(hintText: '••••••'),
+        style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 8,
+            color: cs.textPrimary),
+        decoration: const InputDecoration(hintText: ''),
       ),
       if (_identifierError.isNotEmpty)
         Padding(
@@ -672,6 +647,42 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
       ),
     ];
+  }
+
+  void _openLegal(Widget page) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  // "By continuing you agree to …" — opens the in-app Terms / Privacy pages
+  // (no browser / url_launcher, so it works offline and stays themed).
+  Widget _buildLegalNote() {
+    final base = TextStyle(
+        fontSize: 11, height: 1.5, color: context.colors.textSecondary);
+    final link = base.copyWith(
+        color: AppTheme.primaryColor, fontWeight: FontWeight.w700);
+    return Text.rich(
+      TextSpan(
+        style: base,
+        children: [
+          const TextSpan(text: 'By continuing you agree to our '),
+          TextSpan(
+            text: 'Terms & Conditions',
+            style: link,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => _openLegal(LegalScreen.terms()),
+          ),
+          const TextSpan(text: ' and '),
+          TextSpan(
+            text: 'Privacy Policy',
+            style: link,
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => _openLegal(LegalScreen.privacy()),
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
   }
 
   void _showServerIpDialog() {

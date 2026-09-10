@@ -139,7 +139,7 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
     final currencyFormatter = NumberFormat('#,##,###');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: context.colors.scaffold,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -175,13 +175,13 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                       ),
                     ),
                     Material(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       shape: const CircleBorder(),
                       clipBehavior: Clip.antiAlias,
                       child: IconButton(
                         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary, size: 20),
+                        icon: Icon(Icons.close_rounded, color: context.colors.textPrimary, size: 20),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -192,7 +192,7 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
@@ -214,14 +214,14 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                           children: [
                             Text(
                               widget.activity.title,
-                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary),
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: context.colors.textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '₹${currencyFormatter.format(widget.activity.startingPrice)}/person • ${widget.activity.location.isNotEmpty ? widget.activity.location : widget.activity.destinationName}',
-                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                              style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -279,7 +279,7 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.colors.surface,
                       border: Border.all(color: const Color(0xFFCBD5E1)),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -315,7 +315,7 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFFCBD5E1)),
                         ),
@@ -327,8 +327,8 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
-                                  const Text('Age 12+', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Adults', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.colors.textPrimary)),
+                                  Text('Age 12+', style: TextStyle(fontSize: 10, color: context.colors.textSecondary)),
                                 ],
                               ),
                             ),
@@ -366,7 +366,7 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.colors.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFFCBD5E1)),
                         ),
@@ -378,8 +378,8 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('Children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textPrimary)),
-                                  const Text('Age 5-11', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                  Text('Children', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: context.colors.textPrimary)),
+                                  Text('Age 5-11', style: TextStyle(fontSize: 10, color: context.colors.textSecondary)),
                                 ],
                               ),
                             ),

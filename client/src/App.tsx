@@ -136,14 +136,16 @@ export const App: React.FC = () => {
   const isAdmin = checkIsAdminUser();
   const isLoginPage = isAuthPath && !isUserLoggedIn;
   const hideWebChrome = isMobile;
+  // Marketing pages (home, packages, destinations, blog, …) are public — show
+  // the site chrome for everyone, only hiding it on the bare login screen,
+  // admin, and the mobile app shell.
+  const showWebChrome = !isAdminRoute && !hideWebChrome && !isLoginPage;
 
-  // Immediate render-time redirect target for public customer pages
+  // Public marketing pages render for everyone. Signed-in admins are sent to
+  // the back-office; nobody else is redirected.
   const getPublicRouteElement = (element: React.ReactNode) => {
     if (isAdmin) {
       return <Navigate to="/admin/dashboard" replace />;
-    }
-    if (!isUserLoggedIn) {
-      return <Navigate to="/login" replace />;
     }
     return element;
   };
@@ -153,10 +155,10 @@ export const App: React.FC = () => {
       {!isOnline && (
         <NetworkErrorScreen onRetry={checkConnection} isChecking={isChecking} />
       )}
-      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <Navbar />}
+      {showWebChrome && <Navbar />}
 
       <main
-        className={`flex-1 ${!isAdminRoute && !hideWebChrome && isUserLoggedIn && !isLoginPage ? 'pt-[64px]' : ''} ${
+        className={`flex-1 ${showWebChrome ? 'pt-[64px]' : ''} ${
           tabletFrame ? 'mx-auto w-full max-w-[480px] border-x border-line shadow-glass min-h-screen' : ''
         }`}
       >
@@ -217,8 +219,8 @@ export const App: React.FC = () => {
         </Suspense>
       </main>
 
-      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <Footer />}
-      {!isAdminRoute && !hideWebChrome && isUserLoggedIn && <FloatingActionWidget />}
+      {showWebChrome && <Footer />}
+      {showWebChrome && <FloatingActionWidget />}
 
       {/* Bottom tab bar — visible on mobile when logged in */}
       {!isAdminRoute && isUserLoggedIn && <MobileStickyBar />}

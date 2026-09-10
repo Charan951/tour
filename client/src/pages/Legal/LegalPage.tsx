@@ -52,7 +52,14 @@ const PRIVACY: LegalSection[] = [
   {
     heading: 'Your choices',
     paragraphs: [
-      'You can view and edit your profile at any time, ask us to correct or delete your data, and opt out of marketing messages.',
+      'You can view and edit your profile at any time and opt out of marketing messages.',
+    ],
+  },
+  {
+    heading: 'Deleting your account',
+    paragraphs: [
+      'You can permanently delete your account from the mobile app (Profile → Delete account) or on our website at /delete-account. This removes your login and personal profile data.',
+      'Booking and enquiry records are retained in anonymised form only where accounting or legal rules require it, then deleted. If you cannot sign in, contact us from your registered email address.',
     ],
   },
   {

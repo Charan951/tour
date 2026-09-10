@@ -160,6 +160,7 @@ export const Footer: React.FC = () => {
             <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/delete-account" className="hover:text-white transition-colors">Delete Account</Link>
             <Link to="/contact" className="hover:text-white transition-colors">Contact Support</Link>
             <Link to="/admin/login" className="text-gold-500 hover:underline">Admin Login</Link>
           </div>

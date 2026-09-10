@@ -20,6 +20,7 @@ const BlogsPage = lazy(() => import('./pages/Blogs/BlogsPage').then(m => ({ defa
 const BlogDetailPage = lazy(() => import('./pages/Blogs/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
 const FaqPage = lazy(() => import('./pages/Faq/FaqPage').then(m => ({ default: m.FaqPage })));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
+const DeleteAccountPage = lazy(() => import('./pages/Legal/DeleteAccountPage').then(m => ({ default: m.DeleteAccountPage })));
 const ThemeCatalogPage = lazy(() => import('./pages/Themes/ThemeCatalogPage').then(m => ({ default: m.ThemeCatalogPage })));
 const UserDashboardPage = lazy(() => import('./pages/User/UserDashboardPage').then(m => ({ default: m.UserDashboardPage })));
 
@@ -190,6 +191,8 @@ export const App: React.FC = () => {
             {/* Legal pages must be reachable without auth (login link, app stores, Razorpay) */}
             <Route path="/terms" element={<LegalPage doc="terms" />} />
             <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+            <Route path="/delete-account" element={<DeleteAccountPage />} />
+            <Route path="/account-deletion" element={<DeleteAccountPage />} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
             <Route path="/login" element={isAdmin ? <Navigate to="/admin/dashboard" replace /> : <UserDashboardPage />} />

@@ -156,7 +156,9 @@ class ApiConfig {
       return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=$width&q=75&auto=format&fit=crop';
     }
     final cleanUrl = url.trim();
-    if (cleanUrl.startsWith('data:') || cleanUrl.startsWith('blob:') || cleanUrl.startsWith('assets/')) {
+    if (cleanUrl.startsWith('data:') ||
+        cleanUrl.startsWith('blob:') ||
+        cleanUrl.startsWith('assets/')) {
       return cleanUrl;
     }
     if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
@@ -251,8 +253,7 @@ class _ServerConfigDialogWidget extends StatefulWidget {
       __ServerConfigDialogWidgetState();
 }
 
-class __ServerConfigDialogWidgetState
-    extends State<_ServerConfigDialogWidget> {
+class __ServerConfigDialogWidgetState extends State<_ServerConfigDialogWidget> {
   late bool _selectedIsProduction;
   late TextEditingController _customHostController;
   bool _useCustomHost = false;
@@ -261,8 +262,8 @@ class __ServerConfigDialogWidgetState
   void initState() {
     super.initState();
     _selectedIsProduction = ApiConfig.isProduction;
-    _useCustomHost = ApiConfig.customHost != null &&
-        ApiConfig.customHost!.trim().isNotEmpty;
+    _useCustomHost =
+        ApiConfig.customHost != null && ApiConfig.customHost!.trim().isNotEmpty;
     _customHostController =
         TextEditingController(text: ApiConfig.customHost ?? '');
   }
@@ -282,7 +283,8 @@ class __ServerConfigDialogWidgetState
         children: [
           Icon(Icons.tune_rounded, color: AppTheme.primaryColor),
           const SizedBox(width: 10),
-          const Text('Backend Environment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Backend Environment',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
       content: SingleChildScrollView(
@@ -343,7 +345,8 @@ class __ServerConfigDialogWidgetState
                             ApiConfig.productionHost,
                             style: TextStyle(
                               fontSize: 11,
-                              color: theme.textTheme.bodySmall?.color ?? Colors.grey,
+                              color: theme.textTheme.bodySmall?.color ??
+                                  Colors.grey,
                             ),
                           ),
                         ],
@@ -358,7 +361,9 @@ class __ServerConfigDialogWidgetState
                           color: (_selectedIsProduction && !_useCustomHost)
                               ? AppTheme.primaryColor
                               : Colors.grey,
-                          width: (_selectedIsProduction && !_useCustomHost) ? 6 : 2,
+                          width: (_selectedIsProduction && !_useCustomHost)
+                              ? 6
+                              : 2,
                         ),
                       ),
                     ),
@@ -415,7 +420,8 @@ class __ServerConfigDialogWidgetState
                             ApiConfig.localHost,
                             style: TextStyle(
                               fontSize: 11,
-                              color: theme.textTheme.bodySmall?.color ?? Colors.grey,
+                              color: theme.textTheme.bodySmall?.color ??
+                                  Colors.grey,
                             ),
                           ),
                         ],
@@ -430,7 +436,9 @@ class __ServerConfigDialogWidgetState
                           color: (!_selectedIsProduction && !_useCustomHost)
                               ? AppTheme.primaryColor
                               : Colors.grey,
-                          width: (!_selectedIsProduction && !_useCustomHost) ? 6 : 2,
+                          width: (!_selectedIsProduction && !_useCustomHost)
+                              ? 6
+                              : 2,
                         ),
                       ),
                     ),
@@ -469,7 +477,9 @@ class __ServerConfigDialogWidgetState
                       children: [
                         Icon(
                           Icons.dns_rounded,
-                          color: _useCustomHost ? AppTheme.primaryColor : Colors.grey,
+                          color: _useCustomHost
+                              ? AppTheme.primaryColor
+                              : Colors.grey,
                         ),
                         const SizedBox(width: 12),
                         const Expanded(
@@ -518,7 +528,8 @@ class __ServerConfigDialogWidgetState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.link, size: 16, color: AppTheme.primaryColor),
+                  const Icon(Icons.link,
+                      size: 16, color: AppTheme.primaryColor),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -580,4 +591,3 @@ class __ServerConfigDialogWidgetState
         : ApiConfig.localHost;
   }
 }
-

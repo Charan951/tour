@@ -69,9 +69,22 @@ export const sendPushNotification = async (
     // on aggressive-OEM Android. iOS keeps an `aps.alert` so the OS shows it.
     const message: Message = {
       token,
+      notification: {
+        title,
+        body,
+      },
       data: { ...data, title, body },
       android: {
         priority: 'high',
+        notification: {
+          title,
+          body,
+          channelId: 'high_importance_channel',
+          priority: 'high',
+          sound: 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        },
       },
       apns: {
         headers: { 'apns-priority': '10' },
@@ -111,13 +124,24 @@ export const sendMulticastPushNotification = async (
   }
 
   try {
-    // See sendPushNotification — Android is data-only (client renders it),
-    // iOS keeps an aps.alert so the OS shows it.
     const message: MulticastMessage = {
       tokens,
+      notification: {
+        title,
+        body,
+      },
       data: { ...data, title, body },
       android: {
         priority: 'high',
+        notification: {
+          title,
+          body,
+          channelId: 'high_importance_channel',
+          priority: 'high',
+          sound: 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        },
       },
       apns: {
         headers: { 'apns-priority': '10' },

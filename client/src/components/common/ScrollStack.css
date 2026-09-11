@@ -2,8 +2,7 @@
   .scroll-stack {
     display: block;
     width: 100%;
-    /* space for the stacked cards to pin and scroll smoothly above MobileStickyBar */
-    padding-bottom: 260px;
+    padding-bottom: 12px;
   }
 
   .scroll-stack-slot {

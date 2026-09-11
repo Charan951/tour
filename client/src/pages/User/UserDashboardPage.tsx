@@ -747,20 +747,38 @@ export const UserDashboardPage: React.FC = () => {
         <div className="relative overflow-hidden text-white px-6 pt-8 pb-28 min-h-[52vh] flex flex-col">
           <AuthHeroCarousel />
 
-          {isLogin && loginStep !== 'identifier' ? (
-            <button
-              type="button"
-              onClick={() => {
-                setAuthError(''); setAuthSuccess('');
-                setLoginStep('identifier'); setLoginOtp('');
-              }}
-              className="relative z-10 self-start inline-flex items-center gap-1.5 h-9 -ml-2 px-2 rounded-full text-white/90 hover:text-white text-xs font-black uppercase tracking-wider active:scale-95 transition"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-          ) : (
-            <div className="h-9" />
-          )}
+          <div className="relative z-10 flex items-center justify-between">
+            {isLogin && loginStep !== 'identifier' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError(''); setAuthSuccess('');
+                  setLoginStep('identifier'); setLoginOtp('');
+                }}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold active:scale-95 transition backdrop-blur-md border border-white/25 shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+            ) : (
+              <Link
+                to="/"
+                onClick={handleContinueAsGuest}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold active:scale-95 transition backdrop-blur-md border border-white/25 shadow-sm"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Home
+              </Link>
+            )}
+
+            {isLogin && loginStep !== 'identifier' && (
+              <Link
+                to="/"
+                onClick={handleContinueAsGuest}
+                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold active:scale-95 transition backdrop-blur-md border border-white/25 shadow-sm"
+              >
+                <span>Back to Home</span>
+              </Link>
+            )}
+          </div>
 
           <div className="relative z-10 mt-auto text-center flex flex-col items-center">
             <div className="flex justify-center mb-4">
@@ -1012,9 +1030,15 @@ export const UserDashboardPage: React.FC = () => {
           {screen === 'profile' && (
             <div className="flex-1 overflow-y-auto bg-canvas">
               {/* Blue header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-5 pt-12 pb-14 rounded-b-[32px] shadow-[0_20px_40px_-18px_rgba(6,59,109,0.5)] text-white">
+              <div className="relative overflow-hidden bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-5 pt-10 pb-14 rounded-b-[32px] shadow-[0_20px_40px_-18px_rgba(6,59,109,0.5)] text-white">
                 <div aria-hidden className="pointer-events-none absolute -top-16 -right-12 w-52 h-52 rounded-full bg-aqua-500/25 blur-3xl" />
-                <div className="relative flex items-start justify-between gap-3">
+                <div className="relative space-y-2.5">
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold shrink-0 transition backdrop-blur-md border border-white/25 shadow-sm w-fit active:scale-95 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" /> <span>Back to Home</span>
+                  </Link>
                   <div className="min-w-0">
                     <h1 className="font-display font-black text-2xl leading-tight">My Profile &amp; Account</h1>
                     <p className="text-sm text-white/75 mt-1">Manage your account, bookings and preferences.</p>

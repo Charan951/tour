@@ -147,57 +147,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showServerConfigDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Configure Backend Server'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Specify host IP address if testing on physical mobile device:',
-              style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ipController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. 192.168.1.10',
-                labelText: 'Host Local IP Address',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Current Active Base URL: ${ApiConfig.baseUrl}',
-              style:
-                  const TextStyle(fontSize: 11, color: AppTheme.primaryColor),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ApiConfig.customHost = _ipController.text.trim();
-              Navigator.pop(context);
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('Server endpoint updated to: ${ApiConfig.baseUrl}'),
-                  backgroundColor: AppTheme.successColor,
-                ),
-              );
-            },
-            child: const Text('Save Host'),
-          ),
-        ],
-      ),
+    ApiConfig.showServerConfigDialog(
+      context,
+      onSaved: () => setState(() {}),
     );
   }
 

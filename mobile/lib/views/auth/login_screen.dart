@@ -686,50 +686,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showServerIpDialog() {
-    final controller = TextEditingController(text: ApiConfig.customHost ?? '');
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Configure Backend Server IP'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Enter your laptop IPv4 address (e.g. 192.168.1.15) if testing over Wi-Fi, or leave empty for default:',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                hintText: '192.168.x.x',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.dns),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                ApiConfig.customHost =
-                    controller.text.trim().isEmpty ? null : controller.text.trim();
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Server URL set to: ${ApiConfig.baseUrl}')),
-              );
-            },
-            child: const Text('Save Host'),
-          ),
-        ],
-      ),
+    ApiConfig.showServerConfigDialog(
+      context,
+      onSaved: () => setState(() {}),
     );
   }
 }

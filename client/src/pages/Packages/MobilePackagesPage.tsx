@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Filter, X, MapPin, Clock, Star, ArrowLeft } from 'lucide-react';
+import { Search, Filter, X, MapPin, Clock, Star, ArrowLeft, Info, Send, Sparkles } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { FALLBACK_PACKAGES } from '../../utils/mobileDataFallback';
@@ -28,10 +28,11 @@ const safeDuration = (dur: any): string => {
 
 interface PackageCardProps {
   pkg: any;
+  onEnquire?: (pkg: any, initialMode?: 'enquiry' | 'booking') => void;
   onBookNow?: (pkg: any) => void;
 }
 
-export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }) => {
+export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire, onBookNow }) => {
   const rawImg = pkg.images?.[0] || pkg.imageUrl || pkg.mainImage || pkg.coverImage;
   const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop');
   const price = Number(pkg.price || pkg.startingPrice || pkg.pricePerPerson || 0);
@@ -42,18 +43,25 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
   const duration = safeDuration(pkg.duration);
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(0,0,0,0.06)] mb-4">
+    <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_10px_rgba(0,0,0,0.06)] mb-4 group relative">
       {/* Image + Badges */}
-      <Link to={`/package/${pkg.slug}`} className="block relative" style={{ height: 180 }}>
-        <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover" />
-        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-ocean-600/90 text-white text-xs font-bold">
+      <div className="relative" style={{ height: 180 }}>
+        <Link to={`/package/${pkg.slug}`} className="block w-full h-full">
+          <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover" />
+        </Link>
+        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-ocean-600/90 text-white text-xs font-bold pointer-events-none">
           {category}
         </div>
-        <div className="absolute top-3 right-3 px-2 py-1 rounded-xl bg-black/70 text-white text-xs font-bold flex items-center gap-1">
-          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          {rating}
-        </div>
-      </Link>
+        
+        {/* Info Icon Button (Top Right) to Open Details */}
+        <Link
+          to={`/package/${pkg.slug}`}
+          title="View Package Details"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center backdrop-blur-md shadow-md active:scale-95 border border-white/50 z-10"
+        >
+          <Info className="w-4 h-4 text-ocean-600" />
+        </Link>
+      </div>
 
       {/* Content */}
       <div className="px-4 py-3">
@@ -72,11 +80,13 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
           )}
         </div>
 
-        <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-3">
-          {pkg.title}
-        </h3>
+        <Link to={`/package/${pkg.slug}`}>
+          <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2 mb-3 hover:text-ocean-600 transition-colors">
+            {pkg.title}
+          </h3>
+        </Link>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
           <div>
             <p className="text-[0.6875rem] text-slate-500">Starting from</p>
             <div className="flex items-baseline gap-1.5">
@@ -88,17 +98,24 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onBookNow }
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <Link
-              to={`/package/${pkg.slug}`}
-              className="px-3 py-2 rounded-xl border-2 border-aqua-500 text-aqua-500 text-xs font-bold"
-            >
-              View Deal
-            </Link>
             <button
-              onClick={() => onBookNow?.(pkg)}
-              className="px-3 py-2 rounded-xl bg-ocean-600 text-white text-xs font-bold active:opacity-80"
+              type="button"
+              onClick={() => onEnquire?.(pkg, 'enquiry')}
+              className="px-3 py-1.5 rounded-xl bg-ocean-50 border border-ocean-200 text-ocean-700 text-xs font-bold active:scale-95 flex items-center gap-1"
             >
-              Book Now
+              <Send className="w-3 h-3 text-ocean-600" />
+              <span>Enquire</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (onBookNow) onBookNow(pkg);
+                else if (onEnquire) onEnquire(pkg, 'booking');
+              }}
+              className="px-3 py-1.5 rounded-xl bg-ocean-600 text-white text-xs font-bold active:scale-95 flex items-center gap-1"
+            >
+              <Sparkles className="w-3 h-3 text-amber-300 fill-current" />
+              <span>Book Now</span>
             </button>
           </div>
         </div>
@@ -121,13 +138,18 @@ export const MobilePackagesPage: React.FC = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState('All');
   const [filterOpen, setFilterOpen] = useState(false);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [enquiryMode, setEnquiryMode] = useState<'enquiry' | 'booking'>('enquiry');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
         setLoading(true);
-        const res = await apiClient.get('/packages?limit=30');
+        const res = await apiClient.get('/packages?limit=100');
         const apiData = res.data.data || [];
         setPackages(apiData);
       } catch (e) {
@@ -150,20 +172,44 @@ export const MobilePackagesPage: React.FC = () => {
 
   const filtered = packages.filter(pkg => {
     if (!pkg) return false;
-    const titleMatch = safeStr(pkg.title).toLowerCase().includes((search || '').toLowerCase());
-    const destMatch = safeStr(pkg.destination).toLowerCase().includes((search || '').toLowerCase());
-    const pkgCat = safeStr(pkg.category || pkg.theme || pkg.themeName);
-    const catMatch = !selectedCategory || selectedCategory === 'All' ||
-      pkgCat.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-      selectedCategory.toLowerCase().includes(pkgCat.toLowerCase());
+    const q = (search || '').trim().toLowerCase();
+    
+    // Search query matching (title, destination, code)
+    let searchMatch = true;
+    if (q) {
+      const titleStr = safeStr(pkg.title).toLowerCase();
+      const codeStr = safeStr(pkg.packageCode).toLowerCase();
+      const destStr = typeof pkg.destination === 'object' && pkg.destination !== null ? safeStr(pkg.destination.name) : safeStr(pkg.destination);
+      searchMatch = titleStr.includes(q) || codeStr.includes(q) || destStr.toLowerCase().includes(q);
+    }
 
+    // Category / Theme match (handles array category, themeName, or string category)
+    let catMatch = true;
+    if (selectedCategory && selectedCategory !== 'All') {
+      const sel = selectedCategory.toLowerCase();
+      const themeStr = safeStr(pkg.themeName || pkg.theme).toLowerCase();
+      
+      let catStr = '';
+      if (typeof pkg.category === 'string') catStr = pkg.category.toLowerCase();
+      else if (Array.isArray(pkg.category)) {
+        catStr = pkg.category.map((c: any) => (typeof c === 'object' ? c.name || c.slug : String(c))).join(' ').toLowerCase();
+      }
+
+      const destCatStr = typeof pkg.destination === 'object' && pkg.destination !== null ? safeStr(pkg.destination.category).toLowerCase() : '';
+
+      catMatch = catStr.includes(sel) || sel.includes(catStr) ||
+                 themeStr.includes(sel) || sel.includes(themeStr) ||
+                 destCatStr.includes(sel) || sel.includes(destCatStr);
+    }
+
+    // Price Filter
     const price = Number(pkg.price || pkg.startingPrice || pkg.pricePerPerson || 0);
     let priceMatch = true;
     if (selectedPriceRange === 'Under ₹20,000') priceMatch = price < 20000;
     else if (selectedPriceRange === '₹20,000 - ₹50,000') priceMatch = price >= 20000 && price <= 50000;
     else if (selectedPriceRange === 'Above ₹50,000') priceMatch = price > 50000;
 
-    return (titleMatch || destMatch) && catMatch && priceMatch;
+    return searchMatch && catMatch && priceMatch;
   });
 
   return (
@@ -180,7 +226,7 @@ export const MobilePackagesPage: React.FC = () => {
         <h1 className="font-display font-black text-lg text-white">Explore Packages</h1>
       </div>
 
-      <div className="overflow-y-auto pb-48" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="pb-48">
         <div className="px-4 pt-4 pb-2">
           {/* Search + Filter row */}
           <div className="flex items-center gap-2.5">
@@ -244,7 +290,16 @@ export const MobilePackagesPage: React.FC = () => {
               <MobilePackageCard
                 key={pkg._id || i}
                 pkg={pkg}
-                onBookNow={p => { setSelectedPkg(p); setEnquiryOpen(true); }}
+                onEnquire={(p, mode) => {
+                  setSelectedPkg(p);
+                  setEnquiryMode(mode || 'enquiry');
+                  setEnquiryOpen(true);
+                }}
+                onBookNow={p => {
+                  setSelectedPkg(p);
+                  setEnquiryMode('booking');
+                  setEnquiryOpen(true);
+                }}
               />
             ))
           )}
@@ -253,54 +308,51 @@ export const MobilePackagesPage: React.FC = () => {
         <div className="h-28" aria-hidden="true" />
       </div>
 
-      {/* Filter Bottom Sheet */}
+      {/* Filter Bottom Sheet Modal */}
       {filterOpen && (
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setFilterOpen(false)} />
-          <div className="relative bg-white rounded-t-3xl w-full px-5 pt-5 pb-8 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-4" />
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">Filters</h2>
-              <button
-                onClick={() => { setSelectedCategory('All'); setSelectedPriceRange('All'); setFilterOpen(false); }}
-                className="text-ocean-600 font-semibold text-sm"
-              >
-                Reset All
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 space-y-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-900">Filter Packages</h3>
+              <button onClick={() => setFilterOpen(false)} className="p-1 rounded-full text-slate-400 hover:bg-slate-100">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="font-bold text-base text-slate-800 mb-3">Categories</p>
-            <div className="flex flex-wrap gap-2.5 mb-5">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                    selectedCategory === cat
-                      ? 'bg-ocean-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-800'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            {/* Category Filter */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Category</p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
+                      selectedCategory === cat ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <p className="font-bold text-base text-slate-800 mb-3">Budget Range</p>
-            <div className="flex flex-wrap gap-2.5 mb-6">
-              {PRICE_RANGES.map(pr => (
-                <button
-                  key={pr}
-                  onClick={() => setSelectedPriceRange(pr)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                    selectedPriceRange === pr
-                      ? 'bg-cyan-700 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-800'
-                  }`}
-                >
-                  {pr}
-                </button>
-              ))}
+            {/* Price Range Filter */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Price Range</p>
+              <div className="flex flex-wrap gap-2">
+                {PRICE_RANGES.map(pr => (
+                  <button
+                    key={pr}
+                    onClick={() => setSelectedPriceRange(pr)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${
+                      selectedPriceRange === pr ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {pr}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button
@@ -317,6 +369,7 @@ export const MobilePackagesPage: React.FC = () => {
         isOpen={enquiryOpen}
         onClose={() => setEnquiryOpen(false)}
         selectedPackage={selectedPkg}
+        initialMode={enquiryMode}
       />
     </>
   );

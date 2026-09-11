@@ -47,9 +47,8 @@ export const MobileStickyBar: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Hide sticky bar on admin routes and on login/auth pages when user is not logged in
-  const isAuthPath = ['/login', '/my-bookings', '/profile', '/dashboard', '/my-enquiries'].some((p) => location.pathname.startsWith(p));
-  if (location.pathname.startsWith('/admin') || (isAuthPath && !currentUser)) {
+  // Hide sticky bar on admin routes
+  if (location.pathname.startsWith('/admin')) {
     return null;
   }
 

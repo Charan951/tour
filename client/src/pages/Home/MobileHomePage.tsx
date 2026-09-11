@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Search, Zap } from 'lucide-react';
+import { ChevronRight, Search, Zap, Calendar, Headphones, ShieldCheck, Compass, MessageSquare, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { ActivityBookingModal } from '../../components/modals/ActivityBookingModal';
 import { MobilePackageCard } from '../Packages/MobilePackagesPage';
@@ -421,8 +421,113 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           )}
         </div>
 
+        {/* ── How to Book (4-Step Ultra-Stylish Light Guide) ── */}
+        <div className="mt-3 px-4">
+          <div className="relative rounded-[28px] p-5 bg-gradient-to-b from-white via-sky-50/50 to-blue-50/40 border border-slate-200/90 shadow-[0_12px_36px_rgba(6,59,109,0.08)] overflow-hidden">
+            {/* Background Decorative Blur Rings */}
+            <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full bg-ocean-600/10 blur-3xl" />
+            <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-cyan-600/10 blur-3xl" />
+
+            {/* Header */}
+            <div className="relative z-10 text-center mb-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ocean-600/10 text-ocean-700 font-extrabold text-[10px] uppercase tracking-widest border border-ocean-600/20 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-ocean-600" /> How It Works
+              </span>
+              <h2 className="font-display font-black text-xl text-slate-900 mt-2 tracking-tight">
+                Book Your Trip In <span className="text-ocean-600">4 Easy Steps</span>
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium max-w-xs mx-auto">
+                Simple, transparent &amp; personalized holiday planning
+              </p>
+            </div>
+
+            {/* Stepper Cards list with connecting gradient vertical line */}
+            <div className="relative z-10 space-y-3">
+              {/* Connecting Line */}
+              <div className="absolute left-[21px] top-5 bottom-5 w-0.5 bg-gradient-to-b from-ocean-500 via-sky-400 to-emerald-500 opacity-40 pointer-events-none" />
+
+              {[
+                {
+                  step: '01',
+                  icon: Compass,
+                  title: 'Explore & Select Package',
+                  desc: 'Browse hand-picked destinations, holiday packages or specialized travel themes.',
+                  badge: '100+ Tours',
+                  numBg: 'bg-gradient-to-tr from-ocean-700 to-ocean-500 text-white shadow-md shadow-ocean-600/20',
+                  badgeBg: 'bg-ocean-50 text-ocean-700 border-ocean-200',
+                  iconColor: 'text-ocean-600'
+                },
+                {
+                  step: '02',
+                  icon: MessageSquare,
+                  title: 'Submit Booking Enquiry',
+                  desc: 'Select preferred travel dates, guests, and tap Enquire or Book Now.',
+                  badge: 'Free Quote',
+                  numBg: 'bg-gradient-to-tr from-sky-600 to-cyan-500 text-white shadow-md shadow-sky-500/20',
+                  badgeBg: 'bg-sky-50 text-sky-700 border-sky-200',
+                  iconColor: 'text-sky-600'
+                },
+                {
+                  step: '03',
+                  icon: Headphones,
+                  title: 'Personalized Itinerary',
+                  desc: 'Our expert travel consultant calls to customize hotels, transfers & activities for your budget.',
+                  badge: '1-on-1 Support',
+                  numBg: 'bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-md shadow-amber-500/20',
+                  badgeBg: 'bg-amber-50 text-amber-800 border-amber-200',
+                  iconColor: 'text-amber-600'
+                },
+                {
+                  step: '04',
+                  icon: CheckCircle2,
+                  title: 'Confirm & Enjoy Trip!',
+                  desc: 'Make secure advance payment, receive instant vouchers, and embark on your vacation.',
+                  badge: 'Instant Vouchers',
+                  numBg: 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/20',
+                  badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                  iconColor: 'text-emerald-600'
+                }
+              ].map(({ step, icon: Icon, title, desc, badge, numBg, badgeBg, iconColor }) => (
+                <div
+                  key={step}
+                  className="relative flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-200/80 shadow-[0_4px_16px_rgba(6,59,109,0.04)] hover:shadow-md transition-all duration-300 group"
+                >
+                  {/* Stepper Circle */}
+                  <div className={`relative z-10 w-10 h-10 rounded-xl ${numBg} font-mono font-black text-xs flex items-center justify-center shrink-0 border border-white group-hover:scale-105 transition-transform`}>
+                    {step}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                      <h3 className="font-bold text-xs text-slate-900 leading-tight flex items-center gap-1.5 truncate">
+                        <Icon className={`w-3.5 h-3.5 ${iconColor} shrink-0`} />
+                        <span className="truncate">{title}</span>
+                      </h3>
+                      <span className={`text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ${badgeBg}`}>
+                        {badge}
+                      </span>
+                    </div>
+                    <p className="text-[0.72rem] text-slate-500 leading-relaxed font-normal">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom CTA Bar */}
+            <div className="relative z-10 mt-4 pt-3.5 border-t border-slate-200/80 text-center">
+              <Link
+                to="/packages"
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-ocean-600 to-cyan-600 hover:from-ocean-700 hover:to-cyan-700 text-white font-extrabold text-xs shadow-md shadow-ocean-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              >
+                <span>Browse All Tour Packages</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Extra bottom spacer to ensure the last package card and its buttons clear MobileStickyBar */}
-        <div className="h-44" aria-hidden="true" />
+        <div className="h-32" aria-hidden="true" />
       </div>
 
       {/* Enquiry Modal */}

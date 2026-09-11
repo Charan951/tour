@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'config/api_config.dart';
 import 'config/theme.dart';
 import 'config/app_globals.dart';
 import 'providers/auth_provider.dart';
@@ -20,6 +21,7 @@ import 'services/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ApiConfig.loadSavedEnvironment();
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();

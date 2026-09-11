@@ -75,10 +75,13 @@ Future<String?> showFilterSheet(
 }) {
   return showModalBottomSheet<String>(
     context: context,
+    isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) {
       final cs = sheetContext.colors;
+      final maxH = MediaQuery.of(sheetContext).size.height * 0.65;
       return Container(
+        constraints: BoxConstraints(maxHeight: maxH),
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -116,26 +119,37 @@ Future<String?> showFilterSheet(
                 ),
               ),
               const SizedBox(height: 6),
-              ...options.map((opt) {
-                final isSel = opt == selected;
-                return ListTile(
-                  onTap: () => Navigator.pop(sheetContext, opt),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-                  title: Text(
-                    opt,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                      color: isSel ? AppTheme.primaryColor : cs.textPrimary,
+              Flexible(
+                child: Material(
+                  color: Colors.transparent,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: options.map((opt) {
+                        final isSel = opt == selected;
+                        return ListTile(
+                          onTap: () => Navigator.pop(sheetContext, opt),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                          title: Text(
+                            opt,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                              color: isSel ? AppTheme.primaryColor : cs.textPrimary,
+                            ),
+                          ),
+                          trailing: isSel
+                              ? const Icon(Icons.check_rounded,
+                                  color: AppTheme.primaryColor, size: 20)
+                              : null,
+                        );
+                      }).toList(),
                     ),
                   ),
-                  trailing: isSel
-                      ? const Icon(Icons.check_rounded,
-                          color: AppTheme.primaryColor, size: 20)
-                      : null,
-                );
-              }),
+                ),
+              ),
               const SizedBox(height: 12),
             ],
           ),

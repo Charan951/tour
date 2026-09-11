@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, Compass, Sparkles, Flag, Globe, SlidersHorizontal, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, Compass, Flag, Globe, ChevronDown, X, ArrowUpDown } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { PackageCard } from '../../components/cards/PackageCard';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
@@ -28,15 +28,20 @@ export const PackageCatalogPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Filters State
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedTheme, setSelectedTheme] = useState(searchParams.get('theme') || 'All Themes');
   const [selectedRegion, setSelectedRegion] = useState<'All' | 'Domestic' | 'International'>('All');
   const [selectedDestination, setSelectedDestination] = useState(searchParams.get('destination') || '');
+  const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc' | 'days_asc' | 'days_desc'>('featured');
+
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const PAGE_SIZE = 12;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
@@ -57,17 +62,16 @@ export const PackageCatalogPage: React.FC = () => {
     return () => {
       window.removeEventListener('hc_data_updated', handleDataUpdate);
     };
-  }, [searchQuery, selectedTheme, selectedRegion, selectedDestination]);
-
-
+  }, [searchQuery, selectedTheme, selectedRegion, selectedDestination, sortBy]);
 
   const fetchPackagesSilently = async () => {
     try {
-      let url = `/packages?limit=24`;
+      let url = `/packages?limit=100`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;
       const res = await apiClient.get(url);
       let fetched = res.data.data || [];
+
       if (selectedTheme !== 'All Themes' && selectedTheme !== 'All') {
         fetched = fetched.filter((p: any) => isPackageMatchingTheme(p, selectedTheme));
       }
@@ -82,10 +86,21 @@ export const PackageCatalogPage: React.FC = () => {
           return typeof d === 'object' && d !== null ? (d.category === 'International' || d.isDomestic === false) : false;
         });
       }
+
+      // Sort
+      if (sortBy === 'price_asc') {
+        fetched.sort((a: any, b: any) => (Number(a.price || a.startingPrice) || 0) - (Number(b.price || b.startingPrice) || 0));
+      } else if (sortBy === 'price_desc') {
+        fetched.sort((a: any, b: any) => (Number(b.price || b.startingPrice) || 0) - (Number(a.price || a.startingPrice) || 0));
+      } else if (sortBy === 'days_asc') {
+        fetched.sort((a: any, b: any) => (Number(a.duration?.days) || 0) - (Number(b.duration?.days) || 0));
+      } else if (sortBy === 'days_desc') {
+        fetched.sort((a: any, b: any) => (Number(b.duration?.days) || 0) - (Number(a.duration?.days) || 0));
+      }
+
       setPackages(fetched);
     } catch (_) {}
   };
-
 
   const fetchDestinations = async () => {
     try {
@@ -99,7 +114,7 @@ export const PackageCatalogPage: React.FC = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      let url = `/packages?limit=24`;
+      let url = `/packages?limit=100`;
 
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (selectedDestination) url += `&destination=${encodeURIComponent(selectedDestination)}`;
@@ -107,12 +122,10 @@ export const PackageCatalogPage: React.FC = () => {
       const res = await apiClient.get(url);
       let fetched = res.data.data || [];
 
-      // Filter by Theme if selected using robust themeMatcher
       if (selectedTheme !== 'All Themes' && selectedTheme !== 'All') {
         fetched = fetched.filter((p: any) => isPackageMatchingTheme(p, selectedTheme));
       }
 
-      // Filter by Region if selected
       if (selectedRegion === 'Domestic') {
         fetched = fetched.filter((p: any) => {
           const d = p.destination;
@@ -123,6 +136,17 @@ export const PackageCatalogPage: React.FC = () => {
           const d = p.destination;
           return typeof d === 'object' && d !== null ? (d.category === 'International' || d.isDomestic === false) : false;
         });
+      }
+
+      // Sort
+      if (sortBy === 'price_asc') {
+        fetched.sort((a: any, b: any) => (Number(a.price || a.startingPrice) || 0) - (Number(b.price || b.startingPrice) || 0));
+      } else if (sortBy === 'price_desc') {
+        fetched.sort((a: any, b: any) => (Number(b.price || b.startingPrice) || 0) - (Number(a.price || a.startingPrice) || 0));
+      } else if (sortBy === 'days_asc') {
+        fetched.sort((a: any, b: any) => (Number(a.duration?.days) || 0) - (Number(b.duration?.days) || 0));
+      } else if (sortBy === 'days_desc') {
+        fetched.sort((a: any, b: any) => (Number(b.duration?.days) || 0) - (Number(a.duration?.days) || 0));
       }
 
       setPackages(fetched);
@@ -141,6 +165,17 @@ export const PackageCatalogPage: React.FC = () => {
     setEnquiryModalOpen(true);
   };
 
+  const hasActiveFilters = searchQuery || selectedDestination || (selectedTheme !== 'All Themes' && selectedTheme !== 'All') || selectedRegion !== 'All' || sortBy !== 'featured';
+
+  const resetAllFilters = () => {
+    setSearchQuery('');
+    setSelectedDestination('');
+    setSelectedTheme('All Themes');
+    setSelectedRegion('All');
+    setSortBy('featured');
+    setSearchParams({});
+  };
+
   return (
     <>
       <SEO
@@ -148,176 +183,162 @@ export const PackageCatalogPage: React.FC = () => {
         description="Browse all domestic and international holiday tour packages with custom day itineraries."
       />
 
-      <div className="pt-18 sm:pt-20 pb-16 px-4 max-w-7xl mx-auto space-y-10">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1.5 rounded-full inline-block">
+      <div className="pt-14 sm:pt-[60px] pb-12 px-4 max-w-7xl mx-auto space-y-4">
+        
+        {/* Sleek Compact Header - Restored Starting Text */}
+        <div className="text-center max-w-xl mx-auto space-y-1.5">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-ocean-600 bg-ocean-50 border border-ocean-200/80 px-3 py-0.5 rounded-full inline-block">
             Holiday Directory
           </span>
-          <h1 className="font-poppins font-bold text-4xl text-slate-900">
+          <h1 className="font-poppins font-bold text-2xl sm:text-3xl text-slate-900 leading-tight">
             Hand-Crafted Tour Packages Catalog
           </h1>
-          <p className="text-slate-600 text-sm">
+          <p className="text-slate-500 text-xs sm:text-sm">
             Explore hand-crafted holiday itineraries with transparent pricing, 4-star resorts, and private transfers.
           </p>
         </div>
 
-        {/* Dynamic Search & Collapsible Filters Card */}
-        <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-lg space-y-4 text-left">
+        {/* Compact & Professional Clean Filter Card */}
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-sm space-y-3 text-left">
           
-          {/* Main Top Bar: Search Input + Toggle Filters Button */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 text-ocean-600 absolute left-4 top-3.5" />
+          {/* Row 1: Search Box + Destination Dropdown + Region Switcher + Sort By */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+            
+            {/* 1. Search Box (4 cols) */}
+            <div className="lg:col-span-4 relative">
+              <Search className="w-3.5 h-3.5 text-ocean-600 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') fetchPackages(); }}
                 placeholder="Search package name, destination, city..."
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 outline-none text-xs font-bold text-slate-800 focus:border-ocean-600 focus:bg-white transition-all shadow-inner"
+                className="w-full pl-8 pr-7 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 outline-none focus:border-ocean-600 focus:bg-white transition-all"
               />
-            </div>
-
-            {/* Toggle Filters Button */}
-            <button
-              type="button"
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`w-full sm:w-auto px-5 py-3 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border shadow-md active:scale-95 whitespace-nowrap ${
-                isFilterOpen || (selectedDestination || selectedRegion !== 'All' || (selectedTheme !== 'All Themes' && selectedTheme !== 'All'))
-                  ? 'bg-gradient-to-r from-ocean-600 to-cyan-600 text-white border-transparent'
-                  : 'bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-              <span>{isFilterOpen ? 'Hide Filters' : 'Filter Packages'}</span>
-              {(selectedDestination || selectedRegion !== 'All' || (selectedTheme !== 'All Themes' && selectedTheme !== 'All')) && (
-                <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[0.6875rem] font-black uppercase tracking-wider border border-white/30">
-                  On
-                </span>
-              )}
-              {isFilterOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {/* Collapsible Filter Options Panel - Rendered ONLY when isFilterOpen is true */}
-          {isFilterOpen && (
-            <div className="pt-4 border-t border-slate-100 space-y-5 animate-fade-up">
-              {/* Filter Controls Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-center">
-                
-                {/* 1. Destination Dropdown (6 Columns) */}
-                <div className="lg:col-span-6">
-                  <label className="block text-[0.6875rem] font-black text-slate-500 uppercase tracking-wider mb-1">Select Destination</label>
-                  <select
-                    value={selectedDestination}
-                    onChange={(e) => setSelectedDestination(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-2xl bg-slate-50 border border-slate-200 outline-none text-xs font-bold text-slate-800 focus:border-ocean-600 focus:bg-white transition-all cursor-pointer shadow-inner"
-                  >
-                    <option value="">All Destinations</option>
-                    {destinations.map((d) => (
-                      <option key={d._id} value={d._id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 2. Region Category Buttons (6 Columns) */}
-                <div className="lg:col-span-6">
-                  <label className="block text-[0.6875rem] font-black text-slate-500 uppercase tracking-wider mb-1">Region Category</label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100 border border-slate-200/80">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRegion('All')}
-                      className={`py-1.5 rounded-xl text-xs font-black transition-all ${
-                        selectedRegion === 'All'
-                          ? 'bg-ocean-600 text-white shadow-md'
-                          : 'text-slate-700 hover:text-slate-900'
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRegion('Domestic')}
-                      className={`py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition-all ${
-                        selectedRegion === 'Domestic'
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'text-slate-700 hover:text-slate-900'
-                      }`}
-                    >
-                      <Flag className="w-3 h-3" /> India
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRegion('International')}
-                      className={`py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition-all ${
-                        selectedRegion === 'International'
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'text-slate-700 hover:text-slate-900'
-                      }`}
-                    >
-                      <Globe className="w-3 h-3" /> World
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Theme Filters Chips */}
-              <div className="pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[0.6875rem] font-black text-slate-500 uppercase tracking-wider">Filter by Travel Theme:</span>
-                  {(searchQuery || selectedDestination || selectedTheme !== 'All Themes' || selectedRegion !== 'All') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSelectedDestination('');
-                        setSelectedTheme('All Themes');
-                        setSelectedRegion('All');
-                        setSearchParams({});
-                      }}
-                      className="text-xs font-bold text-ocean-600 hover:underline cursor-pointer"
-                    >
-                      Clear All Filters
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {THEME_FILTERS.map((theme) => {
-                    const isSelected = selectedTheme === theme.name;
-                    return (
-                      <button
-                        key={theme.name}
-                        type="button"
-                        onClick={() => setSelectedTheme(theme.name)}
-                        className={`px-3.5 py-1.5 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-ocean-600 border-ocean-600 text-white shadow-md scale-105'
-                            : 'bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100'
-                        }`}
-                      >
-                        <span>{theme.icon}</span>
-                        <span>{theme.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Drawer Bottom Close CTA */}
-              <div className="pt-2 flex justify-end">
+              {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setIsFilterOpen(false)}
-                  className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  <span>Apply & Close Filters</span>
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* 2. Destination Dropdown (3 cols) */}
+            <div className="lg:col-span-3 relative">
+              <select
+                value={selectedDestination}
+                onChange={(e) => setSelectedDestination(e.target.value)}
+                className="w-full py-2 pl-3 pr-7 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-ocean-600 focus:bg-white transition-all cursor-pointer appearance-none truncate"
+              >
+                <option value="">All Destinations</option>
+                {destinations.map((d) => (
+                  <option key={d._id} value={d._id}>{d.name}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            {/* 3. Region Category Switcher (3 cols) */}
+            <div className="lg:col-span-3">
+              <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 text-xs font-bold text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRegion('All')}
+                  className={`flex-1 py-1 rounded-lg text-center transition-all ${
+                    selectedRegion === 'All'
+                      ? 'bg-white text-ocean-700 shadow-xs font-extrabold'
+                      : 'hover:text-slate-900'
+                  }`}
+                >
+                  All Scope
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRegion('Domestic')}
+                  className={`flex-1 py-1 rounded-lg text-center flex items-center justify-center gap-0.5 transition-all ${
+                    selectedRegion === 'Domestic'
+                      ? 'bg-white text-ocean-700 shadow-xs font-extrabold'
+                      : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Flag className="w-2.5 h-2.5 text-emerald-600" /> India
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRegion('International')}
+                  className={`flex-1 py-1 rounded-lg text-center flex items-center justify-center gap-0.5 transition-all ${
+                    selectedRegion === 'International'
+                      ? 'bg-white text-ocean-700 shadow-xs font-extrabold'
+                      : 'hover:text-slate-900'
+                  }`}
+                >
+                  <Globe className="w-2.5 h-2.5 text-sky-600" /> World
                 </button>
               </div>
             </div>
-          )}
+
+            {/* 4. Sort By Dropdown (2 cols) */}
+            <div className="lg:col-span-2 relative">
+              <select
+                value={sortBy}
+                onChange={(e: any) => setSortBy(e.target.value)}
+                className="w-full py-2 pl-3 pr-7 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-ocean-600 focus:bg-white transition-all cursor-pointer appearance-none truncate"
+              >
+                <option value="featured">Sort: Featured</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="days_asc">Duration: Shortest</option>
+                <option value="days_desc">Duration: Longest</option>
+              </select>
+              <ArrowUpDown className="w-3 h-3 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+          </div>
+
+          {/* Row 2: Theme Pills Bar + Result Count & Reset Button */}
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+                Theme:
+              </span>
+              {THEME_FILTERS.map((theme) => {
+                const isSelected = selectedTheme === theme.name;
+                return (
+                  <button
+                    key={theme.name}
+                    type="button"
+                    onClick={() => setSelectedTheme(theme.name)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 border ${
+                      isSelected
+                        ? 'bg-ocean-600 border-ocean-600 text-white font-bold shadow-xs'
+                        : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="text-xs">{theme.icon}</span>
+                    <span>{theme.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="text-xs font-bold text-slate-600">
+                <strong className="text-ocean-600 font-extrabold">{packages.length}</strong> packages
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetAllFilters}
+                  className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2 py-0.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Packages Cards Grid */}

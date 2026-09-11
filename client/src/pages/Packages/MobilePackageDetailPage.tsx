@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, MapPin, Clock, Hotel, Utensils, Car, Check, CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Star, MapPin, Clock, Hotel, Utensils, Car, Check, CheckCircle2, XCircle, ChevronDown, ChevronUp, Camera, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { PackageEnquiryModal } from '../../components/forms/PackageEnquiryModal';
 import { FALLBACK_PACKAGES } from '../../utils/mobileDataFallback';
@@ -35,6 +35,8 @@ export const MobilePackageDetailPage: React.FC = () => {
   const [activeInfoTab, setActiveInfoTab] = useState<'inclusions' | 'exclusions'>('inclusions');
   const [expandedDay, setExpandedDay] = useState<number | null>(1);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [activeImgIndex, setActiveImgIndex] = useState(0);
+  const [activeLightboxImg, setActiveLightboxImg] = useState<string | null>(null);
 
   const handleBack = (e?: React.MouseEvent) => {
     if (e) {
@@ -110,8 +112,19 @@ export const MobilePackageDetailPage: React.FC = () => {
   const tiers = (pkg.pricingTiers && pkg.pricingTiers.length > 0) ? pkg.pricingTiers : defaultTiers;
   const activeTier = tiers[selectedTierIndex] || tiers[0];
 
-  const rawImg = pkg.coverImage || pkg.mainImage || pkg.images?.[0];
-  const imgUrl = formatImageUrl(rawImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800');
+  // Gallery images combined
+  const galleryList = [
+    ...(Array.isArray(pkg.gallery) ? pkg.gallery : []),
+    ...(Array.isArray(pkg.images) ? pkg.images : [])
+  ].filter((u: any) => typeof u === 'string' && u.trim());
+
+  const allPhotos = Array.from(new Set([
+    pkg.coverImage || pkg.mainImage,
+    ...galleryList
+  ].filter((u: any) => typeof u === 'string' && u.trim())));
+
+  const bannerCoverImg = pkg.coverImage || pkg.bannerImage || pkg.mainImage || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+  const imgUrl = formatImageUrl(bannerCoverImg, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800');
   const categoryLabel = safeStr(pkg.category || pkg.theme) || 'Domestic Packages';
   const destName = safeStr(pkg.destination) || 'Himachal & Manali';
   const durationText = safeDuration(pkg.duration) || '5 Days / 4 Nights';
@@ -137,10 +150,10 @@ export const MobilePackageDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white relative pb-28">
-      {/* ── TOP HERO COVER IMAGE WITH FLOATING BACK BUTTON ── */}
-      <div className="h-64 relative bg-slate-900">
-        <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
+      {/* ── TOP HERO COVER IMAGE WITH FLOATING BACK BUTTON ONLY ── */}
+      <div className="h-48 sm:h-56 relative bg-slate-900 overflow-hidden">
+        <img src={imgUrl} alt={pkg.title} className="w-full h-full object-cover transition-all duration-300" />
+        
         {/* Floating Back Button */}
         <button
           type="button"
@@ -151,6 +164,46 @@ export const MobilePackageDetailPage: React.FC = () => {
           <ArrowLeft className="w-6 h-6 text-slate-900 stroke-[2.5]" />
         </button>
       </div>
+
+      {/* ── TOUR GALLERY CAROUSEL STRIP (Below Banner Image) ── */}
+      {allPhotos.length > 0 && (
+        <div className="px-4 pt-3 pb-1">
+          <div className="bg-slate-50/90 rounded-2xl p-3 border border-slate-200/80 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between px-0.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                <Camera className="w-4 h-4 text-ocean-600 shrink-0" />
+                <span>Tour Gallery ({allPhotos.length} {allPhotos.length === 1 ? 'Photo' : 'Photos'})</span>
+              </div>
+              <span className="text-[10px] text-slate-500 font-bold">Tap photo for full page</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+              {allPhotos.map((photo, idx) => {
+                const formatted = formatImageUrl(photo, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800');
+                const isActive = activeImgIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setActiveImgIndex(idx);
+                      setActiveLightboxImg(formatted);
+                    }}
+                    className={`relative shrink-0 w-24 h-18 rounded-xl overflow-hidden border-2 transition-all cursor-pointer snap-start ${
+                      isActive ? 'border-ocean-600 shadow-md scale-102 ring-2 ring-ocean-600/30' : 'border-slate-200 opacity-90 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={formatted} alt={`Tour gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                    <span className="absolute bottom-1 right-1 text-[9px] font-bold text-white bg-black/60 px-1 rounded backdrop-blur-xs">
+                      {idx + 1}/{allPhotos.length}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MAIN CONTENT (Matches Images 1 & 2) ── */}
       <div className="px-5 pt-4 space-y-5">
@@ -382,6 +435,77 @@ export const MobilePackageDetailPage: React.FC = () => {
         selectedPackage={pkg}
         initialMode={modalMode}
       />
+
+      {/* ── FULL SCREEN LIGHTBOX MODAL ── */}
+      {activeLightboxImg && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col justify-between p-4 animate-in fade-in duration-200"
+          onClick={() => setActiveLightboxImg(null)}
+        >
+          {/* Modal Header */}
+          <div className="flex items-center justify-between text-white z-10 pt-2 px-2" onClick={(e) => e.stopPropagation()}>
+            <span className="text-xs font-bold bg-white/10 px-3 py-1 rounded-full border border-white/20">
+              Photo {allPhotos.findIndex(p => formatImageUrl(p, '') === activeLightboxImg || p === activeLightboxImg) + 1} of {allPhotos.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveLightboxImg(null)}
+              className="w-9 h-9 rounded-full bg-white/20 text-white font-bold text-base flex items-center justify-center backdrop-blur-md active:scale-95 border border-white/30 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Full Screen Image Container */}
+          <div
+            className="relative flex-1 flex items-center justify-center my-auto cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={activeLightboxImg}
+              alt="Full Screen View"
+              className="w-auto h-auto max-w-full max-h-[78vh] object-contain rounded-2xl shadow-2xl border border-white/10"
+            />
+
+            {/* Prev / Next controls */}
+            {allPhotos.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIdx = allPhotos.findIndex(p => formatImageUrl(p, '') === activeLightboxImg || p === activeLightboxImg);
+                    const prevIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length;
+                    const prevUrl = formatImageUrl(allPhotos[prevIdx], '');
+                    setActiveImgIndex(prevIdx);
+                    setActiveLightboxImg(prevUrl);
+                  }}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 text-white flex items-center justify-center backdrop-blur-md active:scale-95 border border-white/20"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentIdx = allPhotos.findIndex(p => formatImageUrl(p, '') === activeLightboxImg || p === activeLightboxImg);
+                    const nextIdx = (currentIdx + 1) % allPhotos.length;
+                    const nextUrl = formatImageUrl(allPhotos[nextIdx], '');
+                    setActiveImgIndex(nextIdx);
+                    setActiveLightboxImg(nextUrl);
+                  }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/70 text-white flex items-center justify-center backdrop-blur-md active:scale-95 border border-white/20"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+          </div>
+          
+          <div className="text-center pb-2">
+            <p className="text-[11px] text-slate-400 font-medium">{pkg.title}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

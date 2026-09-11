@@ -5,13 +5,12 @@ import { enquirySchema } from '../../validators/index';
 import { apiClient } from '../../api/apiClient';
 import toast from 'react-hot-toast';
 import { 
-  X, Phone, Mail, UserCheck, 
+  ArrowLeft, Phone, Mail, UserCheck, 
   MapPin, User, Calendar, 
   Minus, Plus, Info, Sparkles, Send, MessageSquare, ShieldCheck, Clock, Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UserAuthModal } from '../auth/UserAuthModal';
-import { Modal } from '../common/Modal';
 
 interface PackageEnquiryModalProps {
   isOpen: boolean;
@@ -284,72 +283,46 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} labelledBy="enquiry-modal-title" panelClassName="max-w-2xl sm:max-w-3xl lg:max-w-4xl w-full" disableBackdropClose>
-      <div className="bg-white rounded-3xl overflow-hidden relative text-slate-800 border border-slate-200/80 shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col overflow-y-auto min-h-screen w-full text-slate-800 animate-fadeIn">
 
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-ocean-800 via-ocean-600 to-ocean-800 p-6 text-white relative">
+      {/* Top Navigation Bar - Sleek Modern Light Theme with Top Left Back Button */}
+      <div className="bg-white border-b border-slate-200/80 sticky top-0 z-30 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
+        
+        {/* Left Side: Back Button + Clean Title & Badge */}
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors border border-white/20 cursor-pointer shadow-sm active:scale-95"
-            aria-label="Close"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs flex items-center gap-2 transition-all cursor-pointer border border-slate-200/80 shrink-0 active:scale-95 shadow-2xs"
           >
-            <X className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 text-ocean-600" />
+            <span>Back</span>
           </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
-              <Send className="w-5 h-5 text-aqua-500" />
-            </div>
-            <div>
-              <span className="text-[0.6875rem] font-black uppercase tracking-wider text-aqua-500 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 inline-block">
-                A consultant replies personally
-              </span>
-              <h2 id="enquiry-modal-title" className="font-display font-black text-xl text-white leading-tight mt-0.5">
-                {mode === 'booking' ? 'Start your booking request' : 'Plan your trip with us'}
-              </h2>
-            </div>
+          <div className="h-6 w-px bg-slate-200/80 hidden sm:block" />
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+            <h2 className="font-poppins font-bold text-base sm:text-lg text-slate-900 leading-tight">
+              {mode === 'booking' ? 'Tour Package Reservation' : 'Plan Your Trip - Package Enquiry'}
+            </h2>
+            <span className="text-[0.625rem] font-extrabold uppercase tracking-wider text-ocean-700 bg-ocean-50 px-2.5 py-0.5 rounded-full border border-ocean-200/80 inline-block self-start sm:self-auto">
+              {mode === 'booking' ? 'Official Reservation' : 'Consultant Quote'}
+            </span>
           </div>
-
-          <p className="text-xs text-slate-200/90 font-medium pl-13">
-            {mode === 'booking'
-              ? 'Provide traveler details to finalize package reservation'
-              : 'Fill in details below for a free custom itinerary & instant quote'}
-          </p>
-
-          {/* Mode Segmented Switch (if package is selected) */}
-          {selectedPackage && (
-            <div className="flex bg-slate-900/40 p-1 rounded-xl border border-white/15 mt-4">
-              <button
-                type="button"
-                onClick={() => setMode('enquiry')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                  mode === 'enquiry'
-                    ? 'bg-aqua-500 text-slate-950 shadow-sm'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Send Enquiry
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('booking')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                  mode === 'booking'
-                    ? 'bg-aqua-500 text-slate-950 shadow-sm'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                Book Package
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Selected Package Banner Context (Compact pill if selected) */}
-        {selectedPackage && (
-          <div className="bg-slate-50 border-b border-slate-200/80 px-6 py-3 flex items-center justify-between gap-3">
+        {/* Right side: Clean Security Info Badge */}
+        <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/80">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Secure & Confidential</span>
+        </div>
+
+      </div>
+
+      {/* Selected Package Banner Context */}
+      {selectedPackage && (
+        <div className="bg-white border-b border-slate-200/80 px-4 sm:px-8 py-3">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 overflow-hidden">
               {selectedPackage.coverImage && (
                 <img
@@ -359,391 +332,379 @@ export const PackageEnquiryModal: React.FC<PackageEnquiryModalProps> = ({
                 />
               )}
               <div className="overflow-hidden">
-                <span className="text-[0.6875rem] font-black uppercase text-ocean-600 tracking-wider block">Selected Tour</span>
-                <h4 className="text-xs font-extrabold text-slate-900 truncate">{selectedPackage.title}</h4>
+                <span className="text-[0.65rem] font-bold uppercase text-ocean-600 tracking-wider block">Selected Tour Package</span>
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{selectedPackage.title}</h4>
               </div>
             </div>
             {selectedPackage.startingPrice && (
               <div className="text-right shrink-0">
-                <span className="text-[0.6875rem] text-slate-500 font-bold block">Starting From</span>
-                <span className="text-xs font-black text-ocean-800">₹{selectedPackage.startingPrice.toLocaleString()}</span>
+                <span className="text-[0.6875rem] text-slate-500 font-medium block">Starting From</span>
+                <span className="text-xs sm:text-sm font-extrabold text-ocean-700">₹{selectedPackage.startingPrice.toLocaleString()}</span>
               </div>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Form Body - Full Page Modal Responsive Layout */}
-        <div className="p-6 overflow-y-auto max-h-[82vh]">
-          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            
-            {/* LEFT COLUMN: Contact Information & Travel Preferences (7 cols on desktop) */}
-            <div className="md:col-span-7 space-y-3.5">
-              <h3 className="text-xs font-black uppercase tracking-wider text-ocean-600 border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5" /> 1. Traveler Details & Date
-              </h3>
+      {/* Full Page Responsive Form Container */}
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-8 py-6 sm:py-8 flex-1">
 
-              {/* Full Name */}
-              <div>
-                <label className="block text-xs font-extrabold text-slate-800 mb-1">Full Name *</label>
-                <div className="relative flex items-center">
-                  <User className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
-                  <input
-                    {...register('fullName')}
-                    type="text"
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
-                  />
-                </div>
-                {errors.fullName && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.fullName.message as string}</p>}
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* LEFT COLUMN: Contact Information & Travel Details (7 cols) */}
+          <div className="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-7 border border-slate-200/90 shadow-sm space-y-4 text-left">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-ocean-600 border-b border-slate-100 pb-2 flex items-center gap-2">
+              <User className="w-4 h-4" /> 1. Traveler Details & Dates
+            </h3>
+
+            {/* Full Name */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-800 mb-1">Full Name *</label>
+              <div className="relative flex items-center">
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                <input
+                  {...register('fullName')}
+                  type="text"
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all"
+                />
               </div>
-
-              {/* Email & Phone 2-Column Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-800 mb-1">Email Address *</label>
-                  <div className="relative flex items-center">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
-                    <input
-                      {...register('email')}
-                      type="email"
-                      placeholder="name@example.com"
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
-                    />
-                  </div>
-                  {errors.email && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.email.message as string}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-800 mb-1">Phone / Mobile *</label>
-                  <div className="relative flex items-center">
-                    <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
-                    <input
-                      {...register('mobile')}
-                      type="text"
-                      placeholder="+91 98765 43210"
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
-                    />
-                  </div>
-                  {errors.mobile && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.mobile.message as string}</p>}
-                </div>
-              </div>
-
-              {/* Destination & Travel Date Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-800 mb-1">Destination</label>
-                  <div className="relative flex items-center">
-                    <MapPin className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={destText || destinationInput}
-                      onChange={(e) => setDestinationInput(e.target.value)}
-                      placeholder="e.g. Kerala, Kashmir, Bali"
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-800 mb-1">Travel Date / Month</label>
-                  <div className="relative flex items-center">
-                    <Calendar className="w-4 h-4 text-slate-500 absolute left-3.5 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={travelDate}
-                      onChange={(e) => setTravelDate(e.target.value)}
-                      placeholder="e.g. Nov 2026 / Diwali"
-                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Message / Preferences */}
-              <div>
-                <label className="block text-xs font-extrabold text-slate-800 mb-1">
-                  {mode === 'booking' ? 'Special Requests / Notes' : 'Preferences / Travel Notes (Optional)'}
-                </label>
-                <div className="relative flex items-start">
-                  <MessageSquare className="w-4 h-4 text-slate-500 absolute left-3.5 top-3 pointer-events-none" />
-                  <textarea
-                    {...register('message')}
-                    rows={3}
-                    placeholder="e.g. 4-star resort, flight inclusion, veg meal preferences..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-500 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:ring-2 focus:ring-ocean-600/20 transition-all resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-ocean-600 to-cyan-600 hover:from-ocean-700 hover:to-cyan-600 text-white font-extrabold text-sm shadow-lg hover:shadow-xl active:scale-[0.99] transition-all cursor-pointer border-0 flex items-center justify-center gap-2 mt-2"
-              >
-                {submitting ? (
-                  <span>Submitting Request...</span>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span>{mode === 'booking' ? 'Submit Booking Request' : 'Submit Quick Enquiry'}</span>
-                  </>
-                )}
-              </button>
+              {errors.fullName && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.fullName.message as string}</p>}
             </div>
 
-            {/* RIGHT COLUMN: Package Tiers, Travelers, Add-Ons & Indicative Total (5 cols on desktop) */}
-            <div className="md:col-span-5 space-y-3.5">
-              <h3 className="text-xs font-black uppercase tracking-wider text-ocean-600 border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> 2. Configuration & Add-Ons
-              </h3>
+            {/* Email & Phone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 mb-1">Email Address *</label>
+                <div className="relative flex items-center">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    {...register('email')}
+                    type="email"
+                    placeholder="name@example.com"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all"
+                  />
+                </div>
+                {errors.email && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.email.message as string}</p>}
+              </div>
 
-              {/* Mode-specific Configuration */}
-              {mode === 'enquiry' ? (
-                /* ENQUIRY MODE: Adults & Kids Stepper Counters */
-                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                  {/* Adults Stepper */}
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 mb-1">Phone / Mobile *</label>
+                <div className="relative flex items-center">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    {...register('mobile')}
+                    type="text"
+                    placeholder="+91 98765 43210"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all"
+                  />
+                </div>
+                {errors.mobile && <p className="text-rose-600 text-[0.6875rem] mt-1 font-semibold">{errors.mobile.message as string}</p>}
+              </div>
+            </div>
+
+            {/* Destination & Travel Date Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 mb-1">Destination</label>
+                <div className="relative flex items-center">
+                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={destText || destinationInput}
+                    onChange={(e) => setDestinationInput(e.target.value)}
+                    placeholder="e.g. Kerala, Kashmir, Bali"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 mb-1">Travel Date / Month</label>
+                <div className="relative flex items-center">
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={travelDate}
+                    onChange={(e) => setTravelDate(e.target.value)}
+                    placeholder="e.g. Nov 2026 / Diwali"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Message / Preferences */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-800 mb-1">
+                {mode === 'booking' ? 'Special Requests / Notes' : 'Preferences / Travel Notes (Optional)'}
+              </label>
+              <div className="relative flex items-start">
+                <MessageSquare className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />
+                <textarea
+                  {...register('message')}
+                  rows={4}
+                  placeholder="e.g. 4-star resort, flight inclusion, veg meal preferences..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 text-slate-900 placeholder:text-slate-400 text-xs font-semibold outline-none border border-slate-200 focus:border-ocean-600 focus:bg-white focus:ring-2 focus:ring-ocean-600/10 transition-all resize-none"
+                />
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: Package Tiers, Travelers, Add-Ons & Total (5 cols) */}
+          <div className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-7 border border-slate-200/90 shadow-sm space-y-4 text-left">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-ocean-600 border-b border-slate-100 pb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> 2. Configuration & Summary
+            </h3>
+
+            {/* Mode-specific Configuration */}
+            {mode === 'enquiry' ? (
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                {/* Adults Stepper */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-800 block">Adults (12+)</span>
+                    <span className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
+                      {adultsCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAdultsCount(adultsCount + 1)}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Kids Stepper */}
+                <div className="flex items-center justify-between pl-2 border-l border-slate-200/80">
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-800 block">Kids (5-11)</span>
+                    <span className="text-[0.6875rem] text-slate-500 font-semibold">Child Fare</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
+                      {childrenCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setChildrenCount(childrenCount + 1)}
+                      className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-800 mb-2">Package Tier / Class:</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { name: 'Standard', price: startingPrice },
+                      { name: 'Deluxe', price: Math.round(startingPrice * 1.25) },
+                      { name: 'Luxury', price: Math.round(startingPrice * 1.6) },
+                    ].map((tierItem) => {
+                      const isSelected = selectedTier === tierItem.name;
+                      return (
+                        <button
+                          key={tierItem.name}
+                          type="button"
+                          onClick={() => setSelectedTier(tierItem.name as any)}
+                          className={`py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-ocean-600 border-ocean-600 text-white font-bold shadow-xs'
+                              : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-100'
+                          }`}
+                        >
+                          <p className="text-[0.6875rem] font-bold">{tierItem.name}</p>
+                          <p className={`font-extrabold text-xs mt-0.5 ${isSelected ? 'text-white' : 'text-ocean-600'}`}>
+                            ₹{tierItem.price.toLocaleString()}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/70">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-extrabold text-slate-800 block">Adults (12+)</span>
-                      <span className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</span>
+                      <p className="text-[0.6875rem] font-extrabold text-slate-800">Adults (12+)</p>
+                      <p className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
-                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
-                        {adultsCount}
-                      </span>
+                      <span className="font-extrabold text-xs text-slate-900 w-3 text-center">{adultsCount}</span>
                       <button
                         type="button"
                         onClick={() => setAdultsCount(adultsCount + 1)}
-                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
 
-                  {/* Kids Stepper */}
-                  <div className="flex items-center justify-between pl-2 border-l border-slate-200/80">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-extrabold text-slate-800 block">Kids (5-11)</span>
-                      <span className="text-[0.6875rem] text-slate-500 font-semibold">Child Fare</span>
+                      <p className="text-[0.6875rem] font-extrabold text-slate-800">Children (5-11)</p>
+                      <p className="text-[0.6875rem] text-slate-500 font-semibold">50% Fare</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
-                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="font-poppins font-black text-xs text-slate-900 w-3 text-center">
-                        {childrenCount}
-                      </span>
+                      <span className="font-extrabold text-xs text-slate-900 w-3 text-center">{childrenCount}</span>
                       <button
                         type="button"
                         onClick={() => setChildrenCount(childrenCount + 1)}
-                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center active:scale-95 cursor-pointer hover:bg-slate-100 shadow-xs"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* BOOKING MODE: Tier Selection & Adults/Children Counter */
-                <div className="space-y-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 mb-2">Package Tier / Class:</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { name: 'Standard', price: startingPrice },
-                        { name: 'Deluxe', price: Math.round(startingPrice * 1.25) },
-                        { name: 'Luxury', price: Math.round(startingPrice * 1.6) },
-                      ].map((tierItem) => {
-                        const isSelected = selectedTier === tierItem.name;
-                        return (
-                          <button
-                            key={tierItem.name}
-                            type="button"
-                            onClick={() => setSelectedTier(tierItem.name as any)}
-                            className={`py-2 px-1.5 rounded-xl border text-center transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-ocean-600 border-ocean-600 text-white font-bold shadow-md'
-                                : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-100'
-                            }`}
-                          >
-                            <p className="text-[0.6875rem] font-bold">{tierItem.name}</p>
-                            <p className={`font-extrabold text-xs mt-0.5 ${isSelected ? 'text-white' : 'text-ocean-600'}`}>
-                              ₹{tierItem.price.toLocaleString()}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-[0.6875rem] font-extrabold text-slate-800">Adults (12+)</p>
-                        <p className="text-[0.6875rem] text-slate-500 font-semibold">Full Fare</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
-                          className="w-7 h-7 rounded-md bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="font-extrabold text-xs text-slate-900 w-3 text-center">{adultsCount}</span>
-                        <button
-                          type="button"
-                          onClick={() => setAdultsCount(adultsCount + 1)}
-                          className="w-7 h-7 rounded-md bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-[0.6875rem] font-extrabold text-slate-800">Children (5-11)</p>
-                        <p className="text-[0.6875rem] text-slate-500 font-semibold">50% Fare</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
-                          className="w-7 h-7 rounded-md bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="font-extrabold text-xs text-slate-900 w-3 text-center">{childrenCount}</span>
-                        <button
-                          type="button"
-                          onClick={() => setChildrenCount(childrenCount + 1)}
-                          className="w-7 h-7 rounded-md bg-white border border-slate-300 flex items-center justify-center active:scale-95 cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-ocean-100/70 rounded-xl p-3 border border-ocean-300 space-y-0.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-ink">Indicative total</span>
-                      <span className="font-display font-black text-base text-ocean-800">₹{estimatedTotal.toLocaleString()}</span>
-                    </div>
-                    <p className="text-[0.6875rem] text-slate-muted font-medium">
-                      A guide only. Your consultant confirms the final price with the itinerary.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Location Activity Add-Ons Section */}
-              {(loadingActivities || locationActivities.length > 0) && (
-                <div className="p-3 bg-cyan-50/70 rounded-xl border border-cyan-200/90 space-y-2">
+                <div className="bg-sky-50/80 rounded-xl p-3.5 border border-sky-200/90 space-y-0.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-                      <span className="text-xs font-black text-slate-800">
-                        Location Activity Add-Ons {destText ? `(${destText})` : ''}
-                      </span>
-                    </div>
-                    <span className="text-[0.625rem] font-black uppercase text-cyan-700 bg-cyan-100/90 px-2 py-0.5 rounded-md">
-                      Optional
+                    <span className="text-xs font-bold text-slate-700">Indicative Total</span>
+                    <span className="font-poppins font-bold text-base text-ocean-700">₹{estimatedTotal.toLocaleString()}</span>
+                  </div>
+                  <p className="text-[0.6875rem] text-slate-500 font-medium">
+                    A guide price. Your consultant confirms final price with your itinerary.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Location Activity Add-Ons Section */}
+            {(loadingActivities || locationActivities.length > 0) && (
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-ocean-600" />
+                    <span className="text-xs font-extrabold text-slate-800">
+                      Location Add-Ons {destText ? `(${destText})` : ''}
                     </span>
                   </div>
+                  <span className="text-[0.625rem] font-bold uppercase text-ocean-700 bg-ocean-50 px-2 py-0.5 rounded-md border border-ocean-200/60">
+                    Optional
+                  </span>
+                </div>
 
-                  {loadingActivities ? (
-                    <p className="text-[0.6875rem] text-slate-500 font-medium py-1 pl-1">Loading activities...</p>
-                  ) : (
-                    <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                      {locationActivities.map((act) => {
-                        const actId = act._id || act.id;
-                        const isSelected = selectedAddOns.includes(actId);
-                        const actPrice = Number(act.startingPrice || act.price || 0);
+                {loadingActivities ? (
+                  <p className="text-[0.6875rem] text-slate-500 font-medium py-1 pl-1">Loading activities...</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                    {locationActivities.map((act) => {
+                      const actId = act._id || act.id;
+                      const isSelected = selectedAddOns.includes(actId);
+                      const actPrice = Number(act.startingPrice || act.price || 0);
 
-                        return (
-                          <div
-                            key={actId}
-                            onClick={() => toggleAddOn(actId)}
-                            className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${
-                              isSelected
-                                ? 'bg-white border-cyan-500 shadow-xs'
-                                : 'bg-white/80 border-slate-200/90 hover:bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                              <div
-                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                                  isSelected ? 'bg-cyan-600 border-cyan-600 text-white' : 'border-slate-300 bg-white'
-                                }`}
-                              >
-                                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                              </div>
-                              <div className="overflow-hidden pr-2">
-                                <p className="text-xs font-extrabold text-slate-900 line-clamp-2 leading-tight">{act.title}</p>
-                                <p className="text-[0.625rem] text-slate-500 font-semibold mt-0.5">{act.duration || act.category}</p>
-                              </div>
+                      return (
+                        <div
+                          key={actId}
+                          onClick={() => toggleAddOn(actId)}
+                          className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-white border-ocean-600 shadow-xs'
+                              : 'bg-white/90 border-slate-200 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div
+                              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? 'bg-ocean-600 border-ocean-600 text-white' : 'border-slate-300 bg-white'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                             </div>
-                            <div className="text-right shrink-0 pl-2">
-                              <span className="text-xs font-black text-cyan-800">+₹{actPrice.toLocaleString()}</span>
-                              <span className="text-[0.625rem] text-slate-400 block font-medium">/person</span>
+                            <div className="overflow-hidden pr-2">
+                              <p className="text-xs font-extrabold text-slate-900 line-clamp-2 leading-tight">{act.title}</p>
+                              <p className="text-[0.625rem] text-slate-500 font-medium mt-0.5">{act.duration || act.category}</p>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </form>
+                          <div className="text-right shrink-0 pl-2">
+                            <span className="text-xs font-bold text-ocean-700">+₹{actPrice.toLocaleString()}</span>
+                            <span className="text-[0.625rem] text-slate-400 block font-medium">/person</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Direct WhatsApp Option */}
-          <div className="pt-3 border-t border-slate-100 text-center">
-            <a
-              href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 font-black text-xs transition-colors cursor-pointer w-full group"
+            {/* Submit Action (Right Column) */}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-3.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-extrabold text-sm shadow-md hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2 mt-3"
             >
-              <WhatsAppIcon className="w-4 h-4 text-whatsapp group-hover:scale-110 transition-transform" />
-              <span>Prefer WhatsApp? Message us instead</span>
-            </a>
-          </div>
+              {submitting ? (
+                <span>Submitting Request...</span>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>{mode === 'booking' ? 'Submit Booking Request' : 'Submit Quick Enquiry'}</span>
+                </>
+              )}
+            </button>
 
-          <div className="flex items-center justify-center gap-4 text-[0.6875rem] font-bold text-slate-muted pt-1">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Your details stay private
-            </span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-gold-600" /> Custom quote, no charge
-            </span>
-          </div>
-        </div>
+            <div className="flex items-center justify-center gap-4 text-[0.6875rem] font-medium text-slate-400 pt-1">
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Details stay private
+              </span>
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Free custom quote
+              </span>
+            </div>
 
-        <UserAuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onSuccess={() => {
-            loadUser();
-            setAuthModalOpen(false);
-          }}
-        />
+          </div>
+        </form>
       </div>
-    </Modal>
+
+      <UserAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => {
+          loadUser();
+          setAuthModalOpen(false);
+        }}
+      />
+    </div>
   );
 };

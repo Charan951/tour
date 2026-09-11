@@ -50,6 +50,7 @@ const packageSchema = new Schema(
     discountPrice: { type: Number, default: null },
     coverImage: { type: String, required: true },
     gallery: [{ type: String }],
+    images: [{ type: String }],
     rating: { type: Number, default: 4.8 },
     overview: { type: String, default: '' },
     highlights: [{ type: String }],

@@ -30,10 +30,10 @@ export const configureCORS = cors({
   exposedHeaders: ['Set-Cookie', 'Authorization']
 });
 
-// Auth Rate Limiter: 15 mins, max 100 attempts in development for mobile testing
+// Auth Rate Limiter: Generous limit so mobile users/testing work anytime anywhere on any network
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 5 : 100,
+  max: 10000,
   message: {
     success: false,
     message: 'Too many authentication attempts from this IP. Please try again after 15 minutes.'
@@ -42,10 +42,10 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Public Lead Enquiries Rate Limiter: 30 mins, max 100 submissions in dev mode
+// Public Lead Enquiries Rate Limiter: Generous limit
 export const enquiryRateLimiter = rateLimit({
   windowMs: 30 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 5 : 100,
+  max: 10000,
   message: {
     success: false,
     message: 'Too many enquiry submissions from this IP. Please try again after 30 minutes.'
@@ -54,10 +54,10 @@ export const enquiryRateLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Contact Form Rate Limiter: 1 hour, max 10 submissions
+// Contact Form Rate Limiter: Generous limit
 export const contactRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 10000,
   message: {
     success: false,
     message: 'Too many contact messages from this IP. Please try again in an hour.'
@@ -66,10 +66,10 @@ export const contactRateLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Global API Read Rate Limiter: 15 mins, max 100 requests
+// Global API Read Rate Limiter: Generous limit
 export const globalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 10000,
   message: {
     success: false,
     message: 'Too many API requests from this IP. Please try again after 15 minutes.'

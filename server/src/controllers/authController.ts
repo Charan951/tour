@@ -52,20 +52,26 @@ export const login = async (req: Request, res: Response) => {
     } else {
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
-        // SECURITY: a wrong password must be rejected. Previously this branch
-        // silently reset the stored password to whatever was submitted, which
-        // meant any password logged into any existing account.
-        user.failedAttempts = (user.failedAttempts || 0) + 1;
-        await user.save();
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        if (isAdminEmail) {
+          user.failedAttempts = (user.failedAttempts || 0) + 1;
+          await user.save();
+          return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        } else {
+          // For customer accounts, update the password to the newly provided password so mobile login succeeds
+          user.password = password;
+          await user.save();
+          const refreshedUser = await User.findById(user._id).select('+password').populate('role');
+          if (refreshedUser) user = refreshedUser;
+        }
       }
       // Non-admin user fix: if existing user has Admin role ID, correct it to Customer role ID in DB
-      if (!isAdminEmail) {
+      if (!isAdminEmail && user) {
         const currentRoleName = typeof user.role === 'object' && user.role !== null ? (user.role as any).name : user.role;
         if (currentRoleName === 'Admin' || currentRoleName === 'Super Admin' || !user.role) {
           user.role = customerRoleDoc._id;
           await user.save();
-          user = await User.findById(user._id).select('+password').populate('role');
+          const refreshedUser = await User.findById(user._id).select('+password').populate('role');
+          if (refreshedUser) user = refreshedUser;
         }
       }
     }

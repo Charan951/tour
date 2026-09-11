@@ -79,6 +79,11 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hc_user_updated', handleAuthChange);
   }, []);
 
+  // Automatically scroll to the top starting point whenever the page/route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
+
 
 
   // Real-time viewport width — the mobile page components render below 1024px (lg).
@@ -222,8 +227,8 @@ export const App: React.FC = () => {
       {showWebChrome && <Footer />}
       {showWebChrome && <FloatingActionWidget />}
 
-      {/* Bottom tab bar — visible on mobile when logged in */}
-      {!isAdminRoute && isUserLoggedIn && <MobileStickyBar />}
+      {/* Bottom tab bar — visible on mobile web */}
+      {!isAdminRoute && <MobileStickyBar />}
     </div>
   );
 };

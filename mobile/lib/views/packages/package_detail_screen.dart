@@ -26,26 +26,226 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
   int _expandedDayIndex = 0;
   bool _showInclusions = true;
 
-  final PageController _imgController = PageController();
-  int _imgIndex = 0;
-
   /// Cover image + gallery, de-duplicated. Falls back to a single image.
   List<String> get _galleryImages {
+    final bannerImg = widget.package.mainImage.trim().toLowerCase();
     final seen = <String>{};
     final list = <String>[];
     for (final u in widget.package.images) {
       final t = u.trim();
-      if (t.isEmpty || !seen.add(t)) continue;
+      if (t.isEmpty) continue;
+      if (t.toLowerCase() == bannerImg) continue;
+      if (!seen.add(t)) continue;
       list.add(t);
     }
-    if (list.isEmpty) list.add(widget.package.mainImage);
     return list;
   }
 
-  @override
-  void dispose() {
-    _imgController.dispose();
-    super.dispose();
+  void _openFullScreenGallery(int initialIndex) {
+    final images = _galleryImages;
+    int currentIndex = initialIndex;
+
+    showDialog(
+      context: context,
+      useSafeArea: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final pageController = PageController(initialPage: initialIndex);
+            return Scaffold(
+              backgroundColor: Colors.black,
+              body: Stack(
+                children: [
+                  // Full Screen Interactive Image PageView (Pinch-to-zoom & Swipe)
+                  PageView.builder(
+                    controller: pageController,
+                    itemCount: images.length,
+                    onPageChanged: (idx) {
+                      setDialogState(() => currentIndex = idx);
+                    },
+                    itemBuilder: (context, i) {
+                      return InteractiveViewer(
+                        minScale: 0.8,
+                        maxScale: 4.0,
+                        child: Center(
+                          child: CachedNetworkImage(
+                            imageUrl: ApiConfig.formatImageUrl(images[i], width: 1200),
+                            fit: BoxFit.contain,
+                            placeholder: (_, __) => const Center(
+                              child: CircularProgressIndicator(color: Colors.white),
+                            ),
+                            errorWidget: (_, __, ___) => const Icon(
+                              Icons.broken_image_rounded,
+                              size: 64,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Top Header Bar with Close Button & Photo Counter
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SafeArea(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.black87, Colors.transparent],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            Text(
+                              '${currentIndex + 1} / ${images.length}',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 48),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Bottom Thumbnail Selector Strip
+                  if (images.length > 1)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: SafeArea(
+                        child: Container(
+                          height: 90,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [Colors.black.withValues(alpha: 0.9), Colors.transparent],
+                            ),
+                          ),
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: images.length,
+                            itemBuilder: (context, thumbIdx) {
+                              final isSelected = thumbIdx == currentIndex;
+                              return GestureDetector(
+                                onTap: () {
+                                  pageController.animateToPage(
+                                    thumbIdx,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  margin: const EdgeInsets.only(right: 10),
+                                  width: isSelected ? 72 : 56,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected ? AppTheme.primaryColor : Colors.white30,
+                                      width: isSelected ? 2.5 : 1,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: CachedNetworkImage(
+                                      imageUrl: ApiConfig.formatImageUrl(images[thumbIdx], width: 200),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+  void _openSingleImageFullScreen(String imageUrl) {
+    showDialog(
+      context: context,
+      useSafeArea: false,
+      builder: (ctx) {
+        return Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 4.0,
+                child: Center(
+                  child: CachedNetworkImage(
+                    imageUrl: ApiConfig.formatImageUrl(imageUrl, width: 1200),
+                    fit: BoxFit.contain,
+                    placeholder: (_, __) => const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                    errorWidget: (_, __, ___) => const Icon(
+                      Icons.broken_image_rounded,
+                      size: 64,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        Text(
+                          'Banner Photo',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openEnquirySheet() async {
@@ -131,12 +331,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  PageView.builder(
-                    controller: _imgController,
-                    itemCount: images.length,
-                    onPageChanged: (i) => setState(() => _imgIndex = i),
-                    itemBuilder: (context, i) => CachedNetworkImage(
-                      imageUrl: ApiConfig.formatImageUrl(images[i], width: 800),
+                  GestureDetector(
+                    onTap: () => _openSingleImageFullScreen(package.mainImage),
+                    child: CachedNetworkImage(
+                      imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 800),
                       fit: BoxFit.cover,
                       memCacheWidth: 800,
                       fadeInDuration: const Duration(milliseconds: 150),
@@ -162,28 +360,6 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                       ),
                     ),
                   ),
-                  if (images.length > 1)
-                    Positioned(
-                      bottom: 14,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(images.length, (i) {
-                          final active = i == _imgIndex;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            width: active ? 18 : 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: active ? Colors.white : Colors.white54,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
                   if (package.packageCode.isNotEmpty)
                     Positioned(
                       bottom: 16,
@@ -286,6 +462,105 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                             color: context.colors.textSecondary, fontSize: 13),
                       ),
                     ],
+                  ),
+                  const Divider(height: 28),
+
+                  // -------------------------------------------------------------
+                  // PHOTO GALLERY SECTION
+                  // -------------------------------------------------------------
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.photo_library_rounded,
+                              size: 20, color: AppTheme.primaryColor),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Photo Gallery',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: context.colors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        '${images.length} Photos',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    height: 105,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: images.length,
+                      itemBuilder: (context, idx) {
+                        return GestureDetector(
+                          onTap: () => _openFullScreenGallery(idx),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            width: 140,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: context.colors.border,
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: CachedNetworkImage(
+                                    imageUrl: ApiConfig.formatImageUrl(images[idx], width: 400),
+                                    fit: BoxFit.cover,
+                                    memCacheWidth: 400,
+                                    placeholder: (_, __) => Container(color: const Color(0xFFF1F5F9)),
+                                    errorWidget: (_, __, ___) => Container(
+                                      color: const Color(0xFFF1F5F9),
+                                      child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 6,
+                                  bottom: 6,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.65),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.fullscreen_rounded,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const Divider(height: 32),
 

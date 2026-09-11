@@ -100,6 +100,14 @@ class AuthProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  String _cleanError(dynamic e) {
+    final str = e.toString().replaceAll('Exception: ', '').trim();
+    if (str.toLowerCase().contains('too many') || str.toLowerCase().contains('rate limit')) {
+      return 'Please tap Sign In again to retry.';
+    }
+    return str;
+  }
+
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -112,7 +120,7 @@ class AuthProvider extends ChangeNotifier {
       _safeNotifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _cleanError(e);
       _isLoading = false;
       _safeNotifyListeners();
       return false;
@@ -143,7 +151,7 @@ class AuthProvider extends ChangeNotifier {
       _safeNotifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _errorMessage = _cleanError(e);
       _isLoading = false;
       _safeNotifyListeners();
       return false;

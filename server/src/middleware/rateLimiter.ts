@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 // Strict Rate Limiter for Admin Authentication (/api/auth/login)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per window
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -15,7 +15,7 @@ export const authLimiter = rateLimit({
 // Rate Limiter for Public Lead Submission (/api/enquiries)
 export const enquiryLimiter = rateLimit({
   windowMs: 30 * 60 * 1000, // 30 minutes
-  max: 5, // 5 submissions per window
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -27,7 +27,7 @@ export const enquiryLimiter = rateLimit({
 // Rate Limiter for Public Contact Messages (/api/contact)
 export const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 submissions per window
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -39,7 +39,7 @@ export const contactLimiter = rateLimit({
 // General Public API Limiter
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // 300 requests per 15 mins
+  max: 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

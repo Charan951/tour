@@ -27,6 +27,10 @@ class ApiService {
   static String? _workingHost;
   static String? _cachedToken;
 
+  static void resetWorkingHost() {
+    _workingHost = null;
+  }
+
   static ImageProvider? getAvatarImageProvider(String? url) {
     if (url == null || url.trim().isEmpty) return null;
     final clean = url.trim();
@@ -137,37 +141,29 @@ class ApiService {
     try {
       final uri = Uri.parse(originalUrl);
       final host = uri.host;
-      final isLocalTarget = host == 'localhost' ||
-          host == '127.0.0.1' ||
-          host == '10.0.2.2' ||
-          host.startsWith('192.168.') ||
-          host.startsWith('10.') ||
-          host.startsWith('172.');
+      final portSuffix = uri.hasPort ? ':${uri.port}' : '';
+      final hostWithPort = '$host$portSuffix';
 
-      // Local dev fallbacks ONLY make sense when we're already pointing at a
-      // local/LAN host. Never append them for a real remote host (e.g.
-      // production) — a dead local candidate just burns a full timeout window
-      // and makes the app look broken on mobile data / other Wi-Fi.
-      if (isLocalTarget) {
-        final altEmulator = originalUrl.replaceAll(host, '10.0.2.2');
-        if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
+      // 1. ADB reverse / local host fallback (http://127.0.0.1:5000)
+      final alt127 = originalUrl.replaceAll(hostWithPort, '127.0.0.1:5000').replaceAll('https://', 'http://');
+      if (!candidates.contains(alt127)) candidates.add(alt127);
 
-        if (ApiConfig.hostIp.isNotEmpty) {
-          final altLan = originalUrl.replaceAll(host, ApiConfig.hostIp);
-          if (!candidates.contains(altLan)) candidates.add(altLan);
-        }
+      // 2. Android emulator fallback (http://10.0.2.2:5000)
+      final altEmulator = originalUrl.replaceAll(hostWithPort, '10.0.2.2:5000').replaceAll('https://', 'http://');
+      if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
 
-        final altLocal = originalUrl.replaceAll(host, '127.0.0.1');
-        if (!candidates.contains(altLocal)) candidates.add(altLocal);
+      // 3. Custom host / Wi-Fi IP fallback
+      if (ApiConfig.hostIp.isNotEmpty) {
+        final targetHost = ApiConfig.hostIp.contains(':') ? ApiConfig.hostIp : '${ApiConfig.hostIp}:5000';
+        final altLan = originalUrl.replaceAll(hostWithPort, targetHost).replaceAll('https://', 'http://');
+        if (!candidates.contains(altLan)) candidates.add(altLan);
+      }
 
-        // Last resort: production, if the local host is unreachable.
-        if (ApiConfig.productionHost.isNotEmpty) {
-          final prodUri = Uri.parse(ApiConfig.productionHost);
-          final altProd = originalUrl
-              .replaceAll(host, prodUri.host)
-              .replaceAll('http://', 'https://');
-          if (!candidates.contains(altProd)) candidates.add(altProd);
-        }
+      // 4. Production remote fallback
+      if (ApiConfig.productionHost.isNotEmpty) {
+        final prodUri = Uri.parse(ApiConfig.productionHost);
+        final altProd = originalUrl.replaceAll(hostWithPort, prodUri.host).replaceAll('http://', 'https://');
+        if (!candidates.contains(altProd)) candidates.add(altProd);
       }
     } catch (_) {}
 
@@ -331,15 +327,24 @@ class ApiService {
       if (response.statusCode == 404) {
         throw const _ApiException('Resource endpoint not found on server (404)');
       }
+      if (response.statusCode == 429) {
+        throw Exception('Rate limited (429)');
+      }
       throw _ApiException('Invalid server response (${response.statusCode})');
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
+    } else if (response.statusCode == 429) {
+      throw Exception('Rate limited (429)');
     } else {
       final message = (body is Map && body['message'] != null)
           ? body['message']
           : 'Server error (${response.statusCode})';
-      throw _ApiException(message.toString());
+      final msgStr = message.toString();
+      if (msgStr.toLowerCase().contains('too many') || msgStr.toLowerCase().contains('rate limit')) {
+        throw Exception('Rate limited: $msgStr');
+      }
+      throw _ApiException(msgStr);
     }
   }
 

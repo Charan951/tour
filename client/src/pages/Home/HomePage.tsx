@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Sparkles, MapPin, Calendar, ShieldCheck, Headphones, Award, Heart, ChevronLeft, ChevronRight, MessageSquare, Phone, ArrowRight, Star, Users, ThumbsUp, Compass, Play, Pause, Clock, Zap } from 'lucide-react';
+import { Search, Sparkles, MapPin, Calendar, ShieldCheck, Headphones, Award, Heart, ChevronLeft, ChevronRight, MessageSquare, Phone, ArrowRight, Star, Users, ThumbsUp, Compass, Play, Pause, Clock, Zap, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { apiClient } from '../../api/apiClient';
 import { PackageCard } from '../../components/cards/PackageCard';
@@ -1075,21 +1075,68 @@ export const HomePage: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* How working with HolidayCity actually goes */}
+      {/* How To Book In 4 Easy Steps Section */}
       <section className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60">
-        <div className="bg-gradient-to-r from-ocean-800 via-ocean-600 to-ocean-800 rounded-3xl p-8 sm:p-12 text-white shadow-glass border border-white/20 relative overflow-hidden">
-          <h2 className="font-display font-black text-2xl sm:text-3xl text-center">How it works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center mt-8">
+        <div className="bg-gradient-to-br from-white via-sky-50/50 to-blue-50/40 rounded-3xl p-8 sm:p-12 border border-slate-200/80 shadow-[0_16px_48px_rgba(6,59,109,0.06)] relative overflow-hidden">
+          <div aria-hidden className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full bg-ocean-600/10 blur-3xl" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-cyan-600/10 blur-3xl" />
+
+          <div className="relative z-10 text-center max-w-xl mx-auto mb-10 space-y-1.5">
+            <span className="text-xs font-black uppercase tracking-widest text-ocean-700 bg-ocean-600/10 px-3.5 py-1 rounded-full border border-ocean-600/20 inline-flex items-center gap-1.5 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-ocean-600" /> Easy Booking Guide
+            </span>
+            <h2 className="font-poppins font-black text-3xl sm:text-4xl text-slate-900">
+              Book Your Trip In <span className="text-ocean-600">4 Easy Steps</span>
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">
+              Simple, transparent and personalized holiday planning with HolidayCity.
+            </p>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { icon: Compass, t: 'Tell us the trip', d: 'Dates, group, rough budget, the kind of holiday you want.' },
-              { icon: Users, t: 'A consultant takes it', d: 'One named person owns your trip from first call to last day.' },
-              { icon: Award, t: 'You get a real quote', d: 'A firm, itemised itinerary and price — usually the same day.' },
-              { icon: ThumbsUp, t: 'Pay when it is right', d: 'Nothing changes hands until the plan is confirmed by you.' },
-            ].map(({ icon: Icon, t, d }) => (
-              <div key={t} className="space-y-2 p-5 rounded-2xl bg-white/10 border border-white/10">
-                <Icon className="w-7 h-7 text-aqua-300 mx-auto" />
-                <p className="font-display font-black text-base text-white">{t}</p>
-                <p className="text-xs font-medium text-white/80 leading-relaxed">{d}</p>
+              {
+                step: '01',
+                icon: Compass,
+                t: '1. Explore & Select Package',
+                d: 'Browse hand-picked destinations, holiday packages or specialized travel themes.',
+                numBg: 'bg-gradient-to-tr from-ocean-700 to-ocean-500 text-white shadow-md shadow-ocean-600/20',
+                iconColor: 'text-ocean-600'
+              },
+              {
+                step: '02',
+                icon: MessageSquare,
+                t: '2. Submit Booking Request',
+                d: 'Pick travel dates, number of travelers, and send a booking request in seconds.',
+                numBg: 'bg-gradient-to-tr from-sky-600 to-cyan-500 text-white shadow-md shadow-sky-500/20',
+                iconColor: 'text-sky-600'
+              },
+              {
+                step: '03',
+                icon: Headphones,
+                t: '3. Personal Consultation',
+                d: 'Our personal travel expert calls to customize itinerary and pricing for your budget.',
+                numBg: 'bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-md shadow-amber-500/20',
+                iconColor: 'text-amber-600'
+              },
+              {
+                step: '04',
+                icon: CheckCircle2,
+                t: '4. Confirm & Enjoy Trip!',
+                d: 'Make advance payment securely, receive official vouchers, and get ready to enjoy!',
+                numBg: 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-500/20',
+                iconColor: 'text-emerald-600'
+              },
+            ].map(({ step, icon: Icon, t, d, numBg, iconColor }) => (
+              <div key={step} className="space-y-3.5 p-6 rounded-2xl bg-white border border-slate-200/80 shadow-[0_4px_20px_rgba(6,59,109,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-left group">
+                <div className="flex items-center justify-between">
+                  <span className={`w-11 h-11 rounded-2xl ${numBg} font-mono font-black text-sm grid place-items-center border border-white`}>
+                    {step}
+                  </span>
+                  <Icon className={`w-6 h-6 ${iconColor} group-hover:scale-110 transition-transform`} />
+                </div>
+                <h3 className="font-poppins font-black text-base text-slate-900">{t}</h3>
+                <p className="text-xs font-normal text-slate-500 leading-relaxed">{d}</p>
               </div>
             ))}
           </div>

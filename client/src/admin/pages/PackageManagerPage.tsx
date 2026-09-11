@@ -81,13 +81,23 @@ export const PackageManagerPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [packageCode, setPackageCode] = useState('');
   const [destinationId, setDestinationId] = useState('');
+  const [isAutoSelected, setIsAutoSelected] = useState<boolean>(true);
   const [startingPrice, setStartingPrice] = useState(25000);
   const [discountPrice, setDiscountPrice] = useState(29000);
   const [nights, setNights] = useState(4);
   const [days, setDays] = useState(5);
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1200&auto=format&fit=crop');
   const [gallery, setGallery] = useState<string[]>([]);
+  const [galleryUrlInput, setGalleryUrlInput] = useState('');
   const [overview, setOverview] = useState('');
+
+  const handleAddGalleryUrl = () => {
+    const trimmed = galleryUrlInput.trim();
+    if (!trimmed) return;
+    setGallery((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+    setGalleryUrlInput('');
+    toast.success('Gallery image added');
+  };
   const [highlights, setHighlights] = useState('');
   const [inclusions, setInclusions] = useState('');
   const [exclusions, setExclusions] = useState('');
@@ -97,6 +107,22 @@ export const PackageManagerPage: React.FC = () => {
   const [itinerary, setItinerary] = useState<Array<{ day: number; title: string; description: string; time?: string }>>([
     { day: 1, title: 'Day 1: Arrival & Transfer', description: 'Arrival at destination, transfer to pre-booked hotel and evening free for leisure.' }
   ]);
+
+  // Destination Auto-Matcher Helper
+  const autoMatchDestinationByTitle = (titleText: string, destList: any[]) => {
+    if (!destList || destList.length === 0) return null;
+    if (!titleText || !titleText.trim()) return destList[0];
+
+    const lower = titleText.toLowerCase();
+    const matched = destList.find((d: any) => {
+      const name = (d.name || '').toLowerCase();
+      const state = (d.state || '').toLowerCase();
+      const country = (d.country || '').toLowerCase();
+      if (!name) return false;
+      return lower.includes(name) || name.split(' ').some((w: string) => w.length > 3 && lower.includes(w)) || (state && lower.includes(state)) || (country && lower.includes(country));
+    });
+    return matched || destList[0];
+  };
 
   // Load initial data
   useEffect(() => {
@@ -109,6 +135,31 @@ export const PackageManagerPage: React.FC = () => {
       fetchDestinations();
     }
   }, [isModalOpen]);
+
+  // Automatically select destination on modal open if none set
+  useEffect(() => {
+    if (isModalOpen && destinations.length > 0 && !destinationId) {
+      const best = autoMatchDestinationByTitle(title, destinations);
+      if (best?._id) {
+        setDestinationId(best._id);
+        const isDom = best.category === 'Domestic' || best.isDomestic !== false;
+        setSelectedRegion(isDom ? 'Domestic' : 'International');
+        setIsAutoSelected(true);
+      }
+    }
+  }, [isModalOpen, destinations]);
+
+  // Auto-update destination when title is typed (if in auto-selected mode)
+  useEffect(() => {
+    if (isModalOpen && isAutoSelected && title && destinations.length > 0) {
+      const best = autoMatchDestinationByTitle(title, destinations);
+      if (best?._id && best._id !== destinationId) {
+        setDestinationId(best._id);
+        const isDom = best.category === 'Domestic' || best.isDomestic !== false;
+        setSelectedRegion(isDom ? 'Domestic' : 'International');
+      }
+    }
+  }, [title, isModalOpen, destinations, isAutoSelected]);
 
 
 
@@ -152,7 +203,14 @@ export const PackageManagerPage: React.FC = () => {
     setPackageCode(pkg.packageCode || '');
     setThemeName(pkg.themeName || 'Honeymoon Tour');
     const destObj = typeof pkg.destination === 'object' ? pkg.destination : null;
-    const destId = destObj?._id || pkg.destination || '';
+    let destId = destObj?._id || pkg.destination || '';
+    if (!destId && destinations.length > 0) {
+      const best = autoMatchDestinationByTitle(pkg.title || '', destinations);
+      destId = best?._id || destinations[0]._id;
+      setIsAutoSelected(true);
+    } else {
+      setIsAutoSelected(false);
+    }
     setDestinationId(destId);
 
     if (destObj) {
@@ -172,6 +230,7 @@ export const PackageManagerPage: React.FC = () => {
         ? pkg.gallery
         : (Array.isArray(pkg.images) ? pkg.images : [])
     );
+    setGalleryUrlInput('');
     setOverview(pkg.overview || '');
     setHighlights(pkg.highlights ? pkg.highlights.join(', ') : '');
     setInclusions(pkg.inclusions ? pkg.inclusions.join(', ') : '');
@@ -226,6 +285,7 @@ export const PackageManagerPage: React.FC = () => {
         duration: { nights: Number(nights), days: Number(days) },
         coverImage,
         gallery: gallery.filter((u) => u && u.trim()),
+        images: gallery.filter((u) => u && u.trim()),
         overview,
         highlights: highlights ? highlights.split(',').map((s) => s.trim()) : [],
         inclusions: inclusions ? inclusions.split(',').map((s) => s.trim()) : [],
@@ -283,9 +343,16 @@ export const PackageManagerPage: React.FC = () => {
     setSelectedRegion('All');
     setThemeName('Honeymoon Tour');
     setGallery([]);
+    setGalleryUrlInput('');
     setTitle('');
     setPackageCode('');
-    setDestinationId('');
+    setIsAutoSelected(true);
+    const defaultDest = destinations.length > 0 ? destinations[0] : null;
+    setDestinationId(defaultDest?._id || '');
+    if (defaultDest) {
+      const isDom = defaultDest.category === 'Domestic' || defaultDest.isDomestic !== false;
+      setSelectedRegion(isDom ? 'Domestic' : 'International');
+    }
     setStartingPrice(25000);
     setDiscountPrice(29000);
     setNights(4);
@@ -302,6 +369,22 @@ export const PackageManagerPage: React.FC = () => {
 
   const domesticDests = destinations.filter((d) => d.category === 'Domestic' || d.isDomestic !== false);
   const intlDests = destinations.filter((d) => d.category === 'International' || d.isDomestic === false);
+
+  const handleSelectRegionFilter = (region: 'All' | 'Domestic' | 'International') => {
+    setSelectedRegion(region);
+    let pool = destinations;
+    if (region === 'Domestic') {
+      pool = domesticDests;
+    } else if (region === 'International') {
+      pool = intlDests;
+    }
+    if (pool.length > 0) {
+      const exists = pool.some(d => d._id === destinationId);
+      if (!exists) {
+        setDestinationId(pool[0]._id);
+      }
+    }
+  };
 
   const displayedDestinations = selectedRegion === 'Domestic'
     ? domesticDests
@@ -663,22 +746,30 @@ export const PackageManagerPage: React.FC = () => {
                     />
                     <div>
                       <label className="block text-slate-600 font-semibold mb-0.5 text-[10px]">…or paste an image URL</label>
-                      <input
-                        type="text"
-                        placeholder="https://res.cloudinary.com/..."
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const v = (e.target as HTMLInputElement).value.trim();
-                            if (v) {
-                              setGallery((prev) => (prev.includes(v) ? prev : [...prev, v]));
-                              (e.target as HTMLInputElement).value = '';
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={galleryUrlInput}
+                          onChange={(e) => setGalleryUrlInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddGalleryUrl();
                             }
-                          }
-                        }}
-                        className="w-full px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[10px] focus:bg-white focus:border-ocean-600"
-                      />
-                      <p className="text-[9px] text-slate-400 mt-0.5">Press Enter to add.</p>
+                          }}
+                          placeholder="https://res.cloudinary.com/..."
+                          className="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 font-mono text-[10px] focus:bg-white focus:border-ocean-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddGalleryUrl}
+                          className="px-3 py-1.5 rounded-lg bg-ocean-600 hover:bg-ocean-700 text-white text-[11px] font-bold transition-all shrink-0 cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1 border-0"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-white" />
+                          <span>Submit Image</span>
+                        </button>
+                      </div>
+                      <p className="text-[9px] text-slate-400 mt-1">Click Submit Image (or press Enter) to add to gallery preview.</p>
                     </div>
                   </div>
                 </div>
@@ -803,27 +894,52 @@ export const PackageManagerPage: React.FC = () => {
 
                 {/* 2. Destination Assignment */}
                 <div className="bg-white rounded-xl p-3.5 border border-slate-200/80 shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                    <h4 className="font-bold text-slate-900 text-xs">Destination *</h4>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 flex-wrap gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-slate-900 text-xs">Destination *</h4>
+                      {isAutoSelected ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-0.5" title="Destination auto-matched from package title or initial location">
+                          ⚡ Auto Selected
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const best = autoMatchDestinationByTitle(title, destinations);
+                            if (best?._id) {
+                              setDestinationId(best._id);
+                              const isDom = best.category === 'Domestic' || best.isDomestic !== false;
+                              setSelectedRegion(isDom ? 'Domestic' : 'International');
+                              setIsAutoSelected(true);
+                              toast.success(`Auto-matched to ${best.name}`);
+                            }
+                          }}
+                          className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer"
+                          title="Click to auto-match destination from package title"
+                        >
+                          ⚡ Auto Match
+                        </button>
+                      )}
+                    </div>
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        onClick={() => { setSelectedRegion('All'); setDestinationId(''); }}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'All' ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                        onClick={() => handleSelectRegionFilter('All')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${selectedRegion === 'All' ? 'bg-ocean-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                       >
                         All
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setSelectedRegion('Domestic'); setDestinationId(''); }}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'Domestic' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                        onClick={() => handleSelectRegionFilter('Domestic')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${selectedRegion === 'Domestic' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                       >
                         🇮🇳 India
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setSelectedRegion('International'); setDestinationId(''); }}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${selectedRegion === 'International' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}
+                        onClick={() => handleSelectRegionFilter('International')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${selectedRegion === 'International' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                       >
                         🌍 World
                       </button>
@@ -832,11 +948,13 @@ export const PackageManagerPage: React.FC = () => {
 
                   <select
                     value={destinationId}
-                    onChange={(e) => setDestinationId(e.target.value)}
+                    onChange={(e) => {
+                      setDestinationId(e.target.value);
+                      setIsAutoSelected(false);
+                    }}
                     required
-                    className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-bold focus:border-ocean-600 focus:bg-white"
+                    className="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 outline-none text-slate-900 text-xs font-bold focus:border-ocean-600 focus:bg-white cursor-pointer"
                   >
-                    <option value="">Select Destination</option>
                     {selectedRegion === 'All' ? (
                       <>
                         <optgroup label="🇮🇳 India (Domestic)">
@@ -856,6 +974,9 @@ export const PackageManagerPage: React.FC = () => {
                       ))
                     )}
                   </select>
+                  <p className="text-[10px] text-slate-400">
+                    Automatically selected from title keywords. Select any destination to override.
+                  </p>
                 </div>
 
                 {/* 3. Pricing & Duration Economics */}

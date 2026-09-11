@@ -47,7 +47,7 @@ class AppColors {
     textSecondary: Color(0xFF94A3B8),
     textFaint: Color(0xFF64748B),
     border: Color(0xFF2A3648),
-    primary: Color(0xFF38BDF8),
+    primary: Color(0xFF0A6FB5),
     shadow: Color(0x33000000),
   );
 }

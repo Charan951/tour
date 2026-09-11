@@ -354,14 +354,20 @@ class _HomeScreenState extends State<HomeScreen> {
         : 'Explorer';
 
     final cs = context.colors;
+    final isDark = context.isDark;
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(16, topPadding + 14, 16, 22),
       decoration: BoxDecoration(
-        color: cs.surfaceAlt,
+        gradient: isDark ? AppTheme.headerGradient : null,
+        color: isDark ? null : cs.surfaceAlt,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
-        border: Border(bottom: BorderSide(color: cs.border.withValues(alpha: 0.6))),
+        border: Border(
+            bottom: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : cs.border.withValues(alpha: 0.6))),
         boxShadow: [
           BoxShadow(
             color: cs.shadow,
@@ -373,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Nav Row: Logo, Aqua Badge & Notifications
+          // Top Nav Row: Logo & Notifications
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -386,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 25,
                         fontWeight: FontWeight.w900,
-                        color: cs.textPrimary,
+                        color: isDark ? Colors.white : cs.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -395,7 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 25,
                         fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0EA5E9),
+                        color: isDark
+                            ? const Color(0xFF38BDF8)
+                            : AppTheme.primaryColor,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -404,81 +412,87 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               Consumer<NotificationProvider>(
-                    builder: (context, notifProvider, child) {
-                      final unread = notifProvider.unreadCount;
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const NotificationsScreen(),
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: cs.surface,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: cs.border,
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: cs.shadow,
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.notifications_outlined,
-                                color: cs.textPrimary,
-                                size: 22,
-                              ),
-                            ),
-                            if (unread > 0)
-                              Positioned(
-                                top: -2,
-                                right: -2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEF4444),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: cs.surfaceAlt,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 18,
-                                    minHeight: 18,
-                                  ),
-                                  child: Text(
-                                    unread > 9 ? '9+' : '$unread',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
+                builder: (context, notifProvider, child) {
+                  final unread = notifProvider.unreadCount;
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
                         ),
                       );
                     },
-                  ),
-                ],
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.15)
+                                : cs.surface,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.25)
+                                  : cs.border,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: cs.shadow,
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.notifications_outlined,
+                            color: isDark ? Colors.white : cs.textPrimary,
+                            size: 22,
+                          ),
+                        ),
+                        if (unread > 0)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppTheme.primaryDarkColor
+                                      : cs.surfaceAlt,
+                                  width: 1.5,
+                                ),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                unread > 9 ? '9+' : '$unread',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
+            ],
+          ),
 
           const SizedBox(height: 18),
 
@@ -488,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.outfit(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: cs.textPrimary,
+              color: isDark ? Colors.white : cs.textPrimary,
               height: 1.15,
             ),
           ),
@@ -498,20 +512,24 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: cs.textSecondary,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.85)
+                  : cs.textSecondary,
             ),
           ),
 
           const SizedBox(height: 18),
 
-          // Search bar — single clean field with an inline icon (no separate
-          // button, static placeholder).
+          // Search bar
           Container(
             height: 52,
             decoration: BoxDecoration(
-              color: cs.surface,
+              color: isDark ? Colors.white : cs.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cs.border),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.3)
+                      : cs.border),
               boxShadow: [
                 BoxShadow(
                   color: cs.shadow,
@@ -523,7 +541,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 const SizedBox(width: 14),
-                Icon(Icons.search_rounded, size: 20, color: cs.textSecondary),
+                Icon(Icons.search_rounded,
+                    size: 20,
+                    color: isDark
+                        ? const Color(0xFF64748B)
+                        : cs.textSecondary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
@@ -542,7 +564,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: cs.textPrimary,
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : cs.textPrimary,
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -553,10 +577,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       contentPadding: EdgeInsets.zero,
                       filled: false,
                       isCollapsed: true,
-                      hintText: '',
+                      hintText:
+                          'Search packages, destinations, activities...',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13.5,
-                        color: cs.textFaint,
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : cs.textFaint,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -573,7 +600,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Icon(Icons.close_rounded,
-                          size: 18, color: cs.textSecondary),
+                          size: 18,
+                          color: isDark
+                              ? const Color(0xFF64748B)
+                              : cs.textSecondary),
                     ),
                   )
                 else

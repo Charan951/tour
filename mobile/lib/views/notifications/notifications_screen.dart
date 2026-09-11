@@ -101,8 +101,11 @@ class NotificationsScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(right: 20),
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444),
+                      color: context.isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFFFCA5A5).withValues(alpha: 0.6),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -110,13 +113,17 @@ class NotificationsScreen extends StatelessWidget {
                         Text(
                           'Delete',
                           style: GoogleFonts.inter(
-                            color: Colors.white,
+                            color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),

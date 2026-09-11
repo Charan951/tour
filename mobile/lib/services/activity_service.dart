@@ -1,17 +1,44 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/activity_model.dart';
+import 'api_service.dart';
 
 class ActivityService {
-  Future<List<ActivityModel>> fetchActivities({String? category, String? destination, String? search}) async {
+  static List<ActivityModel> _cachedActivities = [];
+
+  static List<ActivityModel> get cachedActivities => List.unmodifiable(_cachedActivities);
+
+  Future<List<ActivityModel>> fetchActivities({
+    String? category,
+    String? destination,
+    String? search,
+    bool forceRefresh = false,
+  }) async {
+    final bool isDefaultQuery =
+        (category == null || category == 'All' || category.isEmpty) &&
+        (destination == null || destination.isEmpty) &&
+        (search == null || search.isEmpty);
+
+    if (!forceRefresh && isDefaultQuery && _cachedActivities.isNotEmpty) {
+      // Return cached activities instantly (0ms delay) and update in background
+      _fetchFromNetwork(category: category, destination: destination, search: search);
+      return _filterList(_cachedActivities, category: category, destination: destination, search: search);
+    }
+
+    return await _fetchFromNetwork(category: category, destination: destination, search: search);
+  }
+
+  Future<List<ActivityModel>> _fetchFromNetwork({
+    String? category,
+    String? destination,
+    String? search,
+  }) async {
     List<ActivityModel> result = [];
     try {
       final Map<String, String> queryParams = {'limit': '100'};
       if (destination != null && destination.isNotEmpty) {
         queryParams['destination'] = destination;
       }
-      if (category != null && category.isNotEmpty) {
+      if (category != null && category.isNotEmpty && category != 'All') {
         queryParams['category'] = category;
       }
       if (search != null && search.isNotEmpty) {
@@ -20,21 +47,24 @@ class ActivityService {
 
       final uri = Uri.parse(ApiConfig.activities).replace(queryParameters: queryParams);
 
-      final response = await http.get(uri).timeout(const Duration(seconds: 6));
-      if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        if (body['data'] is List) {
-          final List list = body['data'];
-          result = list.map((item) => ActivityModel.fromJson(item)).toList();
-        } else {
-          result = [];
+      final response = await ApiService.get(uri.toString());
+      if (response is Map && (response['success'] == true || response['data'] != null)) {
+        final dataField = response['data'] ?? response['activities'];
+        if (dataField is List) {
+          result = dataField.map((item) => ActivityModel.fromJson(item)).toList();
+          if ((category == null || category == 'All' || category.isEmpty) &&
+              (destination == null || destination.isEmpty) &&
+              (search == null || search.isEmpty)) {
+            _cachedActivities = result;
+          }
         }
-      } else {
-        result = [];
       }
-    } catch (e) {
-      result = [];
+    } catch (_) {}
+
+    if (result.isEmpty && _cachedActivities.isNotEmpty) {
+      result = _cachedActivities;
     }
+
     return _filterList(result, category: category, destination: destination, search: search);
   }
 

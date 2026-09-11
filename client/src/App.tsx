@@ -207,6 +207,7 @@ export const App: React.FC = () => {
             <Route path="/profile" element={getPublicRouteElement(<UserDashboardPage />)} />
             <Route path="/my-bookings" element={getPublicRouteElement(<UserDashboardPage />)} />
             <Route path="/my-enquiries" element={getPublicRouteElement(<UserDashboardPage />)} />
+            <Route path="/notifications" element={getPublicRouteElement(<UserDashboardPage />)} />
 
             {/* ── ADMIN BACK-OFFICE ── */}
             <Route path="/admin/login" element={<AdminLoginPage />} />

@@ -46,6 +46,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   @override
   void initState() {
     super.initState();
+    if (ActivityService.cachedActivities.isNotEmpty) {
+      _activities = ActivityService.cachedActivities;
+      _isLoading = false;
+    }
     _loadActivities();
   }
 
@@ -56,10 +60,12 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
   }
 
   Future<void> _loadActivities() async {
-    setState(() {
-      _isLoading = true;
-      _loadFailed = false;
-    });
+    if (_activities.isEmpty) {
+      setState(() {
+        _isLoading = true;
+        _loadFailed = false;
+      });
+    }
     try {
       final data = await _activityService.fetchActivities(
         category: _selectedCategory,

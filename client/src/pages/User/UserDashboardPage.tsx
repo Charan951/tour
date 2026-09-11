@@ -6,7 +6,7 @@ import {
   AlertCircle, CheckCircle2, LogOut, Settings,
   ArrowLeft, Mail, Lock, Phone, Sparkles, LogIn, UserPlus,
   ShieldCheck, Headphones, Award, Eye, EyeOff,
-  Bell, Pencil, Camera, ArrowRight, CreditCard, Wallet, ArrowDownLeft, ArrowUpRight
+  Bell, Pencil, Camera, ArrowRight, CreditCard, Wallet, ArrowDownLeft, ArrowUpRight, Zap
 } from 'lucide-react';
 import { apiClient } from '../../api/apiClient';
 import { SEO } from '../../components/common/SEO';
@@ -1049,21 +1049,21 @@ export const UserDashboardPage: React.FC = () => {
               <div className="px-4 -mt-8 pb-6 space-y-4">
                 {/* Identity card — matching exact design system spec */}
                 <div className="animate-fade-up bg-white rounded-3xl overflow-hidden shadow-card border border-slate-200/60" style={{ animationDelay: '0ms' }}>
-                  {/* Top soft blue gradient header */}
-                  <div className="relative bg-gradient-to-br from-blue-50/90 via-sky-50/60 to-blue-100/40 p-5 overflow-hidden">
+                  {/* Top vibrant primary blue gradient header */}
+                  <div className="relative bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 p-5 overflow-hidden text-white shadow-md">
                     {/* Background subtle curve graphic */}
-                    <div aria-hidden="true" className="absolute -top-12 -right-8 w-44 h-44 rounded-full bg-sky-200/30 blur-2xl pointer-events-none" />
+                    <div aria-hidden="true" className="absolute -top-12 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
                     <div className="relative flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-ocean-600 via-ocean-700 to-cyan-600 text-white font-display font-black text-2xl flex items-center justify-center shrink-0 border-4 border-white shadow-md">
+                        <div className="w-16 h-16 rounded-full bg-white text-ocean-700 font-display font-black text-2xl flex items-center justify-center shrink-0 border-4 border-white/30 shadow-md">
                           {displayName.trim() ? displayName.trim()[0].toUpperCase() : 'U'}
                         </div>
                         <div className="min-w-0">
-                          <h2 className="font-display font-black text-xl text-slate-900 truncate tracking-tight">{displayName}</h2>
-                          <p className="text-xs text-slate-500 truncate mt-0.5 font-medium">{email || 'No email set'}</p>
-                          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-100/80 text-emerald-700 px-3 py-1 text-[0.6875rem] font-bold">
-                            <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-600 text-white shrink-0" />
+                          <h2 className="font-display font-black text-xl text-white truncate tracking-tight">{displayName}</h2>
+                          <p className="text-xs text-white/80 truncate mt-0.5 font-medium">{email || 'No email set'}</p>
+                          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white px-3 py-1 text-[0.6875rem] font-bold backdrop-blur-md border border-white/20">
+                            <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-400 text-slate-900 shrink-0" />
                             <span>VERIFIED</span>
                           </div>
                         </div>
@@ -1072,9 +1072,9 @@ export const UserDashboardPage: React.FC = () => {
                       {/* Edit Profile CTA Button */}
                       <button
                         onClick={openEditProfile}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 text-ocean-600 px-3.5 py-2 text-xs font-bold shadow-xs active:scale-95 transition shrink-0"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-2 text-xs font-bold shadow-xs active:scale-95 transition shrink-0 backdrop-blur-md"
                       >
-                        <Pencil className="w-3.5 h-3.5 text-ocean-600" />
+                        <Pencil className="w-3.5 h-3.5 text-white" />
                         <span>Edit Profile</span>
                       </button>
                     </div>
@@ -1134,6 +1134,8 @@ export const UserDashboardPage: React.FC = () => {
                     {[
                       { label: 'My Enquiries & Custom Quotes', desc: 'Trip quotes, responses & status', icon: MessageSquare, tint: 'bg-ocean-600/10 text-ocean-600', go: () => setScreen('enquiries') },
                       { label: 'My Bookings & Payments', desc: 'Active bookings, payment status & balance', icon: PkgIcon, tint: 'bg-emerald-500/10 text-emerald-600', go: () => setScreen('bookings') },
+                      { label: 'Thrill Activities & Sports', desc: 'Bungee jumping, rafting, diving & booking', icon: Zap, tint: 'bg-amber-500/10 text-amber-600', badge: 'HOT', go: () => navigate('/activities') },
+                      { label: 'Notifications & Updates', desc: 'Real-time booking and enquiry status alerts', icon: Bell, tint: 'bg-purple-500/10 text-purple-600', go: () => navigate('/notifications') },
                     ].map((t) => (
                       <button
                         key={t.label} onClick={t.go}
@@ -1143,7 +1145,14 @@ export const UserDashboardPage: React.FC = () => {
                           <t.icon className="w-5 h-5" />
                         </span>
                         <span className="flex-1 min-w-0">
-                          <span className="block font-display font-black text-sm text-ink">{t.label}</span>
+                          <span className="flex items-center gap-2">
+                            <span className="block font-display font-black text-sm text-ink">{t.label}</span>
+                            {(t as any).badge && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white font-extrabold text-[9px] uppercase tracking-wider">
+                                {(t as any).badge}
+                              </span>
+                            )}
+                          </span>
                           <span className="block text-[0.6875rem] text-slate-muted truncate mt-0.5">{t.desc}</span>
                         </span>
                         <ChevronRight className="w-4 h-4 text-slate-faint shrink-0 transition-transform group-active:translate-x-0.5" />

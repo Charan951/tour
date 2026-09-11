@@ -136,32 +136,32 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   return (
     <>
       {/* ── App bar: logo, greeting, notification bell and a search field ── */}
-      <div className="relative overflow-hidden bg-[#F1F5F9] border-b border-slate-200/90 px-4 pt-5 pb-6 rounded-b-[28px] shadow-sm">
+      <div className="relative overflow-hidden bg-[#F1F5F9] dark:bg-gradient-to-br dark:from-ocean-800 dark:via-ocean-700 dark:to-cyan-700 border-b border-slate-200/90 dark:border-white/10 px-4 pt-5 pb-6 rounded-b-[28px] shadow-sm">
         <div className="flex items-center justify-between">
-          <h2 className="relative font-display font-black text-2xl tracking-tight text-slate-900">
-            Holiday<span className="text-aqua-500">City</span>
+          <h2 className="relative font-display font-black text-2xl tracking-tight text-slate-900 dark:text-white">
+            Holiday<span className="text-aqua-500 dark:text-cyan-300">City</span>
           </h2>
           <NotificationBell forceMobile={true} />
         </div>
 
         <div className="relative mt-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0 border border-white/20">
               {(userName || 'E')[0].toUpperCase()}
             </div>
             <div className="min-w-0">
-              <h1 className="font-display font-black text-xl text-slate-900 leading-tight truncate">
+              <h1 className="font-display font-black text-xl text-slate-900 dark:text-white leading-tight truncate">
                 {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
                 <span className="inline-block align-middle">👋</span>
               </h1>
-              <p className="text-xs text-slate-500 font-medium truncate">Where do you want to travel next?</p>
+              <p className="text-xs text-slate-500 dark:text-sky-100/90 font-medium truncate">Where do you want to travel next?</p>
             </div>
           </div>
         </div>
 
         <form
           onSubmit={handleSearch}
-          className="relative z-10 mt-5 flex items-center gap-2 bg-white border border-slate-300/80 rounded-2xl shadow-sm pl-4 pr-1.5 h-14"
+          className="relative z-10 mt-5 flex items-center gap-2 bg-white border border-slate-300/80 dark:border-white/20 rounded-2xl shadow-sm pl-4 pr-1.5 h-14"
         >
           <input
             value={searchQ}
@@ -172,7 +172,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           <button
             type="submit"
             aria-label="Search"
-            className="w-10 h-10 rounded-xl bg-aqua-500 hover:bg-aqua-600 active:scale-95 text-white grid place-items-center transition shrink-0 shadow-md"
+            className="w-10 h-10 rounded-xl bg-ocean-600 hover:bg-ocean-700 active:scale-95 text-white grid place-items-center transition shrink-0 shadow-md"
           >
             <Search className="w-4 h-4" />
           </button>

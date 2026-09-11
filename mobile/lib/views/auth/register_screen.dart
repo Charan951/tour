@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../config/api_config.dart';
 import '../legal/legal_screen.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
@@ -43,13 +42,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  void _showServerIpDialog() {
-    ApiConfig.showServerConfigDialog(
-      context,
-      onSaved: () => setState(() {}),
-    );
   }
 
   void _handleRegister() async {
@@ -291,17 +283,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 20),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: _showServerIpDialog,
-                    icon: Icon(Icons.wifi_tethering, size: 14, color: context.colors.textSecondary),
-                    label: Text(
-                      'Server: ${ApiConfig.baseUrl}',
-                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
-                    ),
-                  ),
                 ),
               ],
             ),

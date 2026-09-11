@@ -274,24 +274,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         child: Column(
                           children: [
-                            // Top light-blue header area containing Profile Avatar, User info & Edit Profile
+                            // Top vibrant ocean blue header area containing Profile Avatar, User info & Edit Profile
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: context.isDark ? cs.surfaceAlt : null,
-                                gradient: context.isDark
-                                    ? null
-                                    : const LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFFEBF5FF),
-                                          Color(0xFFF4F9FF),
-                                          Color(0xFFE0F2FE),
-                                        ],
-                                      ),
+                                  horizontal: 14, vertical: 16),
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF064B88),
+                                    Color(0xFF0A6FB5),
+                                    Color(0xFF0284C7),
+                                  ],
+                                ),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -304,8 +301,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           color: Colors.white, width: 2.5),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppTheme.primaryColor
-                                              .withValues(alpha: 0.25),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.2),
                                           blurRadius: 10,
                                           offset: const Offset(0, 3),
                                         ),
@@ -313,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     ),
                                     child: CircleAvatar(
                                       radius: 30,
-                                      backgroundColor: AppTheme.primaryColor,
+                                      backgroundColor: Colors.white,
                                       child: Text(
                                         userName.trim().isNotEmpty
                                             ? userName.trim()[0].toUpperCase()
@@ -321,7 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         style: GoogleFonts.outfit(
                                           fontSize: 24,
                                           fontWeight: FontWeight.w900,
-                                          color: Colors.white,
+                                          color: AppTheme.primaryColor,
                                         ),
                                       ),
                                     ),
@@ -340,9 +337,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           style: GoogleFonts.outfit(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w900,
-                                            color: context.isDark
-                                                ? cs.textPrimary
-                                                : context.colors.textPrimary,
+                                            color: Colors.white,
                                             height: 1.1,
                                           ),
                                         ),
@@ -352,9 +347,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
-                                            color: context.isDark
-                                                ? cs.textSecondary
-                                                : context.colors.textSecondary,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.85),
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -363,29 +357,30 @@ class _ProfileScreenState extends State<ProfileScreen>
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 3),
                                           decoration: BoxDecoration(
-                                            color: context.isDark
-                                                ? cs.surface
-                                                : const Color(0xFFF1F5F9),
+                                            color: Colors.white
+                                                .withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(999),
-                                            border: Border.all(color: cs.border),
+                                            border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.3)),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(
+                                              const Icon(
                                                 Icons.check_circle_rounded,
                                                 size: 12,
-                                                color: cs.textSecondary,
+                                                color: Color(0xFF34D399),
                                               ),
                                               const SizedBox(width: 3),
                                               Text(
                                                 'VERIFIED',
-                                                style: TextStyle(
+                                                style: GoogleFonts.outfit(
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.w900,
                                                   letterSpacing: 0.5,
-                                                  color: cs.textSecondary,
+                                                  color: Colors.white,
                                                 ),
                                               ),
                                             ],
@@ -401,15 +396,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     icon: const Icon(
                                       Icons.edit_outlined,
                                       size: 13,
-                                      color: AppTheme.primaryColor,
+                                      color: Colors.white,
                                     ),
                                     label: const Text('Edit Profile'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: cs.surface,
-                                      foregroundColor: AppTheme.primaryColor,
-                                      elevation: 1,
-                                      shadowColor: Colors.black
-                                          .withValues(alpha: 0.06),
+                                      backgroundColor: Colors.white
+                                          .withValues(alpha: 0.22),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 10, vertical: 6),
                                       textStyle: GoogleFonts.outfit(
@@ -419,7 +413,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(12),
-                                        side: BorderSide(color: cs.border),
+                                        side: BorderSide(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.4)),
                                       ),
                                     ),
                                   ),

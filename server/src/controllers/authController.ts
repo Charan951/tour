@@ -205,11 +205,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
     // Send OTP email
     let sent = false;
     try {
-      sent = await sendPasswordResetEmail({
+      sent = Boolean(await sendPasswordResetEmail({
         email: user.email,
         firstName: user.firstName || 'Traveler',
         otp,
-      });
+      }));
       if (sent) {
         console.log(`[forgotPassword] OTP email sent to ${user.email}`);
       } else {

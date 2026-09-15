@@ -82,8 +82,8 @@ const renderStatusBadge = (status?: string) => {
 /* ─────────────────────────────────────────────
    1. BOOKING CONFIRMATION EMAIL (NEW BOOKING)
 ───────────────────────────────────────────── */
-export const sendBookingConfirmationEmail = async (booking: any) => {
-  if (!booking?.email) return;
+export const sendBookingConfirmationEmail = async (booking: any): Promise<boolean> => {
+  if (!booking?.email) return false;
 
   const pkgTitle = booking.packageName || booking.package?.title || 'Tour Package';
   const destName = booking.destinationName || booking.destination?.name || 'Popular Destination';
@@ -201,8 +201,8 @@ export const sendBookingConfirmationEmail = async (booking: any) => {
 /* ─────────────────────────────────────────────
    2. BOOKING STATUS & PAYMENT UPDATE EMAIL
 ───────────────────────────────────────────── */
-export const sendBookingStatusUpdateEmail = async (booking: any) => {
-  if (!booking?.email) return;
+export const sendBookingStatusUpdateEmail = async (booking: any): Promise<boolean> => {
+  if (!booking?.email) return false;
 
   const pkgTitle = booking.packageName || booking.package?.title || 'Tour Package';
   const statusStr = booking.status || 'Updated';
@@ -315,8 +315,8 @@ export const sendBookingStatusUpdateEmail = async (booking: any) => {
 /* ─────────────────────────────────────────────
    3. PAYMENT RECEIPT CONFIRMATION EMAIL
 ───────────────────────────────────────────── */
-export const sendPaymentReceiptEmail = async (booking: any, amountPaid: number, isFullPayment: boolean) => {
-  if (!booking?.email) return;
+export const sendPaymentReceiptEmail = async (booking: any, amountPaid: number, isFullPayment: boolean): Promise<boolean> => {
+  if (!booking?.email) return false;
 
   const pkgTitle = booking.packageName || booking.package?.title || 'Tour Package';
 
@@ -431,8 +431,8 @@ export const sendPaymentReceiptEmail = async (booking: any, amountPaid: number, 
 /* ─────────────────────────────────────────────
    4. ENQUIRY CONFIRMATION EMAIL
 ───────────────────────────────────────────── */
-export const sendEnquiryConfirmationEmail = async (enquiry: any) => {
-  if (!enquiry?.email) return;
+export const sendEnquiryConfirmationEmail = async (enquiry: any): Promise<boolean> => {
+  if (!enquiry?.email) return false;
 
   const destName = enquiry.destination?.name || 'Tour Destination';
   const pkgTitle = enquiry.package?.title || '';
@@ -529,8 +529,8 @@ export const sendEnquiryConfirmationEmail = async (enquiry: any) => {
 /* ─────────────────────────────────────────────
    5. ENQUIRY STATUS UPDATE EMAIL
 ───────────────────────────────────────────── */
-export const sendEnquiryStatusUpdateEmail = async (enquiry: any) => {
-  if (!enquiry?.email) return;
+export const sendEnquiryStatusUpdateEmail = async (enquiry: any): Promise<boolean> => {
+  if (!enquiry?.email) return false;
 
   const destName = enquiry.destination?.name || 'Tour Destination';
   const statusStr = enquiry.status || 'Updated';
@@ -626,8 +626,8 @@ export const sendChatReplyNotificationEmail = async (data: {
   messageText: string;
   topicId: string;
   topicTitle?: string;
-}) => {
-  if (!data?.recipientEmail) return;
+}): Promise<boolean> => {
+  if (!data?.recipientEmail) return false;
 
   const html = `
     <!DOCTYPE html>
@@ -840,8 +840,8 @@ export const sendPasswordResetEmail = async (data: {
   email: string;
   firstName: string;
   otp: string;
-}) => {
-  if (!data?.email) return;
+}): Promise<boolean> => {
+  if (!data?.email) return false;
 
   const html = `
     <!DOCTYPE html>

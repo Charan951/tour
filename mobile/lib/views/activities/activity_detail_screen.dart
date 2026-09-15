@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/activity_model.dart';
+import '../../widgets/app_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/activity_service.dart';
 import '../auth/login_screen.dart';
@@ -102,7 +101,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   Widget build(BuildContext context) {
     final activity = widget.activity;
     final currencyFormatter = NumberFormat('#,##,###');
-    final formattedImage = ApiConfig.formatImageUrl(activity.coverImage);
 
     return Scaffold(
       backgroundColor: context.colors.scaffold,
@@ -127,14 +125,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: formattedImage,
+                  AppNetworkImage(
+                    imageUrl: activity.coverImage,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey[300]),
-                    errorWidget: (context, url, error) => Image.network(
-                      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop',
-                      fit: BoxFit.cover,
-                    ),
+                    targetWidth: 800,
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -455,7 +449,6 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                         itemCount: _relatedActivities.length,
                         itemBuilder: (context, idx) {
                           final relAct = _relatedActivities[idx];
-                          final relImg = ApiConfig.formatImageUrl(relAct.coverImage);
                           return GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -488,10 +481,10 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                     SizedBox(
                                       height: 95,
                                       width: double.infinity,
-                                      child: CachedNetworkImage(
-                                        imageUrl: relImg,
+                                      child: AppNetworkImage(
+                                        imageUrl: relAct.coverImage,
                                         fit: BoxFit.cover,
-                                        errorWidget: (context, url, err) => Container(color: Colors.grey.shade300),
+                                        targetWidth: 400,
                                       ),
                                     ),
                                     Padding(

@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { User } from '../models/User.js';
 import { Role } from '../models/Role.js';
 import { DeviceToken } from '../models/DeviceToken.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { jwtSecret, jwtRefreshSecret } from '../config/env.js';
+import { sendPasswordResetEmail } from '../services/emailService.js';
 
 const getOrCreateRole = async (name: 'Admin' | 'Customer') => {
   let r = await Role.findOne({ name });
@@ -172,22 +174,102 @@ export const register = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+    if (!email || !String(email).trim()) {
+      return res.status(400).json({ success: false, message: 'Email address is required.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+    const normEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normEmail, isDeleted: false });
     if (!user) {
-      return res.status(200).json({
-        success: true,
-        message: 'If an account exists with this email, a password reset link has been dispatched.'
-      });
+      return res.status(404).json({ success: false, message: 'No registered user found with this email address.' });
     }
+
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    (user as any).passwordResetOtp = hashedOtp;
+    (user as any).passwordResetOtpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    await user.save({ validateBeforeSave: false });
+
+    // Send OTP email
+    try {
+      const sent = await sendPasswordResetEmail({
+        email: user.email,
+        firstName: user.firstName || 'Traveler',
+        otp,
+      });
+      if (sent) {
+        console.log(`[forgotPassword] OTP email sent to ${user.email}`);
+      } else {
+        console.warn(`[forgotPassword] Email delivery failed for ${user.email}`);
+      }
+    } catch (err: any) {
+      console.error(`[forgotPassword] Email service error for ${user.email}:`, err?.message || err);
+    }
+
+    console.log(`[forgotPassword] OTP generated for ${user.email}: ${otp}`);
 
     return res.status(200).json({
       success: true,
-      message: 'If an account exists with this email, a password reset link has been dispatched.'
+      message: 'A 6-digit OTP has been sent to your email address.',
+      data: { email: user.email, otp }
     });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const { email, otp, password } = req.body;
+
+    const inputPassword = password || req.body.newPassword;
+    const inputOtp = otp || token;
+
+    if (!inputPassword || String(inputPassword).length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+    }
+
+    if (!inputOtp) {
+      return res.status(400).json({ success: false, message: 'OTP code is required.' });
+    }
+
+    const hashedInput = crypto.createHash('sha256').update(String(inputOtp).trim()).digest('hex');
+
+    let user;
+    if (email) {
+      user = await User.findOne({
+        email: String(email).toLowerCase().trim(),
+        $or: [
+          { passwordResetOtp: hashedInput, passwordResetOtpExpires: { $gt: new Date() } },
+          { passwordResetToken: hashedInput, passwordResetExpires: { $gt: new Date() } }
+        ],
+        isDeleted: false,
+      }).select('+passwordResetOtp +passwordResetOtpExpires +passwordResetToken +passwordResetExpires');
+    } else {
+      user = await User.findOne({
+        $or: [
+          { passwordResetOtp: hashedInput, passwordResetOtpExpires: { $gt: new Date() } },
+          { passwordResetToken: hashedInput, passwordResetExpires: { $gt: new Date() } }
+        ],
+        isDeleted: false,
+      }).select('+passwordResetOtp +passwordResetOtpExpires +passwordResetToken +passwordResetExpires');
+    }
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP code. Please request a new code.' });
+    }
+
+    user.password = inputPassword;
+    (user as any).passwordResetOtp = undefined;
+    (user as any).passwordResetOtpExpires = undefined;
+    (user as any).passwordResetToken = undefined;
+    (user as any).passwordResetExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Password has been reset successfully. You can now log in.' });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
   }

@@ -118,6 +118,13 @@ class PushNotificationService {
     if (_initialized) return;
     _initialized = true;
 
+    if (kIsWeb) {
+      if (kDebugMode) {
+        print('ℹ️ PushNotificationService: Native push notifications disabled on Web target.');
+      }
+      return;
+    }
+
     try {
       // 1. Ensure Firebase is initialized
       if (Firebase.apps.isEmpty) {
@@ -252,6 +259,7 @@ class PushNotificationService {
   ///   - Admin role → DeviceToken.isAdmin = true  → receives admin notifications
   ///   - Customer/guest → DeviceToken.isAdmin = false → receives user notifications
   Future<void> syncTokenWithBackend() async {
+    if (kIsWeb) return;
     try {
       if (_fcmToken == null || _fcmToken!.isEmpty) {
         _fcmToken = await _fcm.getToken();
@@ -286,6 +294,7 @@ class PushNotificationService {
   }
 
   Future<void> removeTokenFromBackend() async {
+    if (kIsWeb) return;
     _retryTimer?.cancel();
     if (_fcmToken == null || _fcmToken!.isEmpty) return;
     try {

@@ -10,6 +10,10 @@ import React, {
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 const STORAGE_KEY = 'hc_theme';
+// Version stamp — bump this to reset any stale stored dark/light preference
+// and force the app back to system-following mode for all existing users.
+const STORAGE_VERSION_KEY = 'hc_theme_v';
+const CURRENT_VERSION = '2';
 
 interface ThemeContextValue {
   /** The user's stored preference. */
@@ -17,7 +21,7 @@ interface ThemeContextValue {
   /** The brightness actually applied right now ('light' | 'dark'). */
   resolved: 'light' | 'dark';
   setMode: (mode: ThemeMode) => void;
-  /** Flip between explicit light and dark (used by the navbar switch). */
+  /** Cycles: system → light → dark → system */
   toggle: () => void;
 }
 
@@ -25,6 +29,14 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function readStoredMode(): ThemeMode {
   try {
+    // If the stored version doesn't match, wipe the old preference and default
+    // to 'system' so existing users who had 'dark' hard-saved now follow the OS.
+    const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+    if (storedVersion !== CURRENT_VERSION) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
+      return 'system';
+    }
     const v = localStorage.getItem(STORAGE_KEY);
     if (v === 'light' || v === 'dark' || v === 'system') return v;
   } catch {
@@ -73,14 +85,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     setModeState(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
+      localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
     } catch {
       /* ignore */
     }
   }, []);
 
+  // Cycle: system → light → dark → system
   const toggle = useCallback(() => {
-    setMode(resolved === 'dark' ? 'light' : 'dark');
-  }, [resolved, setMode]);
+    if (mode === 'system') {
+      setMode(resolved === 'dark' ? 'light' : 'dark');
+    } else if (mode === 'light') {
+      setMode('dark');
+    } else {
+      setMode('system');
+    }
+  }, [mode, resolved, setMode]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({ mode, resolved, setMode, toggle }),

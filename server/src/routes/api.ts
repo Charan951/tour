@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { jwtSecret } from '../config/env.js';
-import { login, register, forgotPassword, getMe, updateMe, changePassword, deleteMe, saveFcmToken, removeFcmToken } from '../controllers/authController.js';
+import { login, register, forgotPassword, resetPassword, getMe, updateMe, changePassword, deleteMe, saveFcmToken, removeFcmToken } from '../controllers/authController.js';
 import { createEnquiry, getEnquiries, getMyEnquiries, updateEnquiryStatus, addEnquiryNote, deleteEnquiry } from '../controllers/enquiryController.js';
 import { getPackages, getPackageBySlug, createPackage, updatePackage, deletePackage } from '../controllers/packageController.js';
 import { getActivities, getActivityBySlug, createActivity, updateActivity, deleteActivity } from '../controllers/activityController.js';
@@ -72,6 +72,8 @@ router.use('/upload', uploadRoutes);
 router.post('/auth/login', authRateLimiter, login);
 router.post('/auth/register', authRateLimiter, register);
 router.post('/auth/forgot-password', authRateLimiter, forgotPassword);
+router.post('/auth/reset-password', authRateLimiter, resetPassword);
+router.post('/auth/reset-password/:token', authRateLimiter, resetPassword);
 
 // Signed-in user managing their own account (any authenticated role).
 router.get('/auth/me', authenticateToken, getMe);

@@ -10,16 +10,20 @@ class ApiConfig {
 
   /// Backend selector:
   ///   true  -> production backend (https://tour.speshway.site)
-  ///   false -> localhost backend  (http://localhost:5000)
-  static bool isProduction = false;
+  ///   false -> localhost/LAN backend  (http://192.168.1.20:5000 or http://localhost:5000)
+  static bool isProduction =
+      true; // Default: false in debug mode, true in production builds
 
   // Endpoint URLs
   static const String productionHost = 'https://tour.speshway.site';
-  static String localHost = 'http://localhost:5000';
+
+  /// LAN IP of the dev machine — used when running against the local server
+  static const String _lanIp = '192.168.1.20';
+  static String localHost = 'http://$_lanIp:5000';
 
   /// Kept for the connectivity / candidate-URL fallback logic in
   /// `services/api_service.dart` and `services/connectivity.dart`.
-  static String hostIp = '';
+  static String hostIp = _lanIp; // Pre-filled so LAN fallback works immediately
   static String? customHost;
 
   /// Load persisted environment settings from SharedPreferences
@@ -28,6 +32,8 @@ class ApiConfig {
       final prefs = await SharedPreferences.getInstance();
       if (prefs.containsKey(_prefIsProductionKey)) {
         isProduction = prefs.getBool(_prefIsProductionKey) ?? kReleaseMode;
+      } else {
+        isProduction = kReleaseMode;
       }
       if (prefs.containsKey(_prefCustomHostKey)) {
         customHost = prefs.getString(_prefCustomHostKey);
@@ -117,7 +123,13 @@ class ApiConfig {
       return 'https://$host';
     }
 
-    return isProduction ? productionHost : localHost;
+    if (!isProduction) {
+      if (kIsWeb) {
+        return 'http://localhost:5000';
+      }
+      return localHost;
+    }
+    return productionHost;
   }
 
   // Centralized Base API URL
@@ -153,7 +165,7 @@ class ApiConfig {
 
   static String formatImageUrl(String? url, {int width = 500}) {
     if (url == null || url.trim().isEmpty) {
-      return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=$width&q=75&auto=format&fit=crop';
+      return 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=$width&q=70&auto=format&fit=crop';
     }
     final cleanUrl = url.trim();
     if (cleanUrl.startsWith('data:') ||
@@ -167,14 +179,18 @@ class ApiConfig {
         result = result.replaceFirst(RegExp(r'http://[^/]+:5000'), serverHost);
       }
 
-      // Optimize Unsplash images for instant mobile loading (small WebP/JPEG payload)
+      // Optimize Unsplash images for instant loading (small WebP/JPEG payload)
       if (result.contains('images.unsplash.com')) {
         if (result.contains('w=')) {
           result = result.replaceAll(RegExp(r'w=\d+'), 'w=$width');
         } else {
           result += '&w=$width';
         }
-        if (!result.contains('q=')) result += '&q=75';
+        if (result.contains('q=')) {
+          result = result.replaceAll(RegExp(r'q=\d+'), 'q=70');
+        } else {
+          result += '&q=70';
+        }
         if (!result.contains('auto=')) result += '&auto=format';
         if (!result.contains('fit=')) result += '&fit=crop';
       }
@@ -190,6 +206,9 @@ class ApiConfig {
   static String get login => '$baseUrl/auth/login';
   static String get register => '$baseUrl/auth/register';
   static String get forgotPassword => '$baseUrl/auth/forgot-password';
+  static String get resetPassword => '$baseUrl/auth/reset-password';
+  static String resetPasswordUrl(String token) =>
+      '$baseUrl/auth/reset-password/$token';
   static String get me => '$baseUrl/auth/me';
   static String get updateProfile => '$baseUrl/auth/me';
   static String get changePassword => '$baseUrl/auth/change-password';

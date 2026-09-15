@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../config/api_config.dart';
+import 'app_network_image.dart';
 import '../config/theme.dart';
 import '../models/package_model.dart';
 import '../providers/auth_provider.dart';
@@ -78,24 +77,12 @@ class PackageCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: CachedNetworkImage(
-                    imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 500),
+                  child: AppNetworkImage(
+                    imageUrl: package.mainImage,
                     height: 180,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    memCacheWidth: 500,
-                    fadeInDuration: const Duration(milliseconds: 150),
-                    placeholder: (context, url) => Container(
-                      height: 180,
-                      color: const Color(0xFFF1F5F9),
-                    ),
-                    errorWidget: (context, url, error) => CachedNetworkImage(
-                      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=75&auto=format&fit=crop',
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      memCacheWidth: 500,
-                    ),
+                    targetWidth: 500,
                   ),
                 ),
                 // Category Badge

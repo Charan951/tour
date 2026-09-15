@@ -55,11 +55,34 @@ class AuthService {
     }
   }
 
-  Future<bool> forgotPassword(String email) async {
+  /// POST /auth/forgot-password — send 6-digit OTP to email.
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
     final response = await ApiService.post(ApiConfig.forgotPassword, {
       'email': email,
     });
-    return response['success'] == true;
+    if (response['success'] == true) {
+      final otp = response['data']?['otp']?.toString();
+      return {'success': true, 'otp': otp};
+    }
+    throw Exception(response['message'] ?? 'Could not send OTP to email');
+  }
+
+  /// POST /auth/reset-password — set a new password using email, 6-digit OTP, and new password.
+  Future<bool> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    final response = await ApiService.post(
+      ApiConfig.resetPassword,
+      {
+        'email': email,
+        'otp': otp,
+        'password': newPassword,
+      },
+    );
+    if (response['success'] == true) return true;
+    throw Exception(response['message'] ?? 'Could not reset password');
   }
 
   /// PATCH /auth/me — update the signed-in user's own profile.

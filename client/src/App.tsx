@@ -23,6 +23,7 @@ const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ defa
 const DeleteAccountPage = lazy(() => import('./pages/Legal/DeleteAccountPage').then(m => ({ default: m.DeleteAccountPage })));
 const ThemeCatalogPage = lazy(() => import('./pages/Themes/ThemeCatalogPage').then(m => ({ default: m.ThemeCatalogPage })));
 const UserDashboardPage = lazy(() => import('./pages/User/UserDashboardPage').then(m => ({ default: m.UserDashboardPage })));
+const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 
 // Lazy-loaded Mobile Pages (Flutter-matched)
 const MobilePackagesPage = lazy(() => import('./pages/Packages/MobilePackagesPage').then(m => ({ default: m.MobilePackagesPage })));
@@ -200,6 +201,7 @@ export const App: React.FC = () => {
             <Route path="/privacy" element={<LegalPage doc="privacy" />} />
             <Route path="/delete-account" element={<DeleteAccountPage />} />
             <Route path="/account-deletion" element={<DeleteAccountPage />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
             {/* ── USER DASHBOARD — full-screen app on mobile, normal page on desktop ── */}
             <Route path="/login" element={isAdmin ? <Navigate to="/admin/dashboard" replace /> : <UserDashboardPage />} />

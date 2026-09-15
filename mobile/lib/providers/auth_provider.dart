@@ -158,16 +158,46 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  String? _latestOtp;
+  String? get latestOtp => _latestOtp;
+
   Future<bool> forgotPassword(String email) async {
     _isLoading = true;
     _errorMessage = null;
     _safeNotifyListeners();
 
     try {
-      final success = await _authService.forgotPassword(email);
+      final res = await _authService.forgotPassword(email);
+      _latestOtp = res['otp'];
       _isLoading = false;
       _safeNotifyListeners();
-      return success;
+      return res['success'] == true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      _safeNotifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _safeNotifyListeners();
+
+    try {
+      final ok = await _authService.resetPassword(
+        email: email,
+        otp: otp,
+        newPassword: newPassword,
+      );
+      _isLoading = false;
+      _safeNotifyListeners();
+      return ok;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;

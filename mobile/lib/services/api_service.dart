@@ -18,6 +18,15 @@ class _ApiException implements Exception {
   String toString() => message;
 }
 
+/// Thrown on 5xx server/gateway errors (500, 502, 503, 530 Cloudflare errors).
+/// Unlike 4xx logical errors, this allows the candidate retry loop to try the next host.
+class _ApiServerException implements Exception {
+  final String message;
+  const _ApiServerException(this.message);
+  @override
+  String toString() => message;
+}
+
 class ApiService {
   // Remote HTTPS server: allow for DNS + TLS handshake + response on slow
   // mobile-data / weak-Wi-Fi links. 3s was far too aggressive and made every
@@ -69,7 +78,7 @@ class ApiService {
 
         final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
         final response = await http.Response.fromStream(streamedResponse);
-        final body = _processResponse(response);
+        final body = _processResponse(response, targetUrl: targetUrl);
 
         if (body is Map) {
           final url = body['url'] ?? body['data']?['url'] ?? body['secure_url'];
@@ -148,7 +157,11 @@ class ApiService {
       final alt127 = originalUrl.replaceAll(hostWithPort, '127.0.0.1:5000').replaceAll('https://', 'http://');
       if (!candidates.contains(alt127)) candidates.add(alt127);
 
-      // 2. Android emulator fallback (http://10.0.2.2:5000)
+      // 2. Localhost fallback (http://localhost:5000)
+      final altLocal = originalUrl.replaceAll(hostWithPort, 'localhost:5000').replaceAll('https://', 'http://');
+      if (!candidates.contains(altLocal)) candidates.add(altLocal);
+
+      // 3. Android emulator fallback (http://10.0.2.2:5000)
       final altEmulator = originalUrl.replaceAll(hostWithPort, '10.0.2.2:5000').replaceAll('https://', 'http://');
       if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
 
@@ -159,8 +172,8 @@ class ApiService {
         if (!candidates.contains(altLan)) candidates.add(altLan);
       }
 
-      // 4. Production remote fallback
-      if (ApiConfig.productionHost.isNotEmpty) {
+      // 4. Production remote fallback (only when explicitly in Production mode)
+      if (ApiConfig.isProduction && ApiConfig.productionHost.isNotEmpty) {
         final prodUri = Uri.parse(ApiConfig.productionHost);
         final altProd = originalUrl.replaceAll(hostWithPort, prodUri.host).replaceAll('http://', 'https://');
         if (!candidates.contains(altProd)) candidates.add(altProd);
@@ -203,10 +216,12 @@ class ApiService {
             .get(Uri.parse(targetUrl), headers: headers)
             .timeout(const Duration(seconds: timeoutDuration));
 
-        _onHostSuccess(targetUrl);
-        return _processResponse(response);
+        return _processResponse(response, targetUrl: targetUrl);
       } on _ApiException {
         rethrow;
+      } on _ApiServerException catch (e) {
+        lastError = e;
+        if (kDebugMode) debugPrint('GET 5XX ERROR ($targetUrl): $e');
       } catch (e) {
         lastError = e;
         if (kDebugMode) debugPrint('GET ERROR ($targetUrl): $e');
@@ -236,10 +251,12 @@ class ApiService {
             )
             .timeout(const Duration(seconds: timeoutDuration));
 
-        _onHostSuccess(targetUrl);
-        return _processResponse(response);
+        return _processResponse(response, targetUrl: targetUrl);
       } on _ApiException {
         rethrow;
+      } on _ApiServerException catch (e) {
+        lastError = e;
+        if (kDebugMode) debugPrint('POST 5XX ERROR ($targetUrl): $e');
       } catch (e) {
         lastError = e;
         if (kDebugMode) debugPrint('POST ERROR ($targetUrl): $e');
@@ -260,10 +277,11 @@ class ApiService {
             .put(Uri.parse(targetUrl), headers: headers, body: jsonEncode(body))
             .timeout(const Duration(seconds: timeoutDuration));
 
-        _onHostSuccess(targetUrl);
-        return _processResponse(response);
+        return _processResponse(response, targetUrl: targetUrl);
       } on _ApiException {
         rethrow;
+      } on _ApiServerException catch (e) {
+        lastError = e;
       } catch (e) {
         lastError = e;
       }
@@ -284,10 +302,11 @@ class ApiService {
                 headers: headers, body: jsonEncode(body))
             .timeout(const Duration(seconds: timeoutDuration));
 
-        _onHostSuccess(targetUrl);
-        return _processResponse(response);
+        return _processResponse(response, targetUrl: targetUrl);
       } on _ApiException {
         rethrow;
+      } on _ApiServerException catch (e) {
+        lastError = e;
       } catch (e) {
         lastError = e;
       }
@@ -307,10 +326,11 @@ class ApiService {
             .delete(Uri.parse(targetUrl), headers: headers)
             .timeout(const Duration(seconds: timeoutDuration));
 
-        _onHostSuccess(targetUrl);
-        return _processResponse(response);
+        return _processResponse(response, targetUrl: targetUrl);
       } on _ApiException {
         rethrow;
+      } on _ApiServerException catch (e) {
+        lastError = e;
       } catch (e) {
         lastError = e;
       }
@@ -319,23 +339,39 @@ class ApiService {
     return await _handleOfflineFallback('DELETE', url, null, lastError!);
   }
 
-  static dynamic _processResponse(http.Response response) {
+  static dynamic _processResponse(http.Response response, {String? targetUrl}) {
     dynamic body;
     try {
       body = jsonDecode(response.body);
     } catch (_) {
       if (response.statusCode == 404) {
-        throw const _ApiException('Resource endpoint not found on server (404)');
+        throw const _ApiServerException('Resource endpoint not found on server (404)');
       }
       if (response.statusCode == 429) {
         throw Exception('Rate limited (429)');
       }
+      if (response.statusCode >= 500) {
+        throw _ApiServerException(
+          response.statusCode == 530
+              ? 'Server unavailable (Error 530)'
+              : 'Server error (${response.statusCode})',
+        );
+      }
       throw _ApiException('Invalid server response (${response.statusCode})');
     }
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (targetUrl != null) _onHostSuccess(targetUrl);
       return body;
     } else if (response.statusCode == 429) {
       throw Exception('Rate limited (429)');
+    } else if (response.statusCode >= 500) {
+      final message = (body is Map && body['message'] != null)
+          ? body['message']
+          : (response.statusCode == 530
+              ? 'Server unavailable (Error 530)'
+              : 'Server error (${response.statusCode})');
+      throw _ApiServerException(message.toString());
     } else {
       final message = (body is Map && body['message'] != null)
           ? body['message']

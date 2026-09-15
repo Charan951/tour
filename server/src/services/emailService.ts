@@ -4,7 +4,9 @@ const getTransporter = () => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER || 'naveenkumar970100@gmail.com';
-  const pass = process.env.SMTP_PASS || 'cxycnmgobebxpyys';
+  // NOTE: SMTP_PASS must be set in the hosting platform's environment variables.
+  // The fallback here is only for local development — production relies entirely on SMTP_PASS env var.
+  const pass = process.env.SMTP_PASS || 'kogutewkvdwqqxye';
 
   return nodemailer.createTransport({
     host,
@@ -811,3 +813,97 @@ export const sendAdminEnquiryNotificationEmail = async (data: any) => {
   });
 };
 
+/* ─────────────────────────────────────────────
+   8. PASSWORD RESET EMAIL
+───────────────────────────────────────────── */
+export const sendPasswordResetEmail = async (data: {
+  email: string;
+  firstName: string;
+  otp: string;
+}) => {
+  if (!data?.email) return;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="color-scheme" content="light dark">
+      <meta name="supported-color-schemes" content="light dark">
+      <title>Password Reset OTP - HolidayCity</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f1f5f9" style="padding: 20px 10px;">
+        <tr>
+          <td align="center">
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+              
+              <!-- Header Banner -->
+              <tr>
+                <td bgcolor="#063B6D" style="background: linear-gradient(135deg, #0A6FB5 0%, #063B6D 100%); padding: 36px 24px; text-align: center; color: #ffffff;">
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">HolidayCity Tours</h1>
+                  <p style="margin: 8px 0 0 0; font-size: 13px; color: #e0f2fe; font-weight: 600;">Password Reset Verification Code 🔐</p>
+                </td>
+              </tr>
+
+              <!-- Key Icon Row -->
+              <tr>
+                <td align="center" style="padding: 28px 24px 0 24px;">
+                  <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #0A6FB5, #57D0C9); border-radius: 50%; display: inline-block; line-height: 64px; text-align: center; font-size: 30px;">🔑</div>
+                </td>
+              </tr>
+
+              <!-- Main Body -->
+              <tr>
+                <td style="padding: 20px 32px 28px 32px; color: #1e293b; text-align: center;">
+                  <h2 style="font-size: 18px; margin: 0 0 12px 0; color: #0f172a; font-weight: 800;">Hi ${data.firstName},</h2>
+                  <p style="font-size: 13.5px; line-height: 1.7; color: #475569; margin: 0 0 20px 0;">
+                    We received a request to reset your HolidayCity account password.<br>
+                    Please use the following 6-digit OTP code to verify and reset your password. This OTP will expire in <strong style="color: #0f172a;">15 minutes</strong>.
+                  </p>
+
+                  <!-- OTP Display Card -->
+                  <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#f0f9ff" style="background-color: #f0f9ff; border-radius: 16px; border: 2px dashed #0A6FB5; margin: 0 0 24px 0;">
+                    <tr>
+                      <td style="padding: 20px 18px; text-align: center;">
+                        <p style="margin: 0 0 8px 0; font-size: 12px; color: #0369a1; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Your 6-Digit Password Reset OTP</p>
+                        <div style="margin: 10px 0; font-size: 38px; font-weight: 900; letter-spacing: 12px; color: #0A6FB5; font-family: monospace;">${data.otp}</div>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Enter this code in your app or web browser to continue.</p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Security notice card -->
+                  <table width="100%" border="0" cellpadding="0" cellspacing="0" bgcolor="#fef9c3" style="background-color: #fef9c3; border-radius: 12px; border: 1px solid #fde047; margin-bottom: 4px;">
+                    <tr>
+                      <td style="padding: 14px 18px; font-size: 12px; color: #713f12; text-align: left; line-height: 1.6;">
+                        ⚠️ <strong>Security Tip:</strong> Never share your OTP with anyone. If you didn't request a password reset, you can safely ignore this email — your account remains secure.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td bgcolor="#f8fafc" style="padding: 18px 24px; text-align: center; font-size: 11.5px; color: #94a3b8; border-top: 1px solid #f1f5f9;">
+                  <p style="margin: 0 0 4px 0; font-weight: 600;">© 2026 HolidayCity Pvt. Ltd. All rights reserved.</p>
+                  <p style="margin: 0; font-size: 11px;">This is an automated email. Please do not reply.</p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  return safeSend({
+    to: data.email,
+    subject: `🔐 Your HolidayCity Password Reset OTP: ${data.otp}`,
+    html
+  });
+};

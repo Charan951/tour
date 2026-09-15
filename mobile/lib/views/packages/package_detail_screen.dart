@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/package_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_network_image.dart';
 import '../../widgets/custom_button.dart';
 import '../auth/login_screen.dart';
 import '../enquiry/enquiry_bottom_sheet.dart';
@@ -68,17 +67,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                         minScale: 0.8,
                         maxScale: 4.0,
                         child: Center(
-                          child: CachedNetworkImage(
-                            imageUrl: ApiConfig.formatImageUrl(images[i], width: 1200),
+                          child: AppNetworkImage(
+                            imageUrl: images[i],
                             fit: BoxFit.contain,
-                            placeholder: (_, __) => const Center(
-                              child: CircularProgressIndicator(color: Colors.white),
-                            ),
-                            errorWidget: (_, __, ___) => const Icon(
-                              Icons.broken_image_rounded,
-                              size: 64,
-                              color: Colors.white54,
-                            ),
+                            targetWidth: 1200,
                           ),
                         ),
                       );
@@ -166,9 +158,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: CachedNetworkImage(
-                                      imageUrl: ApiConfig.formatImageUrl(images[thumbIdx], width: 200),
+                                    child: AppNetworkImage(
+                                      imageUrl: images[thumbIdx],
                                       fit: BoxFit.cover,
+                                      targetWidth: 200,
                                     ),
                                   ),
                                 ),
@@ -199,17 +192,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 minScale: 0.8,
                 maxScale: 4.0,
                 child: Center(
-                  child: CachedNetworkImage(
-                    imageUrl: ApiConfig.formatImageUrl(imageUrl, width: 1200),
+                  child: AppNetworkImage(
+                    imageUrl: imageUrl,
                     fit: BoxFit.contain,
-                    placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    ),
-                    errorWidget: (_, __, ___) => const Icon(
-                      Icons.broken_image_rounded,
-                      size: 64,
-                      color: Colors.white54,
-                    ),
+                    targetWidth: 1200,
                   ),
                 ),
               ),
@@ -333,18 +319,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                 children: [
                   GestureDetector(
                     onTap: () => _openSingleImageFullScreen(package.mainImage),
-                    child: CachedNetworkImage(
-                      imageUrl: ApiConfig.formatImageUrl(package.mainImage, width: 800),
+                    child: AppNetworkImage(
+                      imageUrl: package.mainImage,
                       fit: BoxFit.cover,
-                      memCacheWidth: 800,
-                      fadeInDuration: const Duration(milliseconds: 150),
-                      placeholder: (context, url) =>
-                          Container(color: const Color(0xFFF1F5F9)),
-                      errorWidget: (context, url, error) => Container(
-                        color: const Color(0xFFF1F5F9),
-                        child: const Icon(Icons.terrain,
-                            size: 64, color: Colors.grey),
-                      ),
+                      targetWidth: 800,
                     ),
                   ),
                   Container(
@@ -528,15 +506,10 @@ class _PackageDetailScreenState extends State<PackageDetailScreen> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: ApiConfig.formatImageUrl(images[idx], width: 400),
+                                  child: AppNetworkImage(
+                                    imageUrl: images[idx],
                                     fit: BoxFit.cover,
-                                    memCacheWidth: 400,
-                                    placeholder: (_, __) => Container(color: const Color(0xFFF1F5F9)),
-                                    errorWidget: (_, __, ___) => Container(
-                                      color: const Color(0xFFF1F5F9),
-                                      child: const Icon(Icons.broken_image_rounded, color: Colors.grey),
-                                    ),
+                                    targetWidth: 400,
                                   ),
                                 ),
                                 Positioned(

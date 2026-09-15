@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/app_network_image.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/banner_model.dart';
@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
             try {
-              precacheImage(CachedNetworkImageProvider(imageUrl), context);
+              precacheImage(NetworkImage(imageUrl), context);
             } catch (_) {}
           }
         }
@@ -640,7 +640,6 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final dest = items[index];
-              final formattedUrl = ApiConfig.formatImageUrl(dest.image, width: 400);
 
               return GestureDetector(
                 onTap: () {
@@ -669,18 +668,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Stack(
                       children: [
                         Positioned.fill(
-                          child: CachedNetworkImage(
-                            imageUrl: formattedUrl,
+                          child: AppNetworkImage(
+                            imageUrl: dest.image,
                             fit: BoxFit.cover,
-                            memCacheWidth: 400,
-                            fadeInDuration: const Duration(milliseconds: 150),
-                            placeholder: (context, url) =>
-                                Container(color: const Color(0xFFF1F5F9)),
-                            errorWidget: (context, url, error) => CachedNetworkImage(
-                              imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75&auto=format&fit=crop',
-                              fit: BoxFit.cover,
-                              memCacheWidth: 400,
-                            ),
+                            targetWidth: 400,
                           ),
                         ),
                         Positioned.fill(
@@ -874,8 +865,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       : themeProvider.themes.length,
                   itemBuilder: (context, index) {
                     final theme = themeProvider.themes[index];
-                    final formattedUrl =
-                        ApiConfig.formatImageUrl(theme.imageUrl);
 
                     return GestureDetector(
                       onTap: () {
@@ -904,16 +893,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Stack(
                             children: [
                               Positioned.fill(
-                                child: CachedNetworkImage(
-                                  imageUrl: formattedUrl,
+                                child: AppNetworkImage(
+                                  imageUrl: theme.imageUrl,
                                   fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      Container(color: Colors.grey[300]),
-                                  errorWidget: (context, url, error) =>
-                                      Image.network(
-                                    'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop',
-                                    fit: BoxFit.cover,
-                                  ),
+                                  targetWidth: 400,
                                 ),
                               ),
                               Positioned.fill(
@@ -1061,7 +1044,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroBannerCard(BannerModel banner) {
-    final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl, width: 600);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -1077,19 +1059,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: CachedNetworkImage(
-          imageUrl: formattedUrl,
-          fit: BoxFit.fill,
-          memCacheWidth: 600,
-          fadeInDuration: const Duration(milliseconds: 150),
-          placeholder: (context, url) => Container(
-            color: const Color(0xFFF1F5F9),
-          ),
-          errorWidget: (context, url, error) => CachedNetworkImage(
-            imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75&auto=format&fit=crop',
-            fit: BoxFit.fill,
-            memCacheWidth: 600,
-          ),
+        child: AppNetworkImage(
+          imageUrl: banner.imageUrl,
+          fit: BoxFit.cover,
+          targetWidth: 600,
         ),
       ),
     );
@@ -1342,11 +1315,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     height: 100,
                     width: double.infinity,
-                    child: CachedNetworkImage(
+                    child: AppNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(color: Colors.grey[200]),
-                      errorWidget: (context, url, err) => Container(color: Colors.blueGrey),
+                      targetWidth: 300,
                     ),
                   ),
                   Positioned(

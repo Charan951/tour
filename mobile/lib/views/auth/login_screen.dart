@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import '../../config/api_config.dart';
 import '../../config/theme.dart';
+import '../../widgets/app_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/banner_provider.dart';
 import '../../providers/destination_provider.dart';
@@ -242,15 +242,11 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 900),
-                  child: CachedNetworkImage(
+                  child: AppNetworkImage(
                     key: ValueKey(_heroIndex),
                     imageUrl: _heroImages[_heroIndex],
                     fit: BoxFit.cover,
-                    fadeInDuration: const Duration(milliseconds: 300),
-                    placeholder: (_, __) =>
-                        Container(color: AppTheme.primaryDarkColor),
-                    errorWidget: (_, __, ___) =>
-                        Container(color: AppTheme.primaryDarkColor),
+                    targetWidth: 600,
                   ),
                 ),
                 DecoratedBox(

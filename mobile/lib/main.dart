@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'config/api_config.dart';
 import 'config/theme.dart';
 import 'config/app_globals.dart';
@@ -22,8 +23,25 @@ import 'services/push_notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiConfig.loadSavedEnvironment();
+
+  // One-time migration: force production mode on physical devices.
+  // The old default was 'localhost' which doesn't work on real phones.
+  // This clears the stale preference and sets production as default.
   try {
-    if (Firebase.apps.isEmpty) {
+    final prefs = await SharedPreferences.getInstance();
+    const migrationKey = 'hc_migration_v2_production_default';
+    if (!prefs.containsKey(migrationKey)) {
+      await prefs.setBool(migrationKey, true);
+      // Only override if they had the old localhost default (false)
+      if (!ApiConfig.isProduction) {
+        await ApiConfig.setProduction(true);
+        if (kDebugMode) print('🔄 Migrated API env to Production (was localhost)');
+      }
+    }
+  } catch (_) {}
+
+  try {
+    if (Firebase.apps.isEmpty && !kIsWeb) {
       await Firebase.initializeApp();
     }
   } catch (e) {

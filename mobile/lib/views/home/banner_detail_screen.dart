@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
+import '../../widgets/app_network_image.dart';
 import '../../models/banner_model.dart';
 import '../../models/package_model.dart';
 import '../../models/destination_model.dart';
@@ -187,7 +186,6 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final banner = widget.banner;
-    final formattedUrl = ApiConfig.formatImageUrl(banner.imageUrl);
 
     return Scaffold(
       backgroundColor: context.colors.scaffold,
@@ -213,14 +211,10 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: formattedUrl,
+                  AppNetworkImage(
+                    imageUrl: banner.imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey.shade200),
-                    errorWidget: (context, url, error) => Image.network(
-                      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&auto=format&fit=crop',
-                      fit: BoxFit.cover,
-                    ),
+                    targetWidth: 800,
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -433,7 +427,6 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                               itemCount: _relatedDestinations.length,
                               itemBuilder: (context, idx) {
                                 final dest = _relatedDestinations[idx];
-                                final destImg = ApiConfig.formatImageUrl(dest.image);
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -461,10 +454,10 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                                       child: Stack(
                                         fit: StackFit.expand,
                                         children: [
-                                          CachedNetworkImage(
-                                            imageUrl: destImg,
+                                          AppNetworkImage(
+                                            imageUrl: dest.image,
                                             fit: BoxFit.cover,
-                                            errorWidget: (context, url, err) => Container(color: Colors.grey.shade300),
+                                            targetWidth: 400,
                                           ),
                                           Container(
                                             decoration: BoxDecoration(
@@ -527,7 +520,6 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                               itemCount: _offeredActivities.length,
                               itemBuilder: (context, idx) {
                                 final act = _offeredActivities[idx];
-                                final actImg = ApiConfig.formatImageUrl(act.coverImage);
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
@@ -560,10 +552,10 @@ class _BannerDetailScreenState extends State<BannerDetailScreen> {
                                           SizedBox(
                                             height: 95,
                                             width: double.infinity,
-                                            child: CachedNetworkImage(
-                                              imageUrl: actImg,
+                                            child: AppNetworkImage(
+                                              imageUrl: act.coverImage,
                                               fit: BoxFit.cover,
-                                              errorWidget: (context, url, err) => Container(color: Colors.grey.shade300),
+                                              targetWidth: 400,
                                             ),
                                           ),
                                           Padding(

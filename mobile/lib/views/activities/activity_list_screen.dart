@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:provider/provider.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/activity_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/activity_service.dart';
+import '../../widgets/app_network_image.dart';
 import '../../widgets/app_states.dart';
 import '../../widgets/filter_sheet.dart';
 import '../auth/login_screen.dart';
@@ -247,7 +245,6 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                           itemCount: _activities.length,
                           itemBuilder: (context, index) {
                             final act = _activities[index];
-                            final formattedImage = ApiConfig.formatImageUrl(act.coverImage);
 
                             // Same card design as the home screen's activity
                             // scroller: image + category pill top-left, white
@@ -285,11 +282,10 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                                           SizedBox(
                                             height: 150,
                                             width: double.infinity,
-                                            child: CachedNetworkImage(
-                                              imageUrl: formattedImage,
+                                            child: AppNetworkImage(
+                                              imageUrl: act.coverImage,
                                               fit: BoxFit.cover,
-                                              placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                              errorWidget: (context, url, error) => Container(color: Colors.blueGrey),
+                                              targetWidth: 500,
                                             ),
                                           ),
                                           Positioned(

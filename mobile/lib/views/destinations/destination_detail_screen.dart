@@ -1,9 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../widgets/app_network_image.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../models/activity_model.dart';
 import '../../models/destination_model.dart';
@@ -243,21 +242,12 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(24),
                             ),
-                            child: CachedNetworkImage(
-                              imageUrl: ApiConfig.formatImageUrl(
-                                  widget.destination.image),
+                            child: AppNetworkImage(
+                              imageUrl: widget.destination.image,
                               height: 240,
                               width: double.infinity,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                height: 240,
-                                color: Colors.grey[200],
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  Image.network(
-                                'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
-                                fit: BoxFit.cover,
-                              ),
+                              targetWidth: 800,
                             ),
                           ),
                           Padding(
@@ -365,8 +355,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                             final themeItem = _availableThemes[index];
                             final isSelected =
                                 _selectedTheme == themeItem.name;
-                            final imageUrl = ApiConfig.formatImageUrl(
-                                themeItem.imageUrl);
 
                             return GestureDetector(
                               onTap: () {
@@ -404,18 +392,10 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                   child: Stack(
                                     children: [
                                       Positioned.fill(
-                                        child: CachedNetworkImage(
-                                          imageUrl: imageUrl,
+                                        child: AppNetworkImage(
+                                          imageUrl: themeItem.imageUrl,
                                           fit: BoxFit.cover,
-                                          placeholder: (context, url) =>
-                                              Container(
-                                                  color: Colors.grey[300]),
-                                          errorWidget:
-                                              (context, url, error) =>
-                                                  Image.network(
-                                            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&auto=format&fit=crop',
-                                            fit: BoxFit.cover,
-                                          ),
+                                          targetWidth: 400,
                                         ),
                                       ),
                                       Positioned.fill(
@@ -503,7 +483,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                           itemCount: _destinationActivities.length,
                           itemBuilder: (context, index) {
                             final act = _destinationActivities[index];
-                            final actImage = ApiConfig.formatImageUrl(act.coverImage);
 
                             return GestureDetector(
                               onTap: () {
@@ -535,16 +514,12 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                     children: [
                                       Stack(
                                         children: [
-                                          CachedNetworkImage(
-                                            imageUrl: actImage,
+                                          AppNetworkImage(
+                                            imageUrl: act.coverImage,
                                             height: 105,
                                             width: double.infinity,
                                             fit: BoxFit.cover,
-                                            placeholder: (context, url) => Container(color: Colors.grey[300]),
-                                            errorWidget: (context, url, err) => Image.network(
-                                              'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&auto=format&fit=crop',
-                                              fit: BoxFit.cover,
-                                            ),
+                                            targetWidth: 400,
                                           ),
                                           Positioned(
                                             top: 8,

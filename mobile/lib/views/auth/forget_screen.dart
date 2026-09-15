@@ -5,6 +5,7 @@ import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
+import 'reset_password_screen.dart';
 
 class ForgetScreen extends StatefulWidget {
   const ForgetScreen({super.key});
@@ -16,7 +17,6 @@ class ForgetScreen extends StatefulWidget {
 class _ForgetScreenState extends State<ForgetScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _isSubmitted = false;
 
   @override
   void dispose() {
@@ -27,13 +27,38 @@ class _ForgetScreenState extends State<ForgetScreen> {
   void _handleResetRequest() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.forgotPassword(_emailController.text.trim());
+      final email = _emailController.text.trim();
+      final ok = await authProvider.forgotPassword(email);
 
       if (!mounted) return;
 
-      setState(() {
-        _isSubmitted = true;
-      });
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('6-digit OTP sent to your email address!'),
+            backgroundColor: AppTheme.successColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // Navigate directly to the in-app reset password screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ResetPasswordScreen(
+              email: email,
+            ),
+          ),
+        );
+      } else {
+        final err = authProvider.errorMessage ?? 'No registered user found with this email address.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: AppTheme.errorColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -43,12 +68,12 @@ class _ForgetScreenState extends State<ForgetScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset Password'),
+        title: const Text('Forgot Password'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: _isSubmitted ? _buildSuccessView() : _buildFormView(authProvider),
+          child: _buildFormView(authProvider),
         ),
       ),
     );
@@ -68,7 +93,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.lock_reset_outlined,
+              Icons.mark_email_unread_outlined,
               size: 40,
               color: AppTheme.primaryColor,
             ),
@@ -84,7 +109,7 @@ class _ForgetScreenState extends State<ForgetScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter your registered email address and we will send you instructions to reset your password.',
+            'Enter your registered email address and we will send a 6-digit OTP code to verify and reset your password.',
             style: GoogleFonts.inter(
               fontSize: 14,
               color: context.colors.textSecondary,
@@ -100,62 +125,18 @@ class _ForgetScreenState extends State<ForgetScreen> {
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) return 'Email required';
-              if (!value.contains('@')) return 'Enter valid email';
+              if (!value.contains('@')) return 'Enter valid email address';
               return null;
             },
           ),
           const SizedBox(height: 32),
           CustomButton(
-            text: 'Send Reset Link',
+            text: 'Send OTP to Mail',
             isLoading: authProvider.isLoading,
             onPressed: _handleResetRequest,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSuccessView() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Color(0xFFD1FAE5),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.mark_email_read_outlined,
-            size: 56,
-            color: AppTheme.successColor,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Check Your Email',
-          style: GoogleFonts.outfit(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: context.colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'We have sent password recovery instructions to:\n${_emailController.text}',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: context.colors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 36),
-        CustomButton(
-          text: 'Back to Login',
-          onPressed: () => Navigator.pop(context),
-        ),
-      ],
     );
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 interface ThemeToggleProps {
@@ -8,32 +8,46 @@ interface ThemeToggleProps {
   className?: string;
 }
 
-/** Sun / moon dark-mode switch, wired to ThemeContext. */
+/** Sun / moon / monitor dark-mode switch, wired to ThemeContext.
+ *  Cycles: system (OS) → light → dark → system. */
 export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   variant = 'icon',
   className = '',
 }) => {
-  const { resolved, toggle } = useTheme();
+  const { mode, resolved, toggle } = useTheme();
   const isDark = resolved === 'dark';
-  const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+
+  // Icon and label based on the active stored mode (not just resolved brightness).
+  const icon =
+    mode === 'system' ? <Monitor size={18} /> :
+    mode === 'dark'   ? <Moon size={18} />    :
+                        <Sun size={18} />;
+
+  const modeLabel =
+    mode === 'system' ? 'System (auto)' :
+    mode === 'dark'   ? 'Dark'          :
+                        'Light';
+
+  const nextLabel =
+    mode === 'system' ? `Switch to ${isDark ? 'light' : 'dark'} mode` :
+    mode === 'light'  ? 'Switch to dark mode'                          :
+                        'Switch to system (auto) mode';
 
   if (variant === 'row') {
     return (
       <button
         type="button"
         onClick={toggle}
-        aria-label={label}
+        aria-label={nextLabel}
         className={`flex w-full items-center justify-between gap-3 rounded-2xl2 border border-line bg-white px-4 py-3 text-left transition-colors hover:border-ocean-300 ${className}`}
       >
         <span className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl2 bg-fill text-ocean-600">
-            {isDark ? <Moon size={18} /> : <Sun size={18} />}
+            {icon}
           </span>
           <span>
-            <span className="block text-sm font-bold text-ink">Dark mode</span>
-            <span className="block text-xs text-slate-muted">
-              {isDark ? 'On' : 'Off'}
-            </span>
+            <span className="block text-sm font-bold text-ink">Theme</span>
+            <span className="block text-xs text-slate-muted">{modeLabel}</span>
           </span>
         </span>
         <span
@@ -55,11 +69,11 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <button
       type="button"
       onClick={toggle}
-      aria-label={label}
-      title={label}
+      aria-label={nextLabel}
+      title={`${modeLabel} — click to cycle`}
       className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-slate-body transition-colors hover:text-ocean-600 hover:border-ocean-300 ${className}`}
     >
-      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      {icon}
     </button>
   );
 };

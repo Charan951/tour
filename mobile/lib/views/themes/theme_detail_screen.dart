@@ -1,10 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
+import '../../widgets/app_network_image.dart';
 import '../../models/package_model.dart';
 import '../../models/theme_model.dart';
 import '../../providers/package_provider.dart';
@@ -172,19 +171,12 @@ class _ThemeDetailScreenState extends State<ThemeDetailScreen> {
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(24),
                             ),
-                            child: CachedNetworkImage(
-                              imageUrl: ApiConfig.formatImageUrl(widget.theme.imageUrl),
+                            child: AppNetworkImage(
+                              imageUrl: widget.theme.imageUrl,
                               height: 260,
                               width: double.infinity,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                height: 260,
-                                color: Colors.grey[200],
-                              ),
-                              errorWidget: (context, url, error) => Image.network(
-                                'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&auto=format&fit=crop',
-                                fit: BoxFit.cover,
-                              ),
+                              targetWidth: 800,
                             ),
                           ),
                           Padding(

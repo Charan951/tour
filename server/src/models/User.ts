@@ -24,6 +24,10 @@ export interface IUserDocument extends Document {
   deletedBy?: any;
   walletBalance?: number;
   fcmTokens?: string[];
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  passwordResetOtp?: string;
+  passwordResetOtpExpires?: Date;
   comparePassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -52,7 +56,11 @@ const userSchema = new Schema<IUserDocument>(
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
     deletedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
-    fcmTokens: { type: [String], default: [] }
+    fcmTokens: { type: [String], default: [] },
+    passwordResetToken: { type: String, default: null, select: false },
+    passwordResetExpires: { type: Date, default: null, select: false },
+    passwordResetOtp: { type: String, default: null, select: false },
+    passwordResetOtpExpires: { type: Date, default: null, select: false }
   },
   { timestamps: true }
 );

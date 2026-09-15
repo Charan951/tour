@@ -1,12 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/api_config.dart';
 import '../../config/theme.dart';
 import '../../providers/specialization_theme_provider.dart';
 import '../../services/connectivity.dart';
+import '../../widgets/app_network_image.dart';
 import '../../widgets/app_states.dart';
 import '../../widgets/filter_sheet.dart';
 import 'theme_detail_screen.dart';
@@ -274,23 +273,10 @@ class _ThemeScreenState extends State<ThemeScreen> {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                CachedNetworkImage(
-                                  imageUrl: ApiConfig.formatImageUrl(
-                                      theme.imageUrl,
-                                      width: 400),
+                                AppNetworkImage(
+                                  imageUrl: theme.imageUrl,
                                   fit: BoxFit.cover,
-                                  memCacheWidth: 400,
-                                  fadeInDuration:
-                                      const Duration(milliseconds: 150),
-                                  placeholder: (context, url) => Container(
-                                    color: const Color(0xFFF1F5F9),
-                                  ),
-                                  errorWidget: (context, url, error) => Container(
-                                    color: cs.surfaceAlt,
-                                    child: Icon(
-                                        Icons.image_not_supported_outlined,
-                                        color: cs.textSecondary),
-                                  ),
+                                  targetWidth: 400,
                                 ),
                                 const DecoratedBox(
                                   decoration: BoxDecoration(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../config/api_config.dart';
+import 'app_network_image.dart';
 import '../models/destination_model.dart';
 
 class DestinationCard extends StatelessWidget {
@@ -43,20 +42,12 @@ class DestinationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
-              CachedNetworkImage(
-                imageUrl: ApiConfig.formatImageUrl(destination.image, width: 400),
+              AppNetworkImage(
+                imageUrl: destination.image,
                 height: 200,
                 width: 150,
                 fit: BoxFit.cover,
-                memCacheWidth: 400,
-                fadeInDuration: const Duration(milliseconds: 150),
-                placeholder: (context, url) =>
-                    Container(color: const Color(0xFFF1F5F9)),
-                errorWidget: (context, url, error) => CachedNetworkImage(
-                  imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                  memCacheWidth: 400,
-                ),
+                targetWidth: 400,
               ),
               Container(
                 decoration: BoxDecoration(
@@ -121,18 +112,10 @@ class DestinationCard extends StatelessWidget {
           child: Stack(
             children: [
               SizedBox.expand(
-                child: CachedNetworkImage(
-                  imageUrl: ApiConfig.formatImageUrl(destination.image, width: 400),
+                child: AppNetworkImage(
+                  imageUrl: destination.image,
                   fit: BoxFit.cover,
-                  memCacheWidth: 400,
-                  fadeInDuration: const Duration(milliseconds: 150),
-                  placeholder: (context, url) =>
-                      Container(color: const Color(0xFFF1F5F9)),
-                  errorWidget: (context, url, error) => CachedNetworkImage(
-                    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75&auto=format&fit=crop',
-                    fit: BoxFit.cover,
-                    memCacheWidth: 400,
-                  ),
+                  targetWidth: 400,
                 ),
               ),
               Container(

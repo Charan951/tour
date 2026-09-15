@@ -29,8 +29,28 @@ const safeSend = async (mailOptions: nodemailer.SendMailOptions) => {
     console.log(`[EmailService] Email sent to ${mailOptions.to}. MessageId: ${info.messageId}`);
     return true;
   } catch (err: any) {
-    console.error(`[EmailService] Failed to send email to ${mailOptions.to}:`, err.message || err);
-    return false;
+    console.warn(`[EmailService] Primary SMTP send failed for ${mailOptions.to}: ${err.message || err}. Trying SSL fallback (port 465)...`);
+    try {
+      const fallbackTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
+          pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
+        },
+        tls: { rejectUnauthorized: false }
+      });
+      const info = await fallbackTransporter.sendMail({
+        from: FROM_EMAIL,
+        ...mailOptions
+      });
+      console.log(`[EmailService] Email sent via SSL fallback (465) to ${mailOptions.to}. MessageId: ${info.messageId}`);
+      return true;
+    } catch (fallbackErr: any) {
+      console.error(`[EmailService] SSL fallback also failed for ${mailOptions.to}:`, fallbackErr.message || fallbackErr);
+      return false;
+    }
   }
 };
 

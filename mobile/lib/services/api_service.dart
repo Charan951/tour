@@ -172,8 +172,8 @@ class ApiService {
         if (!candidates.contains(altLan)) candidates.add(altLan);
       }
 
-      // 4. Production remote fallback (only when explicitly in Production mode)
-      if (ApiConfig.isProduction && ApiConfig.productionHost.isNotEmpty) {
+      // 4. Production remote fallback (always included so the app works on cellular 4G/5G & external networks)
+      if (ApiConfig.productionHost.isNotEmpty) {
         final prodUri = Uri.parse(ApiConfig.productionHost);
         final altProd = originalUrl.replaceAll(hostWithPort, prodUri.host).replaceAll('http://', 'https://');
         if (!candidates.contains(altProd)) candidates.add(altProd);

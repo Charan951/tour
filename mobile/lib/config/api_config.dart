@@ -11,8 +11,7 @@ class ApiConfig {
   /// Backend selector:
   ///   true  -> production backend (https://tour.speshway.site)
   ///   false -> localhost/LAN backend  (http://192.168.1.20:5000 or http://localhost:5000)
-  static bool isProduction =
-      true; // Default: false in debug mode, true in production builds
+  static bool isProduction = true;
 
   // Endpoint URLs
   static const String productionHost = 'https://tour.speshway.site';

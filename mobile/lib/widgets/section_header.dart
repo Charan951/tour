@@ -28,37 +28,44 @@ class SectionHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (eyebrow != null)
+                if (eyebrow != null && eyebrow!.trim().isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 1),
+                    padding: const EdgeInsets.only(bottom: 2),
                     child: Text(
                       eyebrow!,
                       style: GoogleFonts.parisienne(
-                        fontSize: 22,
-                        height: 1,
-                        color: AppTheme.primaryColor,
+                        fontSize: 27,
+                        fontWeight: FontWeight.bold,
+                        height: 1.15,
+                        letterSpacing: 0.5,
+                        color: context.isDark
+                            ? const Color(0xFF38BDF8)
+                            : const Color(0xFF0284C7),
                       ),
                     ),
                   ),
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: cs.textPrimary,
+                if (eyebrow == null || (eyebrow != title && eyebrow!.replaceAll('⚡', '').trim() != title.replaceAll('⚡', '').trim()))
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.2,
+                      color: cs.textPrimary,
+                    ),
                   ),
-                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: cs.textSecondary,
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: context.isDark ? Colors.white : cs.textSecondary,
                     ),
                   ),
                 ],
@@ -68,12 +75,29 @@ class SectionHeader extends StatelessWidget {
           if (onSeeAll != null)
             TextButton(
               onPressed: onSeeAll,
-              child: const Text(
-                'See All',
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'See All',
+                    style: GoogleFonts.outfit(
+                      color: AppTheme.primaryColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: AppTheme.primaryColor,
+                  ),
+                ],
               ),
             ),
         ],

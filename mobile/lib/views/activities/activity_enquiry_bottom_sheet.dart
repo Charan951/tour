@@ -160,16 +160,16 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEA580C).withValues(alpha: 0.08),
+                        color: AppTheme.primaryColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFEA580C).withValues(alpha: 0.2)),
+                        border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         'ACTIVITY ENQUIRY',
                         style: GoogleFonts.outfit(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFFEA580C),
+                          color: AppTheme.primaryColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -202,10 +202,10 @@ class _ActivityEnquiryBottomSheetState extends State<ActivityEnquiryBottomSheet>
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEA580C).withValues(alpha: 0.1),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.bolt, color: Color(0xFFEA580C), size: 24),
+                        child: const Icon(Icons.bolt, color: AppTheme.primaryColor, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(

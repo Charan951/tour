@@ -60,59 +60,59 @@ export const MobileThemesPage: React.FC = () => {
 
   return (
     <>
-      {/* AppBar */}
-      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center gap-2.5">
-        <Link
-          to="/"
-          aria-label="Back to home"
-          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="font-display font-black text-lg text-white">Themes</h1>
+      {/* Blue Header Container combining AppBar + Search + Filter */}
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 pt-3 pb-4 rounded-b-[28px] sticky top-0 z-30 shadow-md">
+        <div className="flex items-center gap-2.5 mb-3">
+          <Link
+            to="/"
+            aria-label="Back to home"
+            className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="font-display font-black text-lg text-white">Themes</h1>
+        </div>
+
+        {/* Search + Filter Header Container */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search travel themes..."
+              className="w-full pl-9 pr-8 py-3 rounded-2xl bg-white dark:bg-white text-slate-900 text-sm outline-none border border-slate-200 shadow-sm placeholder:text-slate-400 font-medium"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="w-12 h-12 rounded-2xl bg-white dark:bg-white border border-slate-200 flex items-center justify-center shrink-0 active:scale-95 transition-all shadow-sm"
+          >
+            <Filter className="w-5 h-5 text-slate-600" />
+          </button>
+        </div>
+
+        {/* Active Filter Chip */}
+        {selectedThemeCat !== 'All' && (
+          <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+              <span className="text-white text-xs font-bold">{selectedThemeCat}</span>
+              <button onClick={() => setSelectedThemeCat('All')}>
+                <X className="w-3 h-3 text-white" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {/* Search + Filter Header Container */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search travel themes..."
-                className="w-full pl-9 pr-8 py-3 rounded-2xl bg-slate-100 text-slate-900 text-sm outline-none border border-transparent focus:border-ocean-600/30"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="w-12 h-12 rounded-2xl bg-ocean-600/10 flex items-center justify-center shrink-0 active:bg-ocean-600/20 transition-colors"
-            >
-              <Filter className="w-5 h-5 text-ocean-600" />
-            </button>
-          </div>
-
-          {/* Active Filter Chip */}
-          {selectedThemeCat !== 'All' && (
-            <div className="flex items-center gap-2 mt-3">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-ocean-600 rounded-full">
-                <span className="text-white text-xs font-bold">{selectedThemeCat}</span>
-                <button onClick={() => setSelectedThemeCat('All')}>
-                  <X className="w-3 h-3 text-white" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="px-4">
+        <div className="px-4 pt-4">
           {loading ? (
             <div className="grid grid-cols-2 gap-3.5 pb-24">
               {Array.from({ length: 6 }).map((_, i) => (

@@ -1296,9 +1296,9 @@ export const UserDashboardPage: React.FC = () => {
           {screen === 'profile' && (
             <div className="flex-1 overflow-y-auto bg-canvas">
               {/* Blue header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-5 pt-10 pb-14 rounded-b-[32px] shadow-[0_20px_40px_-18px_rgba(6,59,109,0.5)] text-white">
+              <div className="relative overflow-hidden bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-5 pt-10 pb-6 text-white">
                 <div aria-hidden className="pointer-events-none absolute -top-16 -right-12 w-52 h-52 rounded-full bg-aqua-500/25 blur-3xl" />
-                <div className="relative space-y-2.5">
+                <div className="relative space-y-2">
                   <Link
                     to="/"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-bold shrink-0 transition backdrop-blur-md border border-white/25 shadow-sm w-fit active:scale-95 cursor-pointer"
@@ -1307,69 +1307,65 @@ export const UserDashboardPage: React.FC = () => {
                   </Link>
                   <div className="min-w-0">
                     <h1 className="font-display font-black text-2xl leading-tight">My Profile &amp; Account</h1>
-                    <p className="text-sm text-white/75 mt-1">Manage your account, bookings and preferences.</p>
+                    <p className="text-xs text-white/80 mt-0.5">Manage your account, bookings and preferences.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="px-4 -mt-8 pb-6 space-y-4">
+              <div className="px-4 pt-3 pb-6 space-y-4">
                 {/* Identity card — matching exact design system spec */}
-                <div className="animate-fade-up bg-white rounded-3xl overflow-hidden shadow-card border border-slate-200/60" style={{ animationDelay: '0ms' }}>
+                <div className="animate-fade-up bg-white rounded-2xl overflow-hidden shadow-card border border-slate-200/60" style={{ animationDelay: '0ms' }}>
                   {/* Top vibrant primary blue gradient header */}
-                  <div className="relative bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 p-5 overflow-hidden text-white shadow-md">
+                  <div className="relative bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 p-4 overflow-hidden text-white shadow-md">
                     {/* Background subtle curve graphic */}
                     <div aria-hidden="true" className="absolute -top-12 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl pointer-events-none" />
 
-                    <div className="relative flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-16 h-16 rounded-full bg-white text-ocean-700 font-display font-black text-2xl flex items-center justify-center shrink-0 border-4 border-white/30 shadow-md">
-                          {displayName.trim() ? displayName.trim()[0].toUpperCase() : 'U'}
-                        </div>
-                        <div className="min-w-0">
-                          <h2 className="font-display font-black text-xl text-white truncate tracking-tight">{displayName}</h2>
-                          <p className="text-xs text-white/80 truncate mt-0.5 font-medium">{email || 'No email set'}</p>
-                          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white px-3 py-1 text-[0.6875rem] font-bold backdrop-blur-md border border-white/20">
-                            <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-400 text-slate-900 shrink-0" />
-                            <span>VERIFIED</span>
-                          </div>
-                        </div>
+                    <div className="relative space-y-2.5">
+                      {/* Row 1: Name & Edit Profile Button */}
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="font-display font-black text-xl text-white truncate tracking-tight">{displayName}</h2>
+                        <button
+                          onClick={openEditProfile}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3 py-1.5 text-xs font-bold shadow-xs active:scale-95 transition shrink-0 backdrop-blur-md"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-white" />
+                          <span>Edit Profile</span>
+                        </button>
                       </div>
 
-                      {/* Edit Profile CTA Button */}
-                      <button
-                        onClick={openEditProfile}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 border border-white/30 text-white px-3.5 py-2 text-xs font-bold shadow-xs active:scale-95 transition shrink-0 backdrop-blur-md"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-white" />
-                        <span>Edit Profile</span>
-                      </button>
+                      {/* Row 2: Full Email Address (100% visible, full width) */}
+                      <p className="text-xs text-white/90 font-medium break-all">{email || 'No email set'}</p>
+
+                      {/* Row 3: VERIFIED Status Badge */}
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white px-2.5 py-0.5 text-[0.6875rem] font-bold backdrop-blur-md border border-white/20 w-fit">
+                        <CheckCircle2 className="w-3.5 h-3.5 fill-emerald-400 text-slate-900 shrink-0" />
+                        <span>VERIFIED</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Bottom details section (Phone & Address) */}
+                  {/* Bottom details section (Phone & Address in blue color inside boxes) */}
                   <div className="bg-white p-4 space-y-3">
-                    <div onClick={openEditProfile} className="flex items-center gap-3 py-1.5 cursor-pointer group">
-                      <div className="w-11 h-11 rounded-2xl bg-sky-50 text-ocean-600 flex items-center justify-center shrink-0 group-hover:bg-sky-100 transition-colors">
+                    <div onClick={openEditProfile} className="flex items-center gap-3 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100 cursor-pointer group hover:bg-sky-100/60 transition-all shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-white text-ocean-600 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                         <Phone className="w-5 h-5 text-ocean-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-400">Phone Number</p>
-                        <p className="text-sm font-extrabold text-slate-900 truncate mt-0.5">{currentUser?.mobile || '9515694155'}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-ocean-800">Phone Number</p>
+                        <p className="text-sm font-extrabold text-ocean-600 truncate mt-0.5">{currentUser?.mobile || '9515694155'}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                      <ChevronRight className="w-4 h-4 text-ocean-600 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                     </div>
 
-                    <div className="border-t border-slate-100" />
-
-                    <div onClick={openEditProfile} className="flex items-center gap-3 py-1.5 cursor-pointer group">
-                      <div className="w-11 h-11 rounded-2xl bg-sky-50 text-ocean-600 flex items-center justify-center shrink-0 group-hover:bg-sky-100 transition-colors">
+                    <div onClick={openEditProfile} className="flex items-center gap-3 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100 cursor-pointer group hover:bg-sky-100/60 transition-all shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-white text-ocean-600 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                         <MapPin className="w-5 h-5 text-ocean-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-400">Address</p>
-                        <p className="text-sm font-extrabold text-slate-900 truncate mt-0.5">{currentUser?.city || 'Add address'}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-ocean-800">Address</p>
+                        <p className="text-sm font-extrabold text-ocean-600 truncate mt-0.5">{currentUser?.city || 'Add address'}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                      <ChevronRight className="w-4 h-4 text-ocean-600 shrink-0 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1498,16 +1494,16 @@ export const UserDashboardPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl2 border border-line bg-white px-4 pt-2 pb-2.5 focus-within:border-ocean-600 focus-within:ring-2 focus-within:ring-ocean-600/15 transition">
-                      <label htmlFor="ep-phone" className="block text-[0.625rem] font-black uppercase tracking-wider text-slate-muted">Phone Number</label>
+                    <div className="rounded-2xl2 border border-sky-200 bg-sky-50/40 px-4 pt-2 pb-2.5 focus-within:border-ocean-600 focus-within:ring-2 focus-within:ring-ocean-600/15 transition">
+                      <label htmlFor="ep-phone" className="block text-[0.625rem] font-black uppercase tracking-wider text-ocean-800">Phone Number</label>
                       <input id="ep-phone" type="tel" value={editForm.mobile} onChange={(e) => setEditForm(f => ({ ...f, mobile: e.target.value }))}
-                        className="w-full bg-transparent outline-none text-sm text-ink py-0.5" />
+                        className="w-full bg-transparent outline-none text-sm text-ocean-600 font-extrabold py-0.5" />
                     </div>
 
-                    <div className="rounded-2xl2 border border-line bg-white px-4 pt-2 pb-2.5 focus-within:border-ocean-600 focus-within:ring-2 focus-within:ring-ocean-600/15 transition">
-                      <label htmlFor="ep-city" className="block text-[0.625rem] font-black uppercase tracking-wider text-slate-muted">City</label>
+                    <div className="rounded-2xl2 border border-sky-200 bg-sky-50/40 px-4 pt-2 pb-2.5 focus-within:border-ocean-600 focus-within:ring-2 focus-within:ring-ocean-600/15 transition">
+                      <label htmlFor="ep-city" className="block text-[0.625rem] font-black uppercase tracking-wider text-ocean-800">City / Address</label>
                       <input id="ep-city" type="text" value={editForm.city} onChange={(e) => setEditForm(f => ({ ...f, city: e.target.value }))}
-                        placeholder="Enter your city" className="w-full bg-transparent outline-none text-sm text-ink py-0.5 placeholder:text-slate-faint" />
+                        placeholder="Enter your city or address" className="w-full bg-transparent outline-none text-sm text-ocean-600 font-extrabold py-0.5 placeholder:text-sky-300" />
                     </div>
                   </div>
                 </div>

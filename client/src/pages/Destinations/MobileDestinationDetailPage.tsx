@@ -119,19 +119,21 @@ export const MobileDestinationDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F3F3F3] relative pb-6">
+      {/* Top Ocean Blue Gradient Header */}
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-md flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={(e) => handleBack(e)}
+          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors cursor-pointer"
+          aria-label="Go Back"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+        <h1 className="font-display font-black text-lg text-white truncate">{dest.name}</h1>
+      </div>
+
       {/* Scrollable Content */}
       <div className="p-4 space-y-4">
-        {/* Floating Back Button Top Bar */}
-        <div className="flex items-center">
-          <button
-            type="button"
-            onClick={(e) => handleBack(e)}
-            className="w-11 h-11 rounded-2xl bg-white/95 shadow-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all z-50 relative cursor-pointer pointer-events-auto border border-slate-200/50"
-            aria-label="Go Back"
-          >
-            <ArrowLeft className="w-6 h-6 text-slate-900 stroke-[2.5]" />
-          </button>
-        </div>
 
         {/* ── IMAGE & ABOUT CARD ── Matches Image 3 exact design */}
         <div className="bg-white rounded-3xl overflow-hidden shadow-sm">

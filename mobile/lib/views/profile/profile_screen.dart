@@ -200,10 +200,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(20, 52, 20, 52),
+                    padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
                     decoration: const BoxDecoration(
                       gradient: AppTheme.headerGradient,
-                      borderRadius: AppTheme.headerRadius,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,212 +247,239 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ],
               ),
 
-              // Overlapping Profile Identity Card
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Column(
-                    children: [
-                      // User Identity Card Container
-                      Container(
-                        width: double.infinity,
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: cs.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF0A6FB5)
-                                  .withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
-                            ),
+              // Clean Profile Identity Card Section
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: Column(
+                  children: [
+                    // User Identity Card Container (All details enclosed inside blue card box)
+                    Container(
+                      width: double.infinity,
+                      clipBehavior: Clip.antiAlias,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF064B88),
+                            Color(0xFF0A6FB5),
+                            Color(0xFF0284C7),
                           ],
                         ),
-                        child: Column(
-                          children: [
-                            // Top vibrant ocean blue header area containing Profile Avatar, User info & Edit Profile
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 16),
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF064B88),
-                                    Color(0xFF0A6FB5),
-                                    Color(0xFF0284C7),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0A6FB5).withValues(alpha: 0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Row 1: User Name & Edit Profile Action Button
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  userName,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    height: 1.1,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: openEdit,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 7),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.35)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.edit_outlined,
+                                          size: 13,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          'Edit Profile',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Row 2: Email Address
+                          Text(
+                            user.email,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Row 3: VERIFIED Status Pill Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 13,
+                                  color: Color(0xFF34D399),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'VERIFIED',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Inner Divider
+                          Divider(
+                            height: 1,
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Row 4: Phone Number inside Blue Box
+                          Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.phone_android_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Phone Number',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      displayPhone,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Profile Initial Avatar
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: Colors.white, width: 2.5),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.2),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.white,
-                                      child: Text(
-                                        userName.trim().isNotEmpty
-                                            ? userName.trim()[0].toUpperCase()
-                                            : 'U',
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w900,
-                                          color: AppTheme.primaryColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
 
-                                  // Name, Email & Verified Pill
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          userName,
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w900,
-                                            color: Colors.white,
-                                            height: 1.1,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          user.email,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 12,
-                                            color: Colors.white
-                                                .withValues(alpha: 0.85),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(999),
-                                            border: Border.all(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.3)),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.check_circle_rounded,
-                                                size: 12,
-                                                color: Color(0xFF34D399),
-                                              ),
-                                              const SizedBox(width: 3),
-                                              Text(
-                                                'VERIFIED',
-                                                style: GoogleFonts.outfit(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w900,
-                                                  letterSpacing: 0.5,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Edit Profile Button
-                                  ElevatedButton.icon(
-                                    onPressed: openEdit,
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 13,
-                                      color: Colors.white,
-                                    ),
-                                    label: const Text('Edit Profile'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white
-                                          .withValues(alpha: 0.22),
-                                      foregroundColor: Colors.white,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      textStyle: GoogleFonts.outfit(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        side: BorderSide(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.4)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                          // Row 5: Address inside Blue Box
+                          Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.location_on_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ),
-                            ),
-
-                            // Phone & Address Row Tiles
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              child: Column(
-                                children: [
-                                  _detailRowTile(
-                                    icon: Icons.phone_android_rounded,
-                                    iconBgColor: const Color(0xFFEEF2FF),
-                                    iconColor: const Color(0xFF4F46E5),
-                                    label: 'Phone Number',
-                                    value: displayPhone,
-                                  ),
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 2),
-                                    child: Divider(height: 1, color: cs.border),
-                                  ),
-                                  _detailRowTile(
-                                    icon: Icons.location_on_rounded,
-                                    iconBgColor: const Color(0xFFECFEFF),
-                                    iconColor: const Color(0xFF0891B2),
-                                    label: 'Address',
-                                    value: displayAddress,
-                                  ),
-                                ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Address',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      displayAddress,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
+                    ),
                       const SizedBox(height: 14),
 
                       // Compact Stat Cards Grid: ENQUIRIES & BOOKINGS
@@ -574,10 +600,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                           badgeText: 'LIVE 24/7',
                           badgeColor: const Color(0xFF2563EB),
                           onTap: () {
+                            final cleanEmail = user.email.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+                            final supportTopicId = 'SUPPORT_${cleanEmail.isNotEmpty ? cleanEmail : "GUEST"}';
                             ChatBottomSheet.show(
                               context,
-                              topicId: 'GENERAL-SUPPORT',
-                              topicType: 'General',
+                              topicId: supportTopicId,
+                              topicType: 'Support',
                               topicTitle: 'Customer Support',
                               customerName: userName,
                               customerEmail: user.email,
@@ -667,12 +695,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _confirmDeleteAccount(
@@ -900,71 +927,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       onTap: onTap,
     );
-  }
-
-  Widget _detailRowTile({
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required String label,
-    required String value,
-    VoidCallback? onTap,
-  }) {
-    final cs = context.colors;
-    final content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: context.isDark
-                  ? Color.alphaBlend(
-                      iconColor.withValues(alpha: 0.18), cs.surface)
-                  : iconBgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: cs.textFaint,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  value,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: cs.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: content,
-      );
-    }
-    return content;
   }
 
   Widget _buildStatCard({

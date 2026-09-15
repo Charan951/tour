@@ -77,243 +77,244 @@ class _ThemeScreenState extends State<ThemeScreen> {
           return matchesSearch && matchesFilter;
         }).toList();
 
-        final cs = context.colors;
-
         return Scaffold(
           appBar: AppTheme.gradientAppBar(context: context, title: 'Travel Themes'),
           body: RefreshIndicator(
             onRefresh: provider.fetchThemes,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
+              padding: const EdgeInsets.only(bottom: 90),
               children: [
-                // Search Bar — icon outside the container (matches Home screen)
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: cs.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: cs.shadow,
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 14),
-                            Icon(Icons.search_rounded,
-                                size: 20, color: cs.textSecondary),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                textInputAction: TextInputAction.search,
-                                textAlignVertical: TextAlignVertical.center,
-                                onChanged: (_) => setState(() {}),
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: cs.textPrimary,
-                                ),
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
-                                  filled: false,
-                                  isCollapsed: true,
-                                  hintText: '',
-                                  hintStyle: GoogleFonts.inter(
-                                    fontSize: 13.5,
-                                    color: cs.textFaint,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (_searchController.text.isNotEmpty)
-                              GestureDetector(
-                                onTap: () {
-                                  _searchController.clear();
-                                  setState(() {});
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: Icon(Icons.close_rounded,
-                                      size: 18, color: cs.textSecondary),
-                                ),
-                              )
-                            else
-                              const SizedBox(width: 14),
-                          ],
-                        ),
-                      ),
+                // Blue Header Container extending up to the search bar & filter
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+                  decoration: const BoxDecoration(
+                    gradient: AppTheme.headerGradient,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
                     ),
-                    const SizedBox(width: 10),
-                    FilterIconButton(
-                      active: _selectedFilter != _filters.first,
-                      onTap: () async {
-                        final picked = await showFilterSheet(
-                          context,
-                          title: 'Filter themes',
-                          options: _filters,
-                          selected: _selectedFilter,
-                        );
-                        if (picked != null) {
-                          setState(() => _selectedFilter = picked);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Live status indicator row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredThemes.length} ${filteredThemes.length == 1 ? 'Theme' : 'Themes'} Available',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: cs.textSecondary,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.successColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.successColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          const Text(
-                            'Live',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.successColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                if (provider.isLoading && allThemes.isEmpty)
-                  const AppSkeletonList(count: 4)
-                else if (allThemes.isEmpty && !ConnectivityStatus.instance.online)
-                  AppErrorState(onRetry: () => provider.fetchThemes())
-                else if (filteredThemes.isEmpty)
-                  const AppEmptyState(
-                    icon: Icons.category_outlined,
-                    title: 'No themes found',
-                    message: 'Try adjusting your search query or filter options.',
-                  )
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredThemes.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemBuilder: (context, index) {
-                      final theme = filteredThemes[index];
-
-                      // Same card design as the home screen's "Specialization
-                      // Themes" scroller: full-bleed image, bottom gradient,
-                      // bold white title on the image.
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ThemeDetailScreen(theme: theme),
-                            ),
-                          );
-                        },
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
                         child: Container(
+                          height: 52,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                AppNetworkImage(
-                                  imageUrl: theme.imageUrl,
-                                  fit: BoxFit.cover,
-                                  targetWidth: 400,
-                                ),
-                                const DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Color(0x40000000),
-                                        Color(0xD9000000),
-                                      ],
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 14),
+                              const Icon(Icons.search_rounded,
+                                  size: 20, color: Color(0xFF64748B)),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  textInputAction: TextInputAction.search,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  onChanged: (_) => setState(() {}),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    filled: false,
+                                    isCollapsed: true,
+                                    hintText: 'Search themes...',
+                                    hintStyle: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      color: const Color(0xFFADB5BD),
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ),
-                                Positioned(
-                                  bottom: 12,
-                                  left: 12,
-                                  right: 12,
-                                  child: Text(
-                                    theme.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.outfit(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.15,
-                                    ),
+                              ),
+                              if (_searchController.text.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    _searchController.clear();
+                                    setState(() {});
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(Icons.close_rounded,
+                                        size: 18, color: Color(0xFF64748B)),
                                   ),
-                                ),
-                              ],
-                            ),
+                                )
+                              else
+                                const SizedBox(width: 14),
+                            ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(width: 10),
+                      FilterIconButton(
+                        active: _selectedFilter != _filters.first,
+                        onTap: () async {
+                          final picked = await showFilterSheet(
+                            context,
+                            title: 'Filter themes',
+                            options: _filters,
+                            selected: _selectedFilter,
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedFilter = picked);
+                          }
+                        },
+                      ),
+                    ],
                   ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Column(
+                    children: [
+                      // Live status indicator row
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.successColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.successColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              const Text(
+                                'Live',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.successColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      if (provider.isLoading && allThemes.isEmpty)
+                        const AppSkeletonList(count: 4)
+                      else if (allThemes.isEmpty && !ConnectivityStatus.instance.online)
+                        AppErrorState(onRetry: () => provider.fetchThemes())
+                      else if (filteredThemes.isEmpty)
+                        const AppEmptyState(
+                          icon: Icons.category_outlined,
+                          title: 'No themes found',
+                          message: 'Try adjusting your search query or filter options.',
+                        )
+                      else
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filteredThemes.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 14,
+                            mainAxisSpacing: 14,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemBuilder: (context, index) {
+                            final theme = filteredThemes[index];
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ThemeDetailScreen(theme: theme),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      AppNetworkImage(
+                                        imageUrl: theme.imageUrl,
+                                        fit: BoxFit.cover,
+                                        targetWidth: 400,
+                                      ),
+                                      const DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              Color(0x40000000),
+                                              Color(0xD9000000),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 12,
+                                        left: 12,
+                                        right: 12,
+                                        child: Text(
+                                          theme.name,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1.15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

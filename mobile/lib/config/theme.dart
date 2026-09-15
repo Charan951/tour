@@ -96,30 +96,23 @@ class AppTheme {
     List<Widget>? actions,
     Widget? leading,
   }) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final c = dark ? AppColors.dark : AppColors.light;
-    final fg = dark ? c.textPrimary : Colors.white;
+    const fg = Colors.white;
 
     return PreferredSize(
       preferredSize: const Size.fromHeight(kToolbarHeight),
-      child: ClipRRect(
-        borderRadius: headerRadius,
-        child: AppBar(
-          title: Text(
-            title,
-            style: TextStyle(color: fg, fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          backgroundColor: dark ? c.surface : Colors.transparent,
-          elevation: 0,
-          iconTheme: IconThemeData(color: fg),
-          leading: leading,
-          actions: actions,
-          flexibleSpace: dark
-              ? null
-              : Container(
-                  decoration: const BoxDecoration(gradient: headerGradient),
-                ),
+      child: AppBar(
+        title: Text(
+          title,
+          style: const TextStyle(color: fg, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: fg),
+        leading: leading,
+        actions: actions,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(gradient: headerGradient),
         ),
       ),
     );

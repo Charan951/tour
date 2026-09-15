@@ -18,10 +18,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _name;
   late final TextEditingController _phone;
   late final TextEditingController _city;
-  String _language = 'English';
   String _currency = 'INR';
 
-  static const _languages = ['English', 'हिन्दी', 'தமிழ்', 'తెలుగు', 'বাংলা', 'मराठी'];
   static const _currencies = {
     'INR': 'INR - Indian Rupee (₹)',
     'USD': 'USD - US Dollar (\$)',
@@ -37,7 +35,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _name = TextEditingController(text: (u?.displayName ?? u?.fullName ?? '').trim());
     _phone = TextEditingController(text: u?.mobile ?? '');
     _city = TextEditingController(text: u?.city ?? '');
-    _language = _languages.contains(u?.language) ? u!.language : 'English';
     _currency = _currencies.containsKey(u?.currency) ? u!.currency : 'INR';
   }
 
@@ -58,7 +55,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'lastName': parts.length > 1 ? parts.sublist(1).join(' ') : '',
       'mobile': _phone.text.trim(),
       'city': _city.text.trim(),
-      'language': _language,
+      'address': _city.text.trim(),
+      'language': 'English',
       'currency': _currency,
     });
     if (!mounted) return;
@@ -216,6 +214,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         label: 'Full Name',
                         child: TextFormField(
                           controller: _name,
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.colors.textPrimary),
                           decoration: _bare(),
                           validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                         ),
@@ -223,10 +225,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: 12),
                       _fieldCard(
                         label: 'Email',
-                        filled: true,
                         trailing: _verifiedPill(),
                         child: Text(user?.email ?? '—',
-                            style: TextStyle(fontSize: 14, color: context.colors.textSecondary)),
+                            style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: context.colors.textSecondary)),
                       ),
                       const SizedBox(height: 12),
                       _fieldCard(
@@ -234,15 +238,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: TextFormField(
                           controller: _phone,
                           keyboardType: TextInputType.phone,
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.colors.textPrimary),
                           decoration: _bare(),
                         ),
                       ),
                       const SizedBox(height: 12),
                       _fieldCard(
-                        label: 'City',
+                        label: 'Address / City',
                         child: TextFormField(
                           controller: _city,
-                          decoration: _bare(hint: 'Enter your city'),
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.colors.textPrimary),
+                          decoration: _bare(hint: 'Enter your address or city'),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -258,20 +270,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: 24),
 
                       _sectionTitle('Preferences'),
-                      const SizedBox(height: 12),
-                      _fieldCard(
-                        label: 'Preferred Language',
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _language,
-                            isExpanded: true,
-                            items: _languages
-                                .map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 14))))
-                                .toList(),
-                            onChanged: (v) => setState(() => _language = v ?? 'English'),
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 12),
                       _fieldCard(
                         label: 'Currency',
@@ -333,9 +331,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   InputDecoration _bare({String? hint}) => InputDecoration(
         isDense: true,
+        filled: false,
+        fillColor: Colors.transparent,
         hintText: hint,
+        hintStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: context.colors.textFaint,
+          fontWeight: FontWeight.w400,
+        ),
         border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(vertical: 4),
       );
 
   Widget _sectionTitle(String t) => Text(t,
@@ -366,13 +375,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required String label,
     required Widget child,
     Widget? trailing,
-    bool filled = false,
   }) {
     final cs = context.colors;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       decoration: BoxDecoration(
-        color: filled ? cs.surfaceAlt : cs.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cs.border),
       ),

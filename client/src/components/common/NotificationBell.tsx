@@ -187,7 +187,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ forceMobile 
           </div>
 
           {/* Mobile Notification List Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-8">
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-200/70 dark:divide-slate-800 pb-8">
             {notifications.length === 0 ? (
               <div className="h-full min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
                 <div className="w-20 h-20 rounded-full bg-[#0EA5E9]/10 text-[#0EA5E9] flex items-center justify-center mb-5">
@@ -207,14 +207,14 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ forceMobile 
                   onClick={() => {
                     if (!item.isRead) markAsRead(item.id);
                   }}
-                  className={`p-3.5 rounded-[18px] border transition-all relative group flex gap-3.5 items-start cursor-pointer ${
+                  className={`px-4 py-3.5 transition-all relative group flex gap-3.5 items-start cursor-pointer ${
                     item.isRead
-                      ? 'bg-white dark:bg-[#161F2E] border-slate-200 dark:border-[#2A3648] shadow-xs'
-                      : 'bg-[#F0F9FF] dark:bg-sky-950/40 border-[#0EA5E9]/35 dark:border-sky-500/40 shadow-sm'
+                      ? 'bg-white dark:bg-[#161F2E] hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      : 'bg-[#F0F9FF]/80 dark:bg-sky-950/30 hover:bg-[#F0F9FF] dark:hover:bg-sky-950/50'
                   }`}
                 >
-                  {/* Icon Container (44x44, rounded-14px) */}
-                  <div className={`w-11 h-11 rounded-[14px] ${getTypeIconBg(item.type)} flex items-center justify-center shrink-0 mt-0.5`}>
+                  {/* Icon Container (42x42, rounded-12px) */}
+                  <div className={`w-10 h-10 rounded-xl ${getTypeIconBg(item.type)} flex items-center justify-center shrink-0 mt-0.5`}>
                     {getTypeIcon(item.type)}
                   </div>
 
@@ -226,9 +226,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ forceMobile 
                       }`}>
                         {item.title}
                       </h4>
-                      {/* Unread indicator dot (9x9 circular dot) */}
+                      {/* Unread indicator dot (8x8 circular dot) */}
                       {!item.isRead && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9] shrink-0 ml-1 shadow-xs" />
+                        <span className="w-2 h-2 rounded-full bg-[#0EA5E9] shrink-0 ml-1 shadow-xs" />
                       )}
                     </div>
 
@@ -250,14 +250,14 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ forceMobile 
                     </div>
                   </div>
 
-                  {/* Swipe / Delete Button (Light Red Background matching Flutter dismiss background) */}
+                  {/* Swipe / Delete Button (Light Red Background) */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeNotification(item.id);
                     }}
-                    className="p-2 rounded-xl bg-rose-50 dark:bg-[#7F1D1D]/40 hover:bg-rose-100 dark:hover:bg-[#7F1D1D]/60 text-rose-600 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/50 active:scale-90 transition-all shrink-0 ml-1"
+                    className="p-1.5 rounded-lg bg-rose-50 dark:bg-[#7F1D1D]/40 hover:bg-rose-100 dark:hover:bg-[#7F1D1D]/60 text-rose-600 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/50 active:scale-90 transition-all shrink-0 ml-1"
                     title="Delete Notification"
                   >
                     <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-300" />

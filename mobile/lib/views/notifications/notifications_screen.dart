@@ -86,54 +86,52 @@ class NotificationsScreen extends StatelessWidget {
     List<NotificationModel> allList,
   ) {
     return RefreshIndicator(
-            onRefresh: () => provider.checkForUpdates(),
-            color: const Color(0xFF0EA5E9),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              itemCount: allList.length,
-              itemBuilder: (context, index) {
-                final notification = allList[index];
-                return Dismissible(
-                  key: Key(notification.id),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: context.isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFEE2E2),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: const Color(0xFFFCA5A5).withValues(alpha: 0.6),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Delete',
-                          style: GoogleFonts.inter(
-                            color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.delete_outline_rounded,
-                          color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
-                          size: 20,
-                        ),
-                      ],
+      onRefresh: () => provider.checkForUpdates(),
+      color: const Color(0xFF0EA5E9),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: allList.length,
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          thickness: 1,
+          color: context.colors.border.withValues(alpha: 0.6),
+        ),
+        itemBuilder: (context, index) {
+          final notification = allList[index];
+          return Dismissible(
+            key: Key(notification.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              color: context.isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFEE2E2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Delete',
+                    style: GoogleFonts.inter(
+                      color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  onDismissed: (_) {
-                    provider.deleteNotification(notification.id);
-                  },
-                  child: _buildNotificationCard(context, notification, provider),
-                );
-              },
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    color: context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626),
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
+            onDismissed: (_) {
+              provider.deleteNotification(notification.id);
+            },
+            child: _buildNotificationCard(context, notification, provider),
+          );
+        },
+      ),
     );
   }
 
@@ -212,121 +210,99 @@ class NotificationsScreen extends StatelessWidget {
         iconBg = AppTheme.primaryColor.withValues(alpha: 0.12);
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: item.isRead
-            ? cs.surface
-            : (context.isDark
-                ? const Color(0xFF0EA5E9).withValues(alpha: 0.12)
-                : const Color(0xFFF0F9FF)),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: item.isRead
-              ? cs.border
-              : const Color(0xFF0EA5E9).withValues(alpha: 0.35),
-          width: item.isRead ? 1 : 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () {
-            if (!item.isRead) {
-              provider.markAsRead(item.id);
-            }
-            NotificationRouter.handleType(item.type);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(iconData, color: iconColor, size: 22),
+    return Material(
+      color: item.isRead
+          ? cs.surface
+          : (context.isDark
+              ? const Color(0xFF0EA5E9).withValues(alpha: 0.08)
+              : const Color(0xFFF0F9FF)),
+      child: InkWell(
+        onTap: () {
+          if (!item.isRead) {
+            provider.markAsRead(item.id);
+          }
+          NotificationRouter.handleType(item.type);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
+                child: Icon(iconData, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 12),
 
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              style: GoogleFonts.outfit(
-                                fontSize: 15,
-                                fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
-                                color: cs.textPrimary,
-                              ),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                              color: cs.textPrimary,
                             ),
                           ),
-                          if (!item.isRead)
-                            Container(
-                              width: 9,
-                              height: 9,
-                              margin: const EdgeInsets.only(left: 6),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF0EA5E9),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.message,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: item.isRead ? FontWeight.w400 : FontWeight.w500,
-                          color: item.isRead
-                              ? cs.textSecondary
-                              : cs.textPrimary,
-                          height: 1.35,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (item.status != null && item.status!.isNotEmpty) ...[
-                            _buildStatusTag(item.status!),
-                            const SizedBox(width: 8),
-                          ],
-                          Text(
-                            _formatTimestamp(item.timestamp),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade500,
+                        if (!item.isRead)
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(left: 6),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF0EA5E9),
+                              shape: BoxShape.circle,
                             ),
                           ),
-                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.message,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: item.isRead ? FontWeight.w400 : FontWeight.w500,
+                        color: item.isRead
+                            ? cs.textSecondary
+                            : cs.textPrimary,
+                        height: 1.35,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        if (item.status != null && item.status!.isNotEmpty) ...[
+                          _buildStatusTag(item.status!),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          _formatTimestamp(item.timestamp),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

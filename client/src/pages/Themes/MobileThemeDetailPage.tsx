@@ -302,14 +302,14 @@ export const MobileThemeDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── ORANGE FLOATING ENQUIRE FAB ── Matches Flutter ThemeDetailScreen bottom FAB */}
+      {/* ── BLUE FLOATING ENQUIRE FAB ── Matches Flutter ThemeDetailScreen bottom FAB */}
       <div className="fixed bottom-4 left-4 right-4 z-40">
         <button
           onClick={() => {
             setModalMode('enquiry');
             setEnquiryOpen(true);
           }}
-          className="w-full py-4 bg-[#F6A35A] text-white font-extrabold text-lg rounded-3xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
+          className="w-full py-4 bg-[#0A6FB5] text-white font-extrabold text-lg rounded-3xl shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
         >
           <Headphones className="w-6 h-6" />
           Enquire Now

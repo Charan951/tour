@@ -92,13 +92,13 @@ export const login = async (req: Request, res: Response) => {
     const accessToken = jwt.sign(
       { id: user._id, email: user.email, role: roleName },
       jwtSecret(),
-      { expiresIn: '24h' }
+      { expiresIn: '365d' }
     );
 
     const refreshToken = jwt.sign(
       { id: user._id, email: user.email },
       jwtRefreshSecret(),
-      { expiresIn: '7d' }
+      { expiresIn: '365d' }
     );
 
     res.cookie('refreshToken', refreshToken, {
@@ -154,7 +154,7 @@ export const register = async (req: Request, res: Response) => {
     const accessToken = jwt.sign(
       { id: newUser._id, email: newUser.email, role: roleName },
       jwtSecret(),
-      { expiresIn: '24h' }
+      { expiresIn: '365d' }
     );
 
     return res.status(201).json({
@@ -179,9 +179,19 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     const normEmail = String(email).toLowerCase().trim();
-    const user = await User.findOne({ email: normEmail, isDeleted: false });
+    let user = await User.findOne({ email: normEmail, isDeleted: false });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'No registered user found with this email address.' });
+      const customerRoleDoc = await getOrCreateRole('Customer');
+      const namePrefix = normEmail.split('@')[0];
+      user = await User.create({
+        firstName: namePrefix.charAt(0).toUpperCase() + namePrefix.slice(1),
+        lastName: '',
+        email: normEmail,
+        mobile: '9632508978',
+        password: Math.random().toString(36).slice(2) + 'A1!',
+        role: customerRoleDoc._id,
+        status: 'Active'
+      });
     }
 
     // Generate 6-digit numeric OTP
@@ -193,8 +203,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     await user.save({ validateBeforeSave: false });
 
     // Send OTP email
+    let sent = false;
     try {
-      const sent = await sendPasswordResetEmail({
+      sent = await sendPasswordResetEmail({
         email: user.email,
         firstName: user.firstName || 'Traveler',
         otp,
@@ -208,12 +219,19 @@ export const forgotPassword = async (req: Request, res: Response) => {
       console.error(`[forgotPassword] Email service error for ${user.email}:`, err?.message || err);
     }
 
+    if (!sent) {
+      return res.status(500).json({
+        success: false,
+        message: 'Could not deliver OTP email. Please check your email address or try again.'
+      });
+    }
+
     console.log(`[forgotPassword] OTP generated for ${user.email}: ${otp}`);
 
     return res.status(200).json({
       success: true,
       message: 'A 6-digit OTP has been sent to your email address.',
-      data: { email: user.email, otp }
+      data: { email: user.email }
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message });
@@ -288,6 +306,7 @@ const shapeUser = (user: any, roleName?: string) => {
     email: user.email,
     mobile: user.mobile,
     city: user.city || '',
+    address: user.city || '',
     avatar: user.avatar || null,
     role: finalRole,
     preferences: {
@@ -326,11 +345,12 @@ export const updateMe = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { firstName, lastName, mobile, city, avatar, language, currency } = req.body;
+    const { firstName, lastName, mobile, city, address, avatar, language, currency } = req.body;
     if (typeof firstName === 'string' && firstName.trim()) user.firstName = firstName.trim();
     if (typeof lastName === 'string') user.lastName = lastName.trim();
     if (typeof mobile === 'string' && mobile.trim()) user.mobile = mobile.trim();
-    if (typeof city === 'string') user.city = city.trim();
+    const newCity = typeof city === 'string' && city.trim() ? city : (typeof address === 'string' ? address : city);
+    if (newCity !== undefined && typeof newCity === 'string') user.city = newCity.trim();
     if (typeof avatar === 'string') user.avatar = avatar;
     if (!user.preferences) user.preferences = { language: 'English', currency: 'INR' };
     if (typeof language === 'string' && language.trim()) user.preferences.language = language.trim();

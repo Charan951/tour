@@ -353,10 +353,10 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
         ? '⚡ Activity Enquiry'
         : (isPkgEnquiry ? '📦 Package Enquiry' : '🌐 General Trip Enquiry');
     final Color badgeBg = isActivityEnquiry
-        ? const Color(0xFFFEF3C7)
+        ? const Color(0xFFE0F2FE)
         : (isPkgEnquiry ? const Color(0xFFEFF6FF) : const Color(0xFFECFDF5));
     final Color badgeTextCol = isActivityEnquiry
-        ? const Color(0xFFD97706)
+        ? const Color(0xFF0284C7)
         : (isPkgEnquiry ? const Color(0xFF0284C7) : const Color(0xFF059669));
 
     final String travelersText = '${enquiry.adults} Adults, ${enquiry.children} Kids';

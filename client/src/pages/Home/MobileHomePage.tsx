@@ -136,32 +136,29 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
   return (
     <>
       {/* ── App bar: logo, greeting, notification bell and a search field ── */}
-      <div className="relative overflow-hidden bg-[#F1F5F9] dark:bg-gradient-to-br dark:from-ocean-800 dark:via-ocean-700 dark:to-cyan-700 border-b border-slate-200/90 dark:border-white/10 px-4 pt-5 pb-6 rounded-b-[28px] shadow-sm">
+      <div className="relative overflow-hidden bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 pt-5 pb-6 rounded-b-[28px] shadow-md">
         <div className="flex items-center justify-between">
-          <h2 className="relative font-display font-black text-2xl tracking-tight text-slate-900 dark:text-white">
-            Holiday<span className="text-aqua-500 dark:text-cyan-300">City</span>
+          <h2 className="relative font-display font-black text-2xl tracking-tight text-white">
+            Holiday<span className="text-cyan-300">City</span>
           </h2>
           <NotificationBell forceMobile={true} />
         </div>
 
         <div className="relative mt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-ocean-600 to-aqua-500 text-white font-black text-lg flex items-center justify-center shadow-md shrink-0 border border-white/20">
-              {(userName || 'E')[0].toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-display font-black text-xl text-slate-900 dark:text-white leading-tight truncate">
-                {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
-                <span className="inline-block align-middle">👋</span>
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-sky-100/90 font-medium truncate">Where do you want to travel next?</p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display font-black text-xl text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              {userName ? `Hello, ${userName} ` : 'Hello, Explorer '}
+              <span className="inline-block align-middle">👋</span>
+            </h1>
+            <p className="text-xs text-sky-100/90 font-medium truncate mt-0.5">
+              Where do you want to travel next?
+            </p>
           </div>
         </div>
 
         <form
           onSubmit={handleSearch}
-          className="relative z-10 mt-5 flex items-center gap-2 bg-white border border-slate-300/80 dark:border-white/20 rounded-2xl shadow-sm pl-4 pr-1.5 h-14"
+          className="relative z-10 mt-5 flex items-center gap-2 bg-white dark:bg-white border border-slate-200 rounded-2xl shadow-sm pl-4 pr-1.5 h-14"
         >
           <input
             value={searchQ}
@@ -179,16 +176,15 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
         </form>
       </div>
 
-      {/* Content flows in the page scroll. NOTE: no `overflow-y-auto` here — it never
-          actually scrolled (content-height) and it silently breaks `position: sticky`
-          for descendants (e.g. the ScrollStack in Trending Packages).
-          pb-40 clears the fixed MobileStickyBar (nav pills + Call/WhatsApp/Enquire
-          row on the home route). */}
+      {/* Content flows in the page scroll. NOTE: pb-72 clears the fixed MobileStickyBar */}
       <div className="pt-4 pb-72">
 
         {/* ── Hero Banner Slider (height: 240px matching Flutter) ── */}
         {effectiveBanners.length > 0 && (
           <div className="px-2 mt-2">
+            <div className="px-2 mb-2">
+              <h2 className="font-script text-xl leading-none text-ocean-800">Exclusive Offers</h2>
+            </div>
             <div className="relative rounded-2xl2 overflow-hidden shadow-md" style={{ height: 165 }}>
               {effectiveBanners.map((slide: any, index: number) => {
                 const rawImg = slide.imageUrl || slide.url || slide.banner || slide.image;
@@ -289,7 +285,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           <div className="mt-6">
             <div className="flex items-center justify-between px-4 mb-3">
               <div>
-                <h2 className="font-bold text-base text-slate-900">Specialization Themes</h2>
+                <h2 className="font-script text-xl leading-none text-ocean-800">Specialization Themes</h2>
                 <p className="text-[0.6875rem] text-slate-500 mt-0.5">Find tours tailored to your travel style</p>
               </div>
               <Link to="/themes" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">
@@ -326,7 +322,7 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           <div className="mt-6">
             <div className="flex items-center justify-between px-4 mb-3">
               <div>
-                <h2 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
+                <h2 className="font-script text-lg sm:text-xl leading-snug text-ocean-800 flex items-center gap-1.5">
                   Thrill & Adventure Activities ⚡
                 </h2>
                 <p className="text-[0.6875rem] text-slate-500 mt-0.5">Bungee jumping, rafting, scuba diving & safari</p>
@@ -390,11 +386,11 @@ export const MobileHomePage: React.FC<MobileHomePageProps> = ({
           </div>
         )}
 
-        {/* ── Trending Tour Packages List (matches Flutter PackageCard list) ── */}
+        {/* ── Trending Tour Packages List ── */}
         <div className="mt-6 px-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="font-bold text-base text-slate-900">Trending Tour Packages</h2>
+              <h2 className="font-script text-xl leading-none text-ocean-800">Trending Tour Packages</h2>
               <p className="text-[0.6875rem] text-slate-500 mt-0.5">Exclusive deals curated for you</p>
             </div>
             <Link to="/packages" className="text-ocean-600 text-xs font-bold flex items-center gap-0.5">

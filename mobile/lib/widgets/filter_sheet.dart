@@ -18,7 +18,6 @@ class FilterIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.colors;
     return Semantics(
       button: true,
       label: 'Filter',
@@ -28,11 +27,11 @@ class FilterIconButton extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: active ? AppTheme.primaryColor : cs.surface,
+            color: active ? AppTheme.primaryColor : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: active ? AppTheme.primaryColor : cs.border),
+            border: Border.all(color: active ? AppTheme.primaryColor : const Color(0xFFE2E8F0)),
             boxShadow: [
-              BoxShadow(color: cs.shadow, blurRadius: 10, offset: const Offset(0, 3)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 3)),
             ],
           ),
           child: Stack(
@@ -41,7 +40,7 @@ class FilterIconButton extends StatelessWidget {
               Icon(
                 Icons.tune_rounded,
                 size: 22,
-                color: active ? Colors.white : cs.textSecondary,
+                color: active ? Colors.white : const Color(0xFF64748B),
               ),
               if (active)
                 Positioned(

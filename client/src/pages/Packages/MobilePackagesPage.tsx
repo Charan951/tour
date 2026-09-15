@@ -101,9 +101,9 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire, 
             <button
               type="button"
               onClick={() => onEnquire?.(pkg, 'enquiry')}
-              className="px-3 py-1.5 rounded-xl bg-ocean-50 border border-ocean-200 text-ocean-700 text-xs font-bold active:scale-95 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-ocean-600 text-white text-xs font-bold active:scale-95 flex items-center gap-1 shadow-sm"
             >
-              <Send className="w-3 h-3 text-ocean-600" />
+              <Send className="w-3 h-3 text-white" />
               <span>Enquire</span>
             </button>
             <button
@@ -112,7 +112,7 @@ export const MobilePackageCard: React.FC<PackageCardProps> = ({ pkg, onEnquire, 
                 if (onBookNow) onBookNow(pkg);
                 else if (onEnquire) onEnquire(pkg, 'booking');
               }}
-              className="px-3 py-1.5 rounded-xl bg-ocean-600 text-white text-xs font-bold active:scale-95 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-cyan-700 text-white text-xs font-bold active:scale-95 flex items-center gap-1 shadow-sm"
             >
               <Sparkles className="w-3 h-3 text-amber-300 fill-current" />
               <span>Book Now</span>
@@ -214,69 +214,68 @@ export const MobilePackagesPage: React.FC = () => {
 
   return (
     <>
-      {/* AppBar */}
-      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 py-3 sticky top-0 z-30 shadow-sm flex items-center gap-2.5">
-        <Link
-          to="/"
-          aria-label="Back to home"
-          className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="font-display font-black text-lg text-white">Explore Packages</h1>
-      </div>
-
-      <div className="pb-48">
-        <div className="px-4 pt-4 pb-2">
-          {/* Search + Filter row */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search packages..."
-                className="w-full pl-9 pr-8 py-3 rounded-2xl bg-slate-100 text-slate-900 text-sm outline-none border border-transparent focus:border-ocean-600/30"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => setFilterOpen(true)}
-              className="w-12 h-12 rounded-2xl bg-ocean-600/10 flex items-center justify-center shrink-0 active:bg-ocean-600/20 transition-colors"
-            >
-              <Filter className="w-5 h-5 text-ocean-600" />
-            </button>
-          </div>
-
-          {/* Active filter chips */}
-          {(selectedCategory !== 'All' || selectedPriceRange !== 'All') && (
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              {selectedCategory !== 'All' && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-ocean-600 rounded-full">
-                  <span className="text-white text-xs font-bold">{selectedCategory}</span>
-                  <button onClick={() => setSelectedCategory('All')}>
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              )}
-              {selectedPriceRange !== 'All' && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 rounded-full">
-                  <span className="text-white text-xs font-bold">{selectedPriceRange}</span>
-                  <button onClick={() => setSelectedPriceRange('All')}>
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+      {/* Blue Header Container combining AppBar + Search + Filter */}
+      <div className="bg-gradient-to-br from-ocean-800 via-ocean-700 to-cyan-700 px-4 pt-3 pb-4 rounded-b-[28px] sticky top-0 z-30 shadow-md">
+        <div className="flex items-center gap-2.5 mb-3">
+          <Link
+            to="/"
+            aria-label="Back to home"
+            className="-ml-1.5 w-9 h-9 rounded-full flex items-center justify-center text-white active:bg-white/15 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="font-display font-black text-lg text-white">Explore Packages</h1>
         </div>
 
-        <div className="px-4">
+        {/* Search + Filter Row */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search packages..."
+              className="w-full pl-9 pr-8 py-3 rounded-2xl bg-white dark:bg-white text-slate-900 text-sm outline-none border border-slate-200 shadow-sm placeholder:text-slate-400 font-medium"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="w-12 h-12 rounded-2xl bg-white dark:bg-white border border-slate-200 flex items-center justify-center shrink-0 active:scale-95 transition-all shadow-sm"
+          >
+            <Filter className="w-5 h-5 text-slate-600" />
+          </button>
+        </div>
+
+        {/* Active Filter Chips */}
+        {(selectedCategory !== 'All' || selectedPriceRange !== 'All') && (
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {selectedCategory !== 'All' && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+                <span className="text-white text-xs font-bold">{selectedCategory}</span>
+                <button onClick={() => setSelectedCategory('All')}>
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            )}
+            {selectedPriceRange !== 'All' && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/30">
+                <span className="text-white text-xs font-bold">{selectedPriceRange}</span>
+                <button onClick={() => setSelectedPriceRange('All')}>
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="pb-48 pt-4 px-4">
           {loading ? (
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -303,8 +302,6 @@ export const MobilePackagesPage: React.FC = () => {
               />
             ))
           )}
-        </div>
-
         <div className="h-28" aria-hidden="true" />
       </div>
 

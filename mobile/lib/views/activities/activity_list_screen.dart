@@ -350,16 +350,16 @@ class _ActivityListScreenState extends State<ActivityListScreen> {
                                                       child: Container(
                                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                                         decoration: BoxDecoration(
-                                                          color: cs.surfaceAlt,
+                                                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
                                                           borderRadius: BorderRadius.circular(8),
-                                                          border: Border.all(color: cs.border),
+                                                          border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
                                                         ),
-                                                        child: Text(
+                                                        child: const Text(
                                                           'Enquire',
                                                           style: TextStyle(
                                                             fontSize: 11,
                                                             fontWeight: FontWeight.bold,
-                                                            color: cs.textPrimary,
+                                                            color: AppTheme.primaryColor,
                                                           ),
                                                         ),
                                                       ),

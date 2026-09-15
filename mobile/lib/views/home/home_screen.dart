@@ -228,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
             child: Container(
-              height: 72,
+              height: 64,
               decoration: BoxDecoration(
                 color: cs.surface,
                 borderRadius: BorderRadius.circular(28),
@@ -353,24 +353,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ? user.firstName.trim()
         : 'Explorer';
 
-    final cs = context.colors;
-    final isDark = context.isDark;
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(16, topPadding + 14, 16, 22),
+      padding: EdgeInsets.fromLTRB(16, topPadding + 12, 16, 20),
       decoration: BoxDecoration(
-        gradient: isDark ? AppTheme.headerGradient : null,
-        color: isDark ? null : cs.surfaceAlt,
+        gradient: AppTheme.headerGradient,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
         border: Border(
-            bottom: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : cs.border.withValues(alpha: 0.6))),
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: 0.15),
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow,
+            color: const Color(0xFF0A6FB5).withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -392,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 25,
                         fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : cs.textPrimary,
+                        color: Colors.white,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -401,9 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 25,
                         fontWeight: FontWeight.w900,
-                        color: isDark
-                            ? const Color(0xFF38BDF8)
-                            : AppTheme.primaryColor,
+                        color: const Color(0xFF38BDF8),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -430,27 +424,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.15)
-                                : cs.surface,
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.25)
-                                  : cs.border,
+                              color: Colors.white.withValues(alpha: 0.35),
                               width: 1,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: cs.shadow,
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.notifications_outlined,
-                            color: isDark ? Colors.white : cs.textPrimary,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -464,9 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: const Color(0xFFEF4444),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: isDark
-                                      ? AppTheme.primaryDarkColor
-                                      : cs.surfaceAlt,
+                                  color: AppTheme.primaryDarkColor,
                                   width: 1.5,
                                 ),
                               ),
@@ -494,45 +475,45 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // Greeting
           Text(
             'Hello, $greetingName 👋',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.outfit(
-              fontSize: 22,
+              fontSize: 23,
               fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : cs.textPrimary,
+              color: Colors.white,
+              letterSpacing: -0.4,
               height: 1.15,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             'Where do you want to travel next?',
             style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.85)
-                  : cs.textSecondary,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // Search bar
           Container(
-            height: 52,
+            height: 46,
             decoration: BoxDecoration(
-              color: isDark ? Colors.white : cs.surface,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : cs.border),
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: cs.shadow,
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -541,11 +522,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 const SizedBox(width: 14),
-                Icon(Icons.search_rounded,
+                const Icon(Icons.search_rounded,
                     size: 20,
-                    color: isDark
-                        ? const Color(0xFF64748B)
-                        : cs.textSecondary),
+                    color: AppTheme.primaryColor),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
@@ -564,9 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: isDark
-                          ? const Color(0xFF0F172A)
-                          : cs.textPrimary,
+                      color: const Color(0xFF0F172A),
                     ),
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -581,9 +558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Search packages, destinations, activities...',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13.5,
-                        color: isDark
-                            ? const Color(0xFF94A3B8)
-                            : cs.textFaint,
+                        color: const Color(0xFF64748B),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -599,11 +574,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Icon(Icons.close_rounded,
-                          size: 18,
-                          color: isDark
-                              ? const Color(0xFF64748B)
-                              : cs.textSecondary),
+                      child: const Icon(Icons.close_rounded,
+                          size: 18, color: Color(0xFF64748B)),
                     ),
                   )
                 else
@@ -633,7 +605,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onSeeAll: () => setState(() => _currentIndex = 1),
         ),
         SizedBox(
-          height: 210,
+          height: 195,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -651,7 +623,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
                 child: Container(
-                  width: 155,
+                  width: 142,
                   margin: const EdgeInsets.only(right: 14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
@@ -770,12 +742,13 @@ class _HomeScreenState extends State<HomeScreen> {
               if (bannerProvider.banners.isNotEmpty) ...[
                 const SectionHeader(
                   title: 'Exclusive Offers',
+                  eyebrow: 'Exclusive Offers',
                   subtitle: 'Limited-time deals on top tours',
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: SizedBox(
-                    height: 165,
+                    height: 148,
                     child: PageView.builder(
                       controller: _bannerPageController,
                       onPageChanged: (idx) =>
@@ -852,11 +825,12 @@ class _HomeScreenState extends State<HomeScreen> {
             if (themeProvider.themes.isNotEmpty) ...[
               SectionHeader(
                 title: 'Specialization Themes',
+                eyebrow: 'Specialization Themes',
                 subtitle: 'Find tours tailored to your travel style',
                 onSeeAll: () => setState(() => _currentIndex = 2),
               ),
               SizedBox(
-                height: 210,
+                height: 195,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -876,7 +850,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                       child: Container(
-                        width: 155,
+                        width: 142,
                         margin: const EdgeInsets.only(right: 14),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(18),
@@ -944,6 +918,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_homeActivities.isNotEmpty) ...[
               SectionHeader(
                 title: 'Thrill & Adventure Activities ⚡',
+                eyebrow: 'Thrill & Adventure Activities ⚡',
                 subtitle: 'Bungee jumping, scuba diving, rafting & safari',
                 onSeeAll: () {
                   Navigator.push(
@@ -953,7 +928,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               SizedBox(
-                height: 185,
+                height: 182,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -985,6 +960,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Trending Tour Packages
             SectionHeader(
               title: 'Trending Tour Packages',
+              eyebrow: 'Trending Tour Packages',
               subtitle: 'Exclusive deals curated for you',
               onSeeAll: () => setState(() => _currentIndex = 3),
             ),
@@ -1029,6 +1005,155 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
+          SliverToBoxAdapter(
+            child: _buildHowToBookSection(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHowToBookSection() {
+    final cs = context.colors;
+    final isDark = context.isDark;
+
+    final steps = [
+      {
+        'num': '01',
+        'title': 'Explore & Select',
+        'desc': 'Browse top tours, themes & thrill activities.',
+        'icon': Icons.travel_explore_rounded,
+        'color': const Color(0xFF0284C7),
+        'bg': const Color(0xFFE0F2FE),
+      },
+      {
+        'num': '02',
+        'title': 'Customize Trip',
+        'desc': 'Request custom dates, quotes or itineraries.',
+        'icon': Icons.edit_calendar_rounded,
+        'color': const Color(0xFF4F46E5),
+        'bg': const Color(0xFFEEF2FF),
+      },
+      {
+        'num': '03',
+        'title': 'Confirm & Pay',
+        'desc': 'Instant booking confirmation & secure balance.',
+        'icon': Icons.verified_user_rounded,
+        'color': const Color(0xFF059669),
+        'bg': const Color(0xFFD1FAE5),
+      },
+      {
+        'num': '04',
+        'title': 'Travel & Enjoy',
+        'desc': '24/7 direct admin chat support during your trip.',
+        'icon': Icons.flight_takeoff_rounded,
+        'color': const Color(0xFFEA580C),
+        'bg': const Color(0xFFFFEDD5),
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 36),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'How to Book in 4 Easy Steps',
+            eyebrow: 'Simple Booking Process',
+            subtitle: 'Book your dream trip hassle-free in minutes',
+          ),
+          const SizedBox(height: 10),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: steps.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.25,
+            ),
+            itemBuilder: (context, index) {
+              final step = steps[index];
+              final stepColor = step['color'] as Color;
+              final stepBg = step['bg'] as Color;
+              final stepIcon = step['icon'] as IconData;
+
+              return Container(
+                padding: const EdgeInsets.all(11),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: cs.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cs.shadow,
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Color.alphaBlend(
+                                    stepColor.withValues(alpha: 0.2), cs.surface)
+                                : stepBg,
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: Icon(stepIcon, color: stepColor, size: 16),
+                        ),
+                        Text(
+                          step['num'] as String,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: stepColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          step['title'] as String,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: cs.textPrimary,
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          step['desc'] as String,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: cs.textSecondary,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1100,173 +1225,173 @@ class _HomeScreenState extends State<HomeScreen> {
       body: destinationProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
+              padding: const EdgeInsets.only(bottom: 100),
               children: [
-                // Search Bar — icon outside the container (matches Home screen)
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: cs.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: cs.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: cs.shadow,
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 14),
-                            Icon(Icons.search_rounded,
-                                size: 20, color: cs.textSecondary),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextField(
-                                controller: _destSearchController,
-                                textInputAction: TextInputAction.search,
-                                textAlignVertical: TextAlignVertical.center,
-                                onChanged: (_) => setState(() {}),
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: cs.textPrimary,
-                                ),
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  contentPadding: EdgeInsets.zero,
-                                  filled: false,
-                                  isCollapsed: true,
-                                  hintText: '',
-                                  hintStyle: GoogleFonts.inter(
-                                    fontSize: 13.5,
-                                    color: cs.textFaint,
-                                    fontWeight: FontWeight.w400,
+                // Blue Header Container extending up to the search bar & filter
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+                  decoration: const BoxDecoration(
+                    gradient: AppTheme.headerGradient,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 14),
+                              const Icon(Icons.search_rounded,
+                                  size: 20, color: Color(0xFF64748B)),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: _destSearchController,
+                                  textInputAction: TextInputAction.search,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  onChanged: (_) => setState(() {}),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    filled: false,
+                                    isCollapsed: true,
+                                    hintText: 'Search destinations...',
+                                    hintStyle: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      color: const Color(0xFFADB5BD),
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            if (_destSearchController.text.isNotEmpty)
-                              GestureDetector(
-                                onTap: () {
-                                  _destSearchController.clear();
-                                  setState(() {});
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: Icon(Icons.close_rounded,
-                                      size: 18, color: cs.textSecondary),
-                                ),
-                              )
-                            else
-                              const SizedBox(width: 14),
-                          ],
+                              if (_destSearchController.text.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    _destSearchController.clear();
+                                    setState(() {});
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(Icons.close_rounded,
+                                        size: 18, color: Color(0xFF64748B)),
+                                  ),
+                                )
+                              else
+                                const SizedBox(width: 14),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    FilterIconButton(
-                      active: _selectedDestFilter != 'All',
-                      onTap: () async {
-                        final picked = await showFilterSheet(
-                          context,
-                          title: 'Filter destinations',
-                          options: filterOptions,
-                          selected: _selectedDestFilter,
-                        );
-                        if (picked != null) {
-                          setState(() => _selectedDestFilter = picked);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${filteredDestinations.length} ${filteredDestinations.length == 1 ? 'Destination' : 'Destinations'} Found',
-                      style: GoogleFonts.outfit(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: cs.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                if (filteredDestinations.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.location_off_outlined,
-                            size: 48,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No destinations found',
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: cs.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Try searching with a different term or filter',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: cs.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: filteredDestinations.length,
-                    itemBuilder: (context, index) {
-                      final dest = filteredDestinations[index];
-                      return DestinationCard(
-                        destination: dest,
-                        onTap: () {
-                          Navigator.push(
+                      const SizedBox(width: 10),
+                      FilterIconButton(
+                        active: _selectedDestFilter != 'All',
+                        onTap: () async {
+                          final picked = await showFilterSheet(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  DestinationDetailScreen(destination: dest),
-                            ),
+                            title: 'Filter destinations',
+                            options: filterOptions,
+                            selected: _selectedDestFilter,
                           );
+                          if (picked != null) {
+                            setState(() => _selectedDestFilter = picked);
+                          }
                         },
-                      );
-                    },
+                      ),
+                    ],
                   ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Column(
+                    children: [
+                      if (filteredDestinations.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_off_outlined,
+                                  size: 48,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No destinations found',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: cs.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Try searching with a different term or filter',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: cs.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: filteredDestinations.length,
+                          itemBuilder: (context, index) {
+                            final dest = filteredDestinations[index];
+                            return DestinationCard(
+                              destination: dest,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        DestinationDetailScreen(destination: dest),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
     );
@@ -1313,7 +1438,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Stack(
                 children: [
                   SizedBox(
-                    height: 100,
+                    height: 92,
                     width: double.infinity,
                     child: AppNetworkImage(
                       imageUrl: imageUrl,
@@ -1343,7 +1468,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1391,16 +1516,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
+                                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.grey.shade300),
+                                  border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   'Enquire',
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
-                                    color: context.colors.textPrimary,
+                                    color: AppTheme.primaryColor,
                                   ),
                                 ),
                               ),

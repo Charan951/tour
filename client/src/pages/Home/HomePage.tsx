@@ -662,8 +662,8 @@ export const HomePage: React.FC = () => {
         className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
       >
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-1.5">
-          <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-4 py-1.5 rounded-full border border-ocean-600/20 inline-block">
-            Specialized Collections
+          <span className="block font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-800 -mb-1">
+            Specialization Themes
           </span>
           <h2 className="font-poppins font-black text-3xl sm:text-4xl text-slate-900">
             Our Travel Specialization
@@ -803,8 +803,8 @@ export const HomePage: React.FC = () => {
         className="py-16 px-4 max-w-7xl mx-auto border-t border-slate-200/60"
       >
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-1.5">
-          <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1 rounded-full border border-ocean-600/20 inline-block">
-            Limited-Time Deals
+          <span className="block font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-800 -mb-1">
+            Exclusive Offers
           </span>
           <h2 className="font-poppins font-black text-3xl text-slate-900">
             Exclusive Promotional Offers
@@ -949,10 +949,9 @@ export const HomePage: React.FC = () => {
       >
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-amber-700 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20 inline-flex items-center gap-1.5 mb-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Thrill & Adventure Activities
-            </span>
-            <h2 className="font-poppins font-black text-3xl text-slate-900">Popular Activities & Outdoor Sports</h2>
+            <h2 className="block font-script text-3xl sm:text-[2.5rem] leading-tight text-ocean-800">
+              Thrill & Adventure Activities ⚡
+            </h2>
             <p className="text-slate-500 text-xs mt-1 font-medium">Bungee jumping, scuba diving, rafting, desert safari & paragliding with certified safety.</p>
           </div>
           <Link
@@ -1049,8 +1048,8 @@ export const HomePage: React.FC = () => {
       >
         <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
           <div>
-            <span className="text-xs font-black uppercase tracking-widest text-ocean-600 bg-ocean-600/10 px-3.5 py-1 rounded-full border border-ocean-600/20 inline-block mb-1.5">
-              Handpicked Vacation Deals
+            <span className="block font-script text-3xl sm:text-[2.5rem] leading-none text-ocean-800 -mb-1">
+              Trending Tour Packages
             </span>
             <h2 className="font-poppins font-black text-3xl text-slate-900">Featured Tour Packages</h2>
             <p className="text-slate-500 text-xs mt-1 font-medium">Bespoke itineraries with price matching & verified luxury resort stays.</p>

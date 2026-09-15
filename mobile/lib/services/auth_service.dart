@@ -93,7 +93,11 @@ class AuthService {
       final userData = (rawData is Map && rawData.containsKey('user')) ? rawData['user'] : rawData;
       final user = UserModel.fromJson(userData);
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(tokenKey) ?? '';
+      final token = (rawData is Map && rawData.containsKey('accessToken'))
+          ? rawData['accessToken']
+          : (rawData is Map && rawData.containsKey('token')
+              ? rawData['token']
+              : (prefs.getString(tokenKey) ?? prefs.getString('hc_token') ?? ''));
       await saveSession(token, user);
       return user;
     }
@@ -112,7 +116,7 @@ class AuthService {
 
   Future<UserModel?> fetchCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(tokenKey);
+    final token = prefs.getString(tokenKey) ?? prefs.getString('hc_token');
     if (token == null || token.isEmpty) {
       return null;
     }
@@ -135,9 +139,12 @@ class AuthService {
 
   Future<void> saveSession(String token, UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, token);
+    if (token.isNotEmpty) {
+      await prefs.setString(tokenKey, token);
+      await prefs.setString('hc_token', token);
+      ApiService.setToken(token);
+    }
     await prefs.setString(userKey, jsonEncode(user.toJson()));
-    ApiService.setToken(token);
     PushNotificationService.instance.syncTokenWithBackend();
   }
 

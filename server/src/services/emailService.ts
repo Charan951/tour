@@ -2,21 +2,20 @@ import nodemailer from 'nodemailer';
 
 const getTransporter = () => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || 587);
+  // Port 465 = SSL (secure:true), Port 587 = STARTTLS (secure:false)
+  const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER || 'naveenkumar970100@gmail.com';
-  // NOTE: SMTP_PASS must be set in the hosting platform's environment variables.
-  // The fallback here is only for local development — production relies entirely on SMTP_PASS env var.
   const pass = process.env.SMTP_PASS || 'kogutewkvdwqqxye';
 
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: port === 465, // Only SSL on port 465; port 587 uses STARTTLS (secure:false)
     auth: { user, pass },
     tls: { rejectUnauthorized: false },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 5000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
   });
 };
 
@@ -32,30 +31,53 @@ const safeSend = async (mailOptions: nodemailer.SendMailOptions) => {
     console.log(`[EmailService] Email sent to ${mailOptions.to}. MessageId: ${info.messageId}`);
     return true;
   } catch (err: any) {
-    console.warn(`[EmailService] Primary SMTP send failed for ${mailOptions.to}: ${err.message || err}. Trying SSL fallback (port 465)...`);
+    console.warn(`[EmailService] Primary SMTP send failed for ${mailOptions.to}: ${err.message || err}. Trying port 587 fallback...`);
     try {
       const fallbackTransporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false, // STARTTLS
         auth: {
           user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
           pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
         },
         tls: { rejectUnauthorized: false },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 5000,
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 15000,
       });
       const info = await fallbackTransporter.sendMail({
         from: FROM_EMAIL,
         ...mailOptions
       });
-      console.log(`[EmailService] Email sent via SSL fallback (465) to ${mailOptions.to}. MessageId: ${info.messageId}`);
+      console.log(`[EmailService] Email sent via port 587 fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
       return true;
     } catch (fallbackErr: any) {
-      console.error(`[EmailService] SSL fallback also failed for ${mailOptions.to}:`, fallbackErr.message || fallbackErr);
-      return false;
+      console.warn(`[EmailService] Port 587 fallback failed for ${mailOptions.to}: ${fallbackErr.message || fallbackErr}. Trying port 465 SSL fallback...`);
+      try {
+        const sslTransporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: 465,
+          secure: true, // SSL
+          auth: {
+            user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
+            pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
+          },
+          tls: { rejectUnauthorized: false },
+          connectionTimeout: 15000,
+          greetingTimeout: 15000,
+          socketTimeout: 15000,
+        });
+        const info = await sslTransporter.sendMail({
+          from: FROM_EMAIL,
+          ...mailOptions
+        });
+        console.log(`[EmailService] Email sent via port 465 SSL fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
+        return true;
+      } catch (sslErr: any) {
+        console.error(`[EmailService] All SMTP attempts failed for ${mailOptions.to}:`, sslErr.message || sslErr);
+        return false;
+      }
     }
   }
 };

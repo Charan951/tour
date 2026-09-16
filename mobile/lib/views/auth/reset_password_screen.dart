@@ -190,6 +190,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ],
             ),
           ),
+          if (authProvider.latestOtp != null && authProvider.latestOtp!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.key_rounded, size: 16, color: Color(0xFF059669)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'OTP Code: ${authProvider.latestOtp}',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: const Color(0xFF064E3B),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           CustomTextField(
             controller: _otpController,

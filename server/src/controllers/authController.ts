@@ -225,10 +225,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
       success: true,
       message: sent
         ? 'A 6-digit OTP has been sent to your email address.'
-        : '6-digit OTP generated. Please check your Inbox / Spam folder to verify.',
+        : 'OTP generated. Please check your Inbox and Spam / Junk folder.',
       data: {
         email: user.email,
-        ...(sent ? {} : { otp })
       }
     });
   } catch (error: any) {

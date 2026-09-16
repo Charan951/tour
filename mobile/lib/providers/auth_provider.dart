@@ -158,8 +158,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  String? _latestOtp;
-  String? get latestOtp => _latestOtp;
 
   Future<bool> forgotPassword(String email) async {
     _isLoading = true;
@@ -167,11 +165,10 @@ class AuthProvider extends ChangeNotifier {
     _safeNotifyListeners();
 
     try {
-      final res = await _authService.forgotPassword(email);
-      _latestOtp = res['otp'];
+      await _authService.forgotPassword(email);
       _isLoading = false;
       _safeNotifyListeners();
-      return res['success'] == true;
+      return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       _isLoading = false;

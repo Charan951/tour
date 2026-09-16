@@ -220,7 +220,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     if (!sent) {
-      return res.status(500).json({
+      return res.status(400).json({
         success: false,
         message: 'Could not deliver OTP email. Please check your email address or try again.'
       });

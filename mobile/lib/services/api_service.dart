@@ -147,38 +147,41 @@ class ApiService {
       candidates.add(originalUrl);
     }
 
-    try {
-      final uri = Uri.parse(originalUrl);
-      final host = uri.host;
-      final portSuffix = uri.hasPort ? ':${uri.port}' : '';
-      final hostWithPort = '$host$portSuffix';
+    // Only generate local dev fallbacks if NOT in production mode
+    if (!ApiConfig.isProduction) {
+      try {
+        final uri = Uri.parse(originalUrl);
+        final host = uri.host;
+        final portSuffix = uri.hasPort ? ':${uri.port}' : '';
+        final hostWithPort = '$host$portSuffix';
 
-      // 1. ADB reverse / local host fallback (http://127.0.0.1:5000)
-      final alt127 = originalUrl.replaceAll(hostWithPort, '127.0.0.1:5000').replaceAll('https://', 'http://');
-      if (!candidates.contains(alt127)) candidates.add(alt127);
+        // 1. ADB reverse / local host fallback (http://127.0.0.1:5000)
+        final alt127 = originalUrl.replaceAll(hostWithPort, '127.0.0.1:5000').replaceAll('https://', 'http://');
+        if (!candidates.contains(alt127)) candidates.add(alt127);
 
-      // 2. Localhost fallback (http://localhost:5000)
-      final altLocal = originalUrl.replaceAll(hostWithPort, 'localhost:5000').replaceAll('https://', 'http://');
-      if (!candidates.contains(altLocal)) candidates.add(altLocal);
+        // 2. Localhost fallback (http://localhost:5000)
+        final altLocal = originalUrl.replaceAll(hostWithPort, 'localhost:5000').replaceAll('https://', 'http://');
+        if (!candidates.contains(altLocal)) candidates.add(altLocal);
 
-      // 3. Android emulator fallback (http://10.0.2.2:5000)
-      final altEmulator = originalUrl.replaceAll(hostWithPort, '10.0.2.2:5000').replaceAll('https://', 'http://');
-      if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
+        // 3. Android emulator fallback (http://10.0.2.2:5000)
+        final altEmulator = originalUrl.replaceAll(hostWithPort, '10.0.2.2:5000').replaceAll('https://', 'http://');
+        if (!candidates.contains(altEmulator)) candidates.add(altEmulator);
 
-      // 3. Custom host / Wi-Fi IP fallback
-      if (ApiConfig.hostIp.isNotEmpty) {
-        final targetHost = ApiConfig.hostIp.contains(':') ? ApiConfig.hostIp : '${ApiConfig.hostIp}:5000';
-        final altLan = originalUrl.replaceAll(hostWithPort, targetHost).replaceAll('https://', 'http://');
-        if (!candidates.contains(altLan)) candidates.add(altLan);
-      }
+        // 4. Custom host / Wi-Fi IP fallback
+        if (ApiConfig.hostIp.isNotEmpty) {
+          final targetHost = ApiConfig.hostIp.contains(':') ? ApiConfig.hostIp : '${ApiConfig.hostIp}:5000';
+          final altLan = originalUrl.replaceAll(hostWithPort, targetHost).replaceAll('https://', 'http://');
+          if (!candidates.contains(altLan)) candidates.add(altLan);
+        }
+      } catch (_) {}
+    }
 
-      // 4. Production remote fallback (always included so the app works on cellular 4G/5G & external networks)
-      if (ApiConfig.productionHost.isNotEmpty) {
-        final prodUri = Uri.parse(ApiConfig.productionHost);
-        final altProd = originalUrl.replaceAll(hostWithPort, prodUri.host).replaceAll('http://', 'https://');
-        if (!candidates.contains(altProd)) candidates.add(altProd);
-      }
-    } catch (_) {}
+    // Production remote fallback
+    if (ApiConfig.productionHost.isNotEmpty) {
+      final prodUri = Uri.parse(ApiConfig.productionHost);
+      final altProd = originalUrl.replaceAll(Uri.parse(originalUrl).host, prodUri.host).replaceAll('http://', 'https://');
+      if (!candidates.contains(altProd)) candidates.add(altProd);
+    }
 
     return candidates;
   }
@@ -386,17 +389,25 @@ class ApiService {
 
   static Future<dynamic> _handleOfflineFallback(
       String method, String url, Map<String, dynamic>? body, Object error) async {
-    if (kDebugMode) debugPrint('⚡ All candidate network endpoints unreachable for ($url).');
+    if (kDebugMode) debugPrint('⚡ All candidate network endpoints unreachable for ($url). Error: $error');
     ConnectivityStatus.instance.report(false);
 
-    // No fabricated success responses. Every write that never reached the
-    // server must surface an honest failure so the UI shows an error / retry
-    // state instead of telling the user an enquiry, profile change, password
-    // change or payment succeeded when it did not.
+    String message = 'Server unreachable.';
+    if (error is _ApiServerException) {
+      message = error.message;
+    } else if (error is _ApiException) {
+      message = error.message;
+    } else if (error is Exception) {
+      final str = error.toString().replaceAll('Exception: ', '').trim();
+      if (str.isNotEmpty && !str.contains('SocketException') && !str.contains('TimeoutException')) {
+        message = str;
+      }
+    }
+
     return {
       'success': false,
       'data': null,
-      'message': 'Server unreachable.',
+      'message': message,
     };
   }
 

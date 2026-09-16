@@ -29,7 +29,10 @@ class ApiConfig {
   static Future<void> loadSavedEnvironment() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.containsKey(_prefIsProductionKey)) {
+      if (kReleaseMode) {
+        // In Release APK build, always default to production server
+        isProduction = true;
+      } else if (prefs.containsKey(_prefIsProductionKey)) {
         isProduction = prefs.getBool(_prefIsProductionKey) ?? kReleaseMode;
       } else {
         isProduction = kReleaseMode;

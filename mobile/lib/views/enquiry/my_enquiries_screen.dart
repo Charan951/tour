@@ -90,7 +90,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
       case 'closed':
         return const Color(0xFFEF4444); // Red
       default:
-        return const Color(0xFFD97706); // Amber
+        return const Color(0xFF0284C7); // Ocean/Sky Blue
     }
   }
 
@@ -105,7 +105,7 @@ class _MyEnquiriesScreenState extends State<MyEnquiriesScreen> {
       case 'closed':
         return '🔴 Closed';
       default:
-        return '🟡 Pending Response';
+        return '🔵 Pending Response';
     }
   }
 

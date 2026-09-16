@@ -13,7 +13,10 @@ const getTransporter = () => {
     port,
     secure: port === 465,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000,
   });
 };
 
@@ -39,7 +42,10 @@ const safeSend = async (mailOptions: nodemailer.SendMailOptions) => {
           user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
           pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
         },
-        tls: { rejectUnauthorized: false }
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000,
       });
       const info = await fallbackTransporter.sendMail({
         from: FROM_EMAIL,

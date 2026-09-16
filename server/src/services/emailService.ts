@@ -22,63 +22,67 @@ const getTransporter = () => {
 const FROM_EMAIL = process.env.EMAIL_FROM || '"HolidayCity Tours" <naveenkumar970100@gmail.com>';
 
 const safeSend = async (mailOptions: nodemailer.SendMailOptions) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const user = process.env.SMTP_USER || 'naveenkumar970100@gmail.com';
+  const pass = process.env.SMTP_PASS || 'kogutewkvdwqqxye';
+
+  // Helper to create transport options with standard timeouts
+  const createTransportOptions = (targetPort: number, secure: boolean) => ({
+    host,
+    port: targetPort,
+    secure,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+  });
+
+  // Stage 1: Try Primary configured transporter
   try {
-    const transporter = getTransporter();
-    const info = await transporter.sendMail({
-      from: FROM_EMAIL,
-      ...mailOptions
-    });
-    console.log(`[EmailService] Email sent to ${mailOptions.to}. MessageId: ${info.messageId}`);
+    const primaryPort = Number(process.env.SMTP_PORT || 465);
+    const transporter = nodemailer.createTransport(createTransportOptions(primaryPort, primaryPort === 465));
+    const info = await transporter.sendMail({ from: FROM_EMAIL, ...mailOptions });
+    console.log(`[EmailService] Email sent successfully to ${mailOptions.to} via primary port ${primaryPort}. MessageId: ${info.messageId}`);
     return true;
   } catch (err: any) {
-    console.warn(`[EmailService] Primary SMTP send failed for ${mailOptions.to}: ${err.message || err}. Trying port 587 fallback...`);
-    try {
-      const fallbackTransporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: 587,
-        secure: false, // STARTTLS
-        auth: {
-          user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
-          pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
-        },
-        tls: { rejectUnauthorized: false },
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 15000,
-      });
-      const info = await fallbackTransporter.sendMail({
-        from: FROM_EMAIL,
-        ...mailOptions
-      });
-      console.log(`[EmailService] Email sent via port 587 fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
-      return true;
-    } catch (fallbackErr: any) {
-      console.warn(`[EmailService] Port 587 fallback failed for ${mailOptions.to}: ${fallbackErr.message || fallbackErr}. Trying port 465 SSL fallback...`);
-      try {
-        const sslTransporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: 465,
-          secure: true, // SSL
-          auth: {
-            user: process.env.SMTP_USER || 'naveenkumar970100@gmail.com',
-            pass: process.env.SMTP_PASS || 'kogutewkvdwqqxye',
-          },
-          tls: { rejectUnauthorized: false },
-          connectionTimeout: 15000,
-          greetingTimeout: 15000,
-          socketTimeout: 15000,
-        });
-        const info = await sslTransporter.sendMail({
-          from: FROM_EMAIL,
-          ...mailOptions
-        });
-        console.log(`[EmailService] Email sent via port 465 SSL fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
-        return true;
-      } catch (sslErr: any) {
-        console.error(`[EmailService] All SMTP attempts failed for ${mailOptions.to}:`, sslErr.message || sslErr);
-        return false;
-      }
-    }
+    console.warn(`[EmailService] Primary SMTP (port ${process.env.SMTP_PORT || 465}) failed for ${mailOptions.to}: ${err.code || ''} ${err.message || err}. Trying Stage 2 (port 587 STARTTLS)...`);
+  }
+
+  // Stage 2: Fallback to Port 587 STARTTLS
+  try {
+    const transporter587 = nodemailer.createTransport(createTransportOptions(587, false));
+    const info = await transporter587.sendMail({ from: FROM_EMAIL, ...mailOptions });
+    console.log(`[EmailService] Email sent via Stage 2 (Port 587) fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
+    return true;
+  } catch (err: any) {
+    console.warn(`[EmailService] Stage 2 (Port 587) fallback failed for ${mailOptions.to}: ${err.code || ''} ${err.message || err}. Trying Stage 3 (port 465 SSL)...`);
+  }
+
+  // Stage 3: Fallback to Port 465 SSL
+  try {
+    const transporter465 = nodemailer.createTransport(createTransportOptions(465, true));
+    const info = await transporter465.sendMail({ from: FROM_EMAIL, ...mailOptions });
+    console.log(`[EmailService] Email sent via Stage 3 (Port 465 SSL) fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
+    return true;
+  } catch (err: any) {
+    console.warn(`[EmailService] Stage 3 (Port 465) fallback failed for ${mailOptions.to}: ${err.code || ''} ${err.message || err}. Trying Stage 4 (port 2525 STARTTLS)...`);
+  }
+
+  // Stage 4: Fallback to Port 2525 STARTTLS (Bypasses ISP/cloud firewall restrictions on 587/465)
+  try {
+    const transporter2525 = nodemailer.createTransport(createTransportOptions(2525, false));
+    const info = await transporter2525.sendMail({ from: FROM_EMAIL, ...mailOptions });
+    console.log(`[EmailService] Email sent via Stage 4 (Port 2525) fallback to ${mailOptions.to}. MessageId: ${info.messageId}`);
+    return true;
+  } catch (err: any) {
+    console.error(`[EmailService] ALL 4 SMTP FALLBACK STAGES FAILED for ${mailOptions.to}. Last error:`, {
+      message: err?.message,
+      code: err?.code,
+      command: err?.command,
+      response: err?.response,
+    });
+    return false;
   }
 };
 

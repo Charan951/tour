@@ -221,11 +221,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     console.log(`[forgotPassword] OTP generated for ${user.email}: ${otp} (emailSent: ${sent})`);
 
+    if (!sent) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send OTP email to your address. Please verify your email server SMTP setup or try again.',
+      });
+    }
+
     return res.status(200).json({
       success: true,
-      message: sent
-        ? 'A 6-digit OTP has been sent to your email address.'
-        : 'OTP generated. Please check your Inbox and Spam / Junk folder.',
+      message: 'A 6-digit OTP has been sent to your email address.',
       data: {
         email: user.email,
       }

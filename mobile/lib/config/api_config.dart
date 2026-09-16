@@ -141,7 +141,7 @@ class ApiConfig {
   /// Terms / Privacy in-app via `LegalScreen`; these URLs are the web equivalents.
   static String get webUrl => serverHost;
   static String get termsUrl => '$webUrl/terms';
-  static String get privacyUrl => '$webUrl/privacy';
+  static String get privacyUrl => '$webUrl/privacy-policy';
 
   static String get socketUrl {
     final host = serverHost;

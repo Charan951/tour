@@ -21,9 +21,31 @@ Entry format:
 
 ---
 
-## Entries (newest first)
+### 2026-09-16 — Play Console — Privacy Policy URL rejected ("does not link to a valid privacy policy page")
+- Status: Done (code), needs deploy + Play Console update by user.
+- Request: Play Console policy-center flagged `https://tour.speshway.site/privacy` as invalid on Sep 13; user wants the URL changed to `/privacy-policy`.
+- Cause: `/privacy` is a client-side-only React route (`LegalPage`) — `curl`ing it returns the raw Vite `index.html` shell (empty `<div id="root">`, content only appears after JS runs). Google Play's policy-URL validator doesn't reliably execute JS, so it sees no content and fails the URL.
+- Fix: NEW static `client/public/privacy-policy.html` — plain server-servable HTML with the same privacy policy text as `LegalPage.tsx`'s `PRIVACY` sections (no JS/build dependency, content is in the raw response). Root `vercel.json` and `client/vercel.json` — added a `/privacy-policy` → `/privacy-policy.html` rewrite ahead of the SPA catch-all so the clean URL (no `.html`) resolves. Old `/privacy` SPA route left untouched (still works, unrelated).
+- Outcome: needs a deploy (git push → Vercel) before `https://tour.speshway.site/privacy-policy` goes live; user should then verify it returns real HTML (`curl`, no JS needed) and update the Privacy Policy field in Play Console → Policy → App content to the new URL, then resubmit for review. Consider doing the same for `/terms` later if it's ever flagged.
 
-### 2026-09-10 — Play Store production audit (pass 2) — P0/P1/P2 remediation
+### 2026-09-16 — Play Store — direct-to-production launch readiness check
+- Status: Done (audit + 1 fix); Blocked on user for the SMTP item before it's safe to submit.
+- Request: user wants to publish straight to Play Store production (no internal/closed testing track) — check for errors first.
+- Files/areas: mobile/android/gradle.properties, mobile/android/key.properties (not edited, verified), mobile/android/app/build.gradle.
+- Findings:
+  - **Fixed:** `android/gradle.properties` hardcoded `org.gradle.java.home` to a JDK 21 path (`C:/Program Files/Eclipse Adoptium/...`) that no longer exists on this machine — blocked every local release build with "Java home supplied is invalid". Repointed to the JDK bundled with Android Studio (`C:/Program Files/Android/Android Studio/jbr`, confirmed present + valid via `flutter doctor`). This is a machine-local path checked into git; whoever builds next should verify/adjust it for their machine.
+  - `flutter analyze` clean. `flutter build appbundle --release` now succeeds (`app-release.aab`, 47.7MB), signed with the real upload keystore (`android/key.properties` present, keystore file exists at `C:/Users/Lenovo/upload-keystore.jks`, `hasReleaseKeystore` path taken, not the debug fallback). `versionName 1.0.0` / `versionCode 1` — fine for a first submission.
+  - `google-services.json` present, launcher icons present, `/terms` and `/privacy` live (200) on prod, prod `/api/v1/packages` healthy (200).
+  - **Still open / not fixable from here — blocks a safe launch:** forgot-password is broken in production (see entry above, same day) — SMTP send fails, 500 on `/auth/forgot-password`. Going live without fixing this means every real user who forgets their password is stuck with no recovery path. Strongly recommend fixing before submitting, even skipping the testing track.
+  - Confirmed (not a bug, already documented as intentional in the 2026-09-10 entry below): logging in with an unrecognized email auto-registers a new account and logs it in. Verifying this against prod created one throwaway test account (`nonexistent_test_check@example.com`) — harmless but real prod row, flagging in case it needs cleanup.
+  - Not verified from here (no dashboard access): live `RAZORPAY_WEBHOOK_SECRET` / live Razorpay keys actually set in Vercel prod env, and the webhook URL actually registered in the Razorpay dashboard — both called out as user-owned action items in the 2026-09-10 hardening entry and never confirmed done since.
+- Outcome: mobile app itself builds, signs, and analyzes clean and is technically ready to upload as an AAB. Recommend fixing SMTP (blocking) and confirming Razorpay live-webhook config before hitting "publish" on Play Console, given the user's choice to skip the testing track.
+
+### 2026-09-16 — Auth — forgot password fails in production (release APK + web)
+- Status: Blocked (needs user action — no code bug found; credential/env issue on prod server)
+- Request: forgot password not working in release APK; also not working in production generally.
+- Files/areas: server/src/controllers/authController.ts (forgotPassword), server/src/services/emailService.ts, mobile/lib/services/auth_service.dart, mobile/lib/config/api_config.dart.
+- Outcome: Reproduced directly against prod — `POST https://tour.speshway.site/api/v1/auth/forgot-password` returns HTTP 500 `"Failed to send OTP email to your address..."` for a real account. Mobile-side code (endpoint, request shape, release-mode host selection in `api_config.dart` forcing production) is correct — this is not a release-vs-debug bug, forgot password is broken for everyone in prod. Root cause is SMTP send failure in `emailService.ts`'s `safeSend` (tries 4 fallback ports, all fail). `emailService.ts` hardcodes a fallback Gmail account/app-password (`naveenkumar970100@gmail.com` / app password) if `SMTP_*` env vars aren't set — and per the 2026-08-27 audit entry below, this exact Gmail credential had **leaked in git history** and rotation was flagged but deferred to the user ("still on the user: ... rotate leaked SMTP credential ... set prod env"). Most likely Google auto-revoked that app password after the leak, so both the env var (if unrotated) and the hardcoded fallback are now invalid. Needs user action: generate a fresh Gmail App Password (or switch provider), set `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`EMAIL_FROM` in the Vercel production environment, redeploy, then re-test `/auth/forgot-password`. Could not fix from here — no access to Vercel env vars or the Gmail account.
 - Status: In progress. `flutter analyze` clean; server `tsc` clean; `flutter test` / release AAB pending.
 - Request: full Play Store production-readiness audit against `PLAY_STORE_PRODUCTION_CHECKLIST.md`, then implement safe P0/P1/P2 fixes (no app-id / signing-key / Firebase-project / payment-architecture changes; stop-and-ask on decisions).
 - Findings & fixes this pass:

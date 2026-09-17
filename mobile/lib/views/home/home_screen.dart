@@ -917,8 +917,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             if (_homeActivities.isNotEmpty) ...[
               SectionHeader(
-                title: 'Thrill & Adventure Activities ⚡',
-                eyebrow: 'Thrill & Adventure Activities ⚡',
+                title: 'Adventure Activities',
+                eyebrow: 'Adventure Activities',
                 subtitle: 'Bungee jumping, scuba diving, rafting & safari',
                 onSeeAll: () {
                   Navigator.push(
@@ -959,8 +959,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Trending Tour Packages
             SectionHeader(
-              title: 'Trending Tour Packages',
-              eyebrow: 'Trending Tour Packages',
+              title: 'Trending Packages',
+              eyebrow: 'Trending Packages',
               subtitle: 'Exclusive deals curated for you',
               onSeeAll: () => setState(() => _currentIndex = 3),
             ),

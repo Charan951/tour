@@ -452,8 +452,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _registerPrompt() {
     final cs = context.colors;
     return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        alignment: WrapAlignment.center,
         children: [
           Text("Don't have an account? ",
               style: TextStyle(

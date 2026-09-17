@@ -195,7 +195,6 @@ class ApiService {
         _workingHost = uri.host;
         if (uri.host != 'localhost' && uri.host != '127.0.0.1') {
           ApiConfig.hostIp = uri.host;
-          if (kDebugMode) debugPrint('🚀 Cached working host IP: ${uri.host}');
           if (oldHost == null || oldHost == 'localhost' || oldHost == '127.0.0.1') {
             RealtimeService.instance.reconnect();
           }
@@ -210,10 +209,6 @@ class ApiService {
 
     for (final targetUrl in candidateUrls) {
       try {
-        if (kDebugMode) {
-          debugPrint('========== API REQUEST (GET) ==========');
-          debugPrint('URL: $targetUrl');
-        }
         final headers = await _getHeaders();
         final response = await _client
             .get(Uri.parse(targetUrl), headers: headers)
@@ -240,11 +235,6 @@ class ApiService {
 
     for (final targetUrl in candidateUrls) {
       try {
-        if (kDebugMode) {
-          // Never log the request body: it can contain passwords / payment data.
-          debugPrint('========== API REQUEST (POST) ==========');
-          debugPrint('URL: $targetUrl');
-        }
         final headers = await _getHeaders();
         final response = await _client
             .post(

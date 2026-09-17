@@ -205,7 +205,7 @@ export const DeleteAccountPage: React.FC = () => {
 
         <p className="mt-12 text-xs text-slate-400">
           See also{' '}
-          <Link to="/privacy" className="font-bold text-ocean-600 hover:underline">
+          <Link to="/privacy-policy" className="font-bold text-ocean-600 hover:underline">
             Privacy Policy
           </Link>
           .

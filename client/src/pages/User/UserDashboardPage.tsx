@@ -1271,7 +1271,7 @@ export const UserDashboardPage: React.FC = () => {
               By continuing you agree to our{' '}
               <Link to="/terms" className="font-bold text-ocean-600 hover:underline">Terms &amp; Conditions</Link>
               {' '}and{' '}
-              <Link to="/privacy" className="font-bold text-ocean-600 hover:underline">Privacy Policy</Link>.
+              <Link to="/privacy-policy" className="font-bold text-ocean-600 hover:underline">Privacy Policy</Link>.
             </p>
 
           </div>

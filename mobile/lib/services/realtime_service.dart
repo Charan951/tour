@@ -38,13 +38,11 @@ class RealtimeService {
       _currentUserEmail = normalized;
       if (_socket != null && _socket!.connected && _currentUserEmail != null) {
         _socket?.emit('join_user', _currentUserEmail);
-        if (kDebugMode) debugPrint('👤 [RealtimeService] Joined user room for: $_currentUserEmail');
       }
     }
   }
 
   void reconnect() {
-    if (kDebugMode) debugPrint('🔄 [RealtimeService] Reconnecting Socket.io to updated serverHost: ${ApiConfig.serverHost}');
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
@@ -60,7 +58,6 @@ class RealtimeService {
     }
 
     final url = ApiConfig.serverHost;
-    if (kDebugMode) debugPrint('🔌 [RealtimeService] Connecting to Socket.io: $url');
 
     try {
       _socket?.dispose();
@@ -79,14 +76,12 @@ class RealtimeService {
 
       _socket?.onConnect((_) {
         _isConnected = true;
-        if (kDebugMode) debugPrint('✅ [RealtimeService] Socket.io Connected! Socket ID: ${_socket?.id}');
 
         // Join general updates room
         _socket?.emit('join_updates', {'room': 'general_updates'});
 
         if (_currentUserEmail != null && _currentUserEmail!.isNotEmpty) {
           _socket?.emit('join_user', _currentUserEmail);
-          if (kDebugMode) debugPrint('👤 [RealtimeService] Joined user room for: $_currentUserEmail');
         }
       });
 
@@ -108,7 +103,6 @@ class RealtimeService {
 
       for (final eventName in events) {
         _socket?.on(eventName, (data) {
-          if (kDebugMode) debugPrint('📩 [RealtimeService] Socket Event: $eventName');
           if (!_eventController.isClosed) {
             _eventController.add({
               'event': eventName,

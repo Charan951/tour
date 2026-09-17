@@ -198,7 +198,8 @@ export const App: React.FC = () => {
             <Route path="/faq" element={getPublicRouteElement(<FaqPage />)} />
             {/* Legal pages must be reachable without auth (login link, app stores, Razorpay) */}
             <Route path="/terms" element={<LegalPage doc="terms" />} />
-            <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+            <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+            <Route path="/privacy-policy" element={<LegalPage doc="privacy" />} />
             <Route path="/delete-account" element={<DeleteAccountPage />} />
             <Route path="/account-deletion" element={<DeleteAccountPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />

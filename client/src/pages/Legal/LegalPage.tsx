@@ -188,7 +188,7 @@ export const LegalPage: React.FC<{ doc: 'terms' | 'privacy' }> = ({ doc }) => {
         <p className="mt-12 text-xs text-slate-400">
           See also{' '}
           <Link
-            to={doc === 'terms' ? '/privacy' : '/terms'}
+            to={doc === 'terms' ? '/privacy-policy' : '/terms'}
             className="font-bold text-ocean-600 hover:underline"
           >
             {doc === 'terms' ? 'Privacy Policy' : 'Terms & Conditions'}

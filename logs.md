@@ -21,6 +21,13 @@ Entry format:
 
 ---
 
+### 2026-09-18 — Mobile — Fix release build failure (> 25.0.3 Gradle plugin resolution error)
+- Status: Done
+- Request: `flutter build apk --release` failed with `Error resolving plugin [id: 'dev.flutter.flutter-plugin-loader', version: '1.0.0'] > 25.0.3` at `settings.gradle:25`.
+- Cause: `mobile/android/gradle.properties` had `org.gradle.java.home=C\:/Program Files/Android/Android Studio/jbr`. Android Studio's bundled JBR is OpenJDK `25.0.3`. Gradle 8.14 does not support Java 25, causing Gradle plugin loader failure when Gradle attempts to run with Java 25.
+- Fix: Updated `mobile/android/gradle.properties` `org.gradle.java.home` to `C\:/Program Files/Eclipse Adoptium/jdk-21.0.12.101-hotspot` (Temurin JDK 21 LTS installed on the system and configured in system `JAVA_HOME`).
+- Outcome: Ready for user to run `flutter build apk --release`.
+
 ### 2026-09-16 — Play Console — Privacy Policy URL rejected ("does not link to a valid privacy policy page")
 - Status: Done (code), needs deploy + Play Console update by user.
 - Request: Play Console policy-center flagged `https://tour.speshway.site/privacy` as invalid on Sep 13; user wants the URL changed to `/privacy-policy`.
